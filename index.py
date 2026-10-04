@@ -168,10 +168,6 @@ def grados_a_cardinal(grados):
     return formatear_direccion(direcciones[indice])
 
 def verificar_estacion_congelada(nombre_estacion, temp, pres, viento, racha):
-    """
-    Verifica si los datos principales de la estación se han mantenido exactamente 
-    iguales durante un número consecutivo de lecturas (LIMITE_LECTURAS_REPETIDAS).
-    """
     historial = {}
     if os.path.exists(ARCHIVO_CONGELADAS):
         try:
@@ -930,7 +926,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", -m "Actualizar index, JSON de LEDs e historial de estaciones congeladas [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Actualizar index, JSON de LEDs e historial de estaciones congeladas [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
