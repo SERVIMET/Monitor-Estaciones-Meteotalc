@@ -167,7 +167,15 @@ def grados_a_cardinal(grados):
     indice = int((grados + 11.25) / 22.5) % 16
     return formatear_direccion(direcciones[indice])
 
-def verificar_estacion_congelada(nombre_estacion, temp, pres, viento, racha):
+def verificar_estacion_congelada(nombre_estacion, temp, viento, racha):
+    """
+    Verifica si una estación está congelada omitiendo el valor de la presión (por las consolas Davis)
+    y excluyendo a las estaciones IFOP con actualización más tardía (Cabo Carranza e Isla Mocha).
+    """
+    estaciones_excluidas = ["faro cabo carranza", "faro isla mocha"]
+    if nombre_estacion.lower() in estaciones_excluidas:
+        return False
+
     historial = {}
     if os.path.exists(ARCHIVO_CONGELADAS):
         try:
@@ -176,7 +184,8 @@ def verificar_estacion_congelada(nombre_estacion, temp, pres, viento, racha):
         except Exception:
             historial = {}
 
-    firma_actual = f"{temp}_{pres}_{viento}_{racha}"
+    # Se excluye la presión de la firma actual
+    firma_actual = f"{temp}_{viento}_{racha}"
     
     if nombre_estacion not in historial:
         historial[nombre_estacion] = {"firma": firma_actual, "contador": 1}
@@ -332,7 +341,8 @@ def consultar_directemar(est):
             fecha_estacion = datetime.strptime(fecha_str, formato_fecha).replace(tzinfo=ZONA_CHILE)
             dif_min = abs((obtener_hora_chile() - fecha_estacion).total_seconds() / 60)
 
-            congelada = verificar_estacion_congelada(est["nombre"], temp, pres, viento, racha)
+            # Llamada actualizada sin presión
+            congelada = verificar_estacion_congelada(est["nombre"], temp, viento, racha)
             if congelada:
                 return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
@@ -382,7 +392,8 @@ def consultar_wunderground_web(est):
 
             obs_time = obs.get("obsTimeLocal", "Reciente")
 
-            congelada = verificar_estacion_congelada(est["nombre"], temp, pres, viento, racha)
+            # Llamada actualizada sin presión
+            congelada = verificar_estacion_congelada(est["nombre"], temp, viento, racha)
             if congelada:
                 return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", temp, pres, viento, dir_viento, racha, precipitacion, str(obs_time)
 
@@ -493,7 +504,8 @@ def consultar_ifop(est):
                 fecha_str = str(fecha_temp) if fecha_temp else "Reciente"
                 es_valido = (temp_f is not None or viento_f is not None or pres_f is not None or pp_f is not None)
                 
-                congelada = verificar_estacion_congelada(est["nombre"], temp, pres, viento, racha)
+                # Llamada actualizada sin presión (dentro de verificar_estacion_congelada se excluyen Cabo Carranza e Isla Mocha)
+                congelada = verificar_estacion_congelada(est["nombre"], temp, viento, racha)
                 if congelada:
                     return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
