@@ -12,8 +12,10 @@ import urllib.request
 # CONFIGURACIÓN GENERAL
 # ==========================================
 TOLERANCIA_MINUTOS = 12
+LIMITE_LECTURAS_REPETIDAS = 10
 ZONA_CHILE = ZoneInfo("America/Santiago")
 ARCHIVO_HISTORIAL = "historial_presion.json"
+ARCHIVO_CONGELADAS = "historial_congeladas.json"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -165,6 +167,38 @@ def grados_a_cardinal(grados):
     indice = int((grados + 11.25) / 22.5) % 16
     return formatear_direccion(direcciones[indice])
 
+def verificar_estacion_congelada(nombre_estacion, temp, pres, viento, racha):
+    """
+    Verifica si los datos principales de la estación se han mantenido exactamente 
+    iguales durante un número consecutivo de lecturas (LIMITE_LECTURAS_REPETIDAS).
+    """
+    historial = {}
+    if os.path.exists(ARCHIVO_CONGELADAS):
+        try:
+            with open(ARCHIVO_CONGELADAS, "r", encoding="utf-8") as f:
+                historial = json.load(f)
+        except Exception:
+            historial = {}
+
+    firma_actual = f"{temp}_{pres}_{viento}_{racha}"
+    
+    if nombre_estacion not in historial:
+        historial[nombre_estacion] = {"firma": firma_actual, "contador": 1}
+    else:
+        datos_est = historial[nombre_estacion]
+        if datos_est.get("firma") == firma_actual:
+            datos_est["contador"] = datos_est.get("contador", 1) + 1
+        else:
+            historial[nombre_estacion] = {"firma": firma_actual, "contador": 1}
+
+    try:
+        with open(ARCHIVO_CONGELADAS, "w", encoding="utf-8") as f:
+            json.dump(historial, f)
+    except Exception:
+        pass
+
+    return historial[nombre_estacion]["contador"] >= LIMITE_LECTURAS_REPETIDAS
+
 def gestionar_historial_presion(nombre_estacion, presion_actual):
     ahora = obtener_hora_chile()
     historial = {}
@@ -302,6 +336,10 @@ def consultar_directemar(est):
             fecha_estacion = datetime.strptime(fecha_str, formato_fecha).replace(tzinfo=ZONA_CHILE)
             dif_min = abs((obtener_hora_chile() - fecha_estacion).total_seconds() / 60)
 
+            congelada = verificar_estacion_congelada(est["nombre"], temp, pres, viento, racha)
+            if congelada:
+                return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
+
             if dif_min <= TOLERANCIA_MINUTOS or (170 <= dif_min <= 200):
                 return True, "OPERATIVA", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
             else:
@@ -347,6 +385,11 @@ def consultar_wunderground_web(est):
                 precipitacion = "0.0 mm"
 
             obs_time = obs.get("obsTimeLocal", "Reciente")
+
+            congelada = verificar_estacion_congelada(est["nombre"], temp, pres, viento, racha)
+            if congelada:
+                return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", temp, pres, viento, dir_viento, racha, precipitacion, str(obs_time)
+
             return True, "OPERATIVA", temp, pres, viento, dir_viento, racha, precipitacion, str(obs_time)
     except Exception as e:
         print(f"Error WU [{est['nombre']}]: {e}")
@@ -453,6 +496,11 @@ def consultar_ifop(est):
 
                 fecha_str = str(fecha_temp) if fecha_temp else "Reciente"
                 es_valido = (temp_f is not None or viento_f is not None or pres_f is not None or pp_f is not None)
+                
+                congelada = verificar_estacion_congelada(est["nombre"], temp, pres, viento, racha)
+                if congelada:
+                    return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
+
                 estado_txt = "OPERATIVA" if es_valido else "SIN DATOS VÁLIDOS"
 
                 return es_valido, estado_txt, fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
@@ -521,7 +569,7 @@ def generar_html(resultados_totales, hay_alerta):
         """
 
     alerta_class = "alerta-activa" if hay_alerta else ""
-    alerta_banner = '<div class="banner-alerta">⚠️ ¡ATENCIÓN: HAY ESTACIONES CON FALLAS O DESACTUALIZADAS! ⚠️</div>' if hay_alerta else ""
+    alerta_banner = '<div class="banner-alerta">⚠️ ¡ATENCIÓN: HAY ESTACIONES CON FALLAS, DESACTUALIZADAS O CONGELADAS! ⚠️</div>' if hay_alerta else ""
     hora_actual_chile = obtener_hora_chile().strftime("%d-%m-%Y %H:%M:%S")
 
     html = f"""<!DOCTYPE html>
@@ -759,7 +807,7 @@ def generar_html(resultados_totales, hay_alerta):
         {cards_html}
     </div>
     <div style="text-align: center;">
-        <div class="footer-dev">Desarrollado por Sgto 2° (Met.) Luis Diego Achurra Garcés</div>
+        <div class="footer-dev">Sgto 2 (Met) Luis Diego Achurra Garces</div>
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -831,9 +879,7 @@ def generar_html(resultados_totales, hay_alerta):
     print("✓ index.html actualizado correctamente.")
 
 def generar_json_esp32(resultados_totales):
-    # Guardamos los estados de las 12 estaciones completas en orden
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
-    
     data_json = {
         "estaciones": estados_12_estaciones
     }
@@ -883,8 +929,8 @@ def ejecutar_monitoreo():
 def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
-        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Actualizar index y JSON de estaciones para ESP32 [skip ci]"], capture_output=True, text=True)
+        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
+        resultado = subprocess.run(["git", "commit", -m "Actualizar index, JSON de LEDs e historial de estaciones congeladas [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
