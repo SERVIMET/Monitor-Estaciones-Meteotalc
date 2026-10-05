@@ -5,6 +5,10 @@ on:
     types: [actualizar_estaciones]
   workflow_dispatch:
 
+concurrency:
+  group: actualizar-estaciones-met
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
