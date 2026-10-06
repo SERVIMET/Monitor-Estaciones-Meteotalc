@@ -815,7 +815,7 @@ def generar_html(resultados_totales, hay_alerta):
         {cards_html}
     </div>
     <div style="text-align: center;">
-        <div class="footer-dev">Sgto 2 (Met) Luis Diego Achurra Garces</div>
+        <div class="footer-dev">Desarrollado por Sgto 2 (Met) Luis Diego Achurra Garces</div>
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
