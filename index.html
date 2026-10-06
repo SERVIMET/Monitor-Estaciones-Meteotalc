@@ -225,9 +225,9 @@
     </div>
     <h1>Monitor de Estaciones Automáticas</h1>
     <div class="subtitle-line2">Centro Zonal de Meteorología Marina de Talcahuano</div>
-    <div class="subtitle">Última verificación: 06-10-2026 03:20:25 (Tolerancia: 12 min)</div>
+    <div class="subtitle">Última verificación: 06-10-2026 03:25:22 (Tolerancia: 12 min)</div>
     <div class="banner-alerta">⚠️ ¡ATENCIÓN: HAY ESTACIONES CON FALLAS, DESACTUALIZADAS O CONGELADAS! ⚠️</div>
-    <div class="summary">Estaciones Operativas: 10 de 12</div>
+    <div class="summary">Estaciones Operativas: 9 de 12</div>
     <div id="map"></div>
     <div class="grid">
         
@@ -329,17 +329,17 @@
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: 2026-10-06 03:20:19</span>
+                    <span class="time">Reporte: 2026-10-06 03:25:14</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
         </a>
         
         <a href="http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm" target="_blank" class="card-link">
-            <div class="card ok">
+            <div class="card error">
                 <div class="card-header">
                     <span class="station-name">Gobernación Marítima de Talcahuano</span>
-                    <span class="status-badge">🟢</span>
+                    <span class="status-badge">🔴</span>
                 </div>
                 
             <div class="card-body-content">
@@ -381,7 +381,7 @@
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: 2026-10-06 03:20:00</span>
+                    <span class="time">Reporte: 2026-10-06 03:25:00</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -568,15 +568,15 @@
         
         L.circleMarker([-36.607, -73.049], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Faro Isla Quiriquina</b><br>Estado: OPERATIVA<br>Temp: 11.1°C | Viento: 1.7 kt (NE) | Racha: 7.8 kt | Pres: 1008.1 hPa ↘ | Lluvia: 14.2 mm<br>Reporte: 2026-10-06 03:20:19<br><a href='https://www.wunderground.com/dashboard/pws/ITALCA20' target='_blank'>Abrir enlace ↗</a>");
+        }).addTo(map).bindPopup("<b>Faro Isla Quiriquina</b><br>Estado: OPERATIVA<br>Temp: 11.1°C | Viento: 1.7 kt (NE) | Racha: 7.8 kt | Pres: 1008.1 hPa ↘ | Lluvia: 14.2 mm<br>Reporte: 2026-10-06 03:25:14<br><a href='https://www.wunderground.com/dashboard/pws/ITALCA20' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-36.712, -73.115], {
-            color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Gobernación Marítima de Talcahuano</b><br>Estado: OPERATIVA<br>Temp: 12.4°C | Viento: 11.5 kt (NE) | Racha: 14.8 kt | Pres: 1008.1 hPa ↘ | Lluvia: 8.4 mm<br>Reporte: 06-10-2026 03:09:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm' target='_blank'>Abrir enlace ↗</a>");
+            color: 'red', fillColor: 'red', fillOpacity: 0.8, radius: 9
+        }).addTo(map).bindPopup("<b>Gobernación Marítima de Talcahuano</b><br>Estado: DESACTUALIZADA (16 min)<br>Temp: 12.4°C | Viento: 11.5 kt (NE) | Racha: 14.8 kt | Pres: 1008.1 hPa ↘ | Lluvia: 8.4 mm<br>Reporte: 06-10-2026 03:09:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-36.745, -73.185], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Faro Punta Hualpén</b><br>Estado: OPERATIVA<br>Temp: 12.2°C | Viento: 9.6 kt (NE) | Racha: 19.1 kt | Pres: 1006.1 hPa ↘ | Lluvia: 7.9 mm<br>Reporte: 2026-10-06 03:20:00<br><a href='https://www.wunderground.com/dashboard/pws/IHUALP1' target='_blank'>Abrir enlace ↗</a>");
+        }).addTo(map).bindPopup("<b>Faro Punta Hualpén</b><br>Estado: OPERATIVA<br>Temp: 12.2°C | Viento: 9.6 kt (NE) | Racha: 19.1 kt | Pres: 1006.1 hPa ↘ | Lluvia: 7.9 mm<br>Reporte: 2026-10-06 03:25:00<br><a href='https://www.wunderground.com/dashboard/pws/IHUALP1' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-37.02, -73.15], {
             color: 'red', fillColor: 'red', fillOpacity: 0.8, radius: 9
