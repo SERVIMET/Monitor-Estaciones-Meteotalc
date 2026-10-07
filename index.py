@@ -511,6 +511,32 @@ def consultar_ifop(est):
         print(f"Error IFOP [{est['nombre']}]: {e}")
         return False, "SIN CONEXION", str(e)[:30], "--", "--", "--", "", "--", "--"
 
+def crear_manifest():
+    """Crea el archivo manifest.json necesario para la PWA."""
+    manifest_data = {
+        "name": "Monitor Estaciones MeteoTalcahuano",
+        "short_name": "MeteoTalcahuano",
+        "start_url": "./index.html",
+        "display": "standalone",
+        "background_color": "#f4f6f9",
+        "theme_color": "#0f2942",
+        "icons": [
+            {
+                "src": "icon-192.png",
+                "sizes": "192x192",
+                "type": "image/png"
+            },
+            {
+                "src": "icon-512.png",
+                "sizes": "512x512",
+                "type": "image/png"
+            }
+        ]
+    }
+    
+    with open("manifest.json", "w", encoding="utf-8") as f:
+        json.dump(manifest_data, f, indent=4, ensure_ascii=False)
+
 def generar_html(resultados_totales, hay_alerta):
     total_estaciones = len(resultados_totales)
     operativas = sum(1 for r in resultados_totales if r['ok'] is True)
@@ -578,6 +604,15 @@ def generar_html(resultados_totales, hay_alerta):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="30">
+    
+    <!-- Configuraciones PWA y Móviles -->
+    <meta name="theme-color" content="#0f2942">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MeteoTalcahuano">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <title>Monitor de Estaciones Automaticas</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -809,6 +844,56 @@ def generar_html(resultados_totales, hay_alerta):
     <div style="text-align: center;">
         <div class="footer-dev">Desarrollado por Sgto 2° (Met.) Luis Diego Achurra Garcés &nbsp;|&nbsp; 👁️ <span id="visit-count">Cargando...</span></div>
     </div>
+    
+    <!-- Banner amigable para instalar la App -->
+    <div id="install-banner" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0f2942; color: white; padding: 12px 20px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 9999; align-items: center; gap: 12px; font-family: sans-serif; max-width: 90%; width: 400px; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">📱</span>
+            <div>
+                <div style="font-weight: bold; font-size: 14px;">Instalar Monitor Meteo</div>
+                <div style="font-size: 11px; opacity: 0.8;">Accede más rápido como una app</div>
+            </div>
+        </div>
+        <button id="btn-install" style="background: #28a745; color: white; border: none; padding: 8px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px;">Instalar</button>
+    </div>
+
+    <!-- Script para gestionar la instalación en Android / iOS -->
+    <script>
+        let deferredPrompt;
+        const installBanner = document.getElementById('install-banner');
+        const btnInstall = document.getElementById('btn-install');
+
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+        if (!isInStandaloneMode) {{
+            if (isIOS) {{
+                installBanner.style.display = 'flex';
+                btnInstall.innerText = 'Ver pasos';
+                btnInstall.onclick = () => {{
+                    alert("Para instalar en iPhone/iPad:\\n1. Toca el botón 'Compartir' 📤 abajo en Safari.\\n2. Selecciona 'Agregar al est. de inicio' ➕.");
+                }};
+            }} else {{
+                window.addEventListener('beforeinstallprompt', (e) => {{
+                    e.preventDefault();
+                    deferredPrompt = e;
+                    installBanner.style.display = 'flex';
+                }});
+
+                btnInstall.onclick = async () => {{
+                    if (deferredPrompt) {{
+                        deferredPrompt.prompt();
+                        const {{ outcome }} = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') {{
+                            installBanner.style.display = 'none';
+                        }}
+                        deferredPrompt = null;
+                    }}
+                }};
+            }}
+        }}
+    </script>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         async function actualizarContadorGlobal() {{
@@ -911,7 +996,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con control de visitas por intervalo de tiempo.")
+    print("✓ index.html actualizado con control de visitas por intervalo de tiempo y PWA.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -957,6 +1042,7 @@ def ejecutar_monitoreo():
 
     resultados_totales = [resultados_dict[nombre] for nombre in ORDEN_ESTACIONES if nombre in resultados_dict]
     
+    crear_manifest()
     generar_html(resultados_totales, hubo_fallas)
     generar_json_esp32(resultados_totales)
     subir_a_github()
@@ -964,8 +1050,8 @@ def ejecutar_monitoreo():
 def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
-        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Actualizar contador por intervalo de tiempo en localStorage [skip ci]"], capture_output=True, text=True)
+        subprocess.run(["git", "add", "index.html", "manifest.json", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Actualizar contador por intervalo de tiempo y soporte PWA [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
