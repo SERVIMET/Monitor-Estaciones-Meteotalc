@@ -628,9 +628,18 @@ def generar_html(resultados_totales, hay_alerta):
         }
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); padding: 15px; margin: 0; transition: background-color 0.3s ease, color 0.3s ease; }
-        h1 { text-align: center; color: var(--h1-color); margin-bottom: 0; font-size: 22px; line-height: 1.2; font-weight: 700; }
-        .subtitle-line2 { text-align: center; color: var(--sub2-color); margin-bottom: 6px; font-size: 16px; font-weight: bold; }
-        .subtitle { text-align: center; color: var(--sub-color); margin-bottom: 12px; font-size: 12px; }
+        
+        .header-container {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto 12px auto;
+            text-align: center;
+        }
+
+        h1 { color: var(--h1-color); margin-bottom: 0; font-size: 22px; line-height: 1.2; font-weight: 700; }
+        .subtitle-line2 { color: var(--sub2-color); margin-bottom: 6px; font-size: 16px; font-weight: bold; }
+        .subtitle { color: var(--sub-color); margin-bottom: 12px; font-size: 12px; }
+        
         .summary { text-align: center; font-weight: bold; margin-bottom: 15px; color: var(--summary-text); font-size: 14px; background: var(--summary-bg); padding: 6px 16px; border-radius: 20px; max-width: 280px; margin-left: auto; margin-right: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.06); border: 1px solid var(--summary-border); }
         
         @keyframes parpadeoFondo { 
@@ -645,7 +654,7 @@ def generar_html(resultados_totales, hay_alerta):
             background-color: #121212 !important; 
         }
 
-        .banner-alerta { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+        .banner-alerta { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); max-width: 1200px; margin-left: auto; margin-right: auto; }
         #map { height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }
         
         .grid { 
@@ -735,14 +744,12 @@ def generar_html(resultados_totales, hay_alerta):
         
         .footer-dev { background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: inline-flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: center; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }
         
-        .floating-controls {
-            position: fixed;
-            top: 10px;
-            right: 10px;
+        .controls-inline {
+            position: absolute;
+            top: 0;
+            right: 0;
             display: flex;
-            flex-direction: column;
             gap: 6px;
-            z-index: 1000;
         }
 
         .icon-btn {
@@ -773,13 +780,12 @@ def generar_html(resultados_totales, hay_alerta):
         }
 
         @media (max-width: 600px) {
-            h1 {
+            .header-container {
                 padding-right: 45px;
-                font-size: 19px;
             }
-            .floating-controls {
-                top: 8px;
-                right: 8px;
+            .controls-inline {
+                top: 0;
+                right: 0;
             }
             .icon-btn {
                 width: 32px;
@@ -793,13 +799,15 @@ def generar_html(resultados_totales, hay_alerta):
     </style>
 </head>
 <body class=""" + alerta_class + '">\n' + f"""
-    <div class="floating-controls">
-        <button class="icon-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="Cambiar Modo Oscuro/Claro">🌙</button>
-        <button class="icon-btn wind-unit-btn" onclick="toggleWindUnit()" id="windUnitBtn" title="Cambiar Unidad de Viento">kt</button>
+    <div class="header-container">
+        <div class="controls-inline">
+            <button class="icon-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="Cambiar Modo Oscuro/Claro">🌙</button>
+            <button class="icon-btn wind-unit-btn" onclick="toggleWindUnit()" id="windUnitBtn" title="Cambiar Unidad de Viento">kt</button>
+        </div>
+        <h1>Monitor de Estaciones Automaticas</h1>
+        <div class="subtitle-line2">Centro Zonal de Meteorologia Marina de Talcahuano</div>
+        <div class="subtitle">Ultima verificacion: {hora_actual_chile} (Tolerancia: {TOLERANCIA_MINUTOS} min)</div>
     </div>
-    <h1>Monitor de Estaciones Automaticas</h1>
-    <div class="subtitle-line2">Centro Zonal de Meteorologia Marina de Talcahuano</div>
-    <div class="subtitle">Ultima verificacion: {hora_actual_chile} (Tolerancia: {TOLERANCIA_MINUTOS} min)</div>
     {alerta_banner}
     <div class="summary">Estaciones Operativas: {operativas} de {total_estaciones}</div>
     <div id="map"></div>
@@ -876,11 +884,10 @@ def generar_html(resultados_totales, hay_alerta):
             setTimeout(updateWindDisplay, 100);
         }
 
-        // Contador de visitas local y estable (sin dependencias externas caídas)
         try {
             let visits = localStorage.getItem('meteotalc_visits');
             if (!visits) {
-                visits = 1; // <--- Modificado a 1 para comenzar desde el inicio
+                visits = 1;
             } else {
                 visits = parseInt(visits) + 1;
             }
@@ -952,7 +959,7 @@ def subir_a_github():
         subprocess.run(["git", "config", "--global", "user.email", "actions@github.com"], check=True)
         
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Actualizar monitor y contador local [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Restaurar posicion de botones en cabecera [skip ci]"], capture_output=True, text=True)
         
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
