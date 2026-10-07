@@ -815,9 +815,18 @@ def generar_html(resultados_totales, hay_alerta):
             const namespace = 'meteotalcahuano_estaciones';
             const key = 'visitas_totales';
             const elem = document.getElementById('visit-count');
+            if (!elem) return;
 
             try {{
-                let response = await fetch(`https://api.countapi.xyz/hit/${{namespace}}/${{key}}`);
+                let endpoint = 'get'; // Por defecto solo consultamos
+
+                // Suma 'hit' únicamente si el navegador está visible (humano real) y es la primera vez en la sesión
+                if (!sessionStorage.getItem('visita_registrada') && document.visibilityState === 'visible') {{
+                    endpoint = 'hit';
+                    sessionStorage.setItem('visita_registrada', 'true');
+                }}
+
+                let response = await fetch(`https://api.countapi.xyz/${{endpoint}}/${{namespace}}/${{key}}`, {{ signal: AbortSignal.timeout(4000) }});
                 if (!response.ok) throw new Error('Error en red');
                 let data = await response.json();
                 elem.innerText = data.value;
@@ -826,15 +835,19 @@ def generar_html(resultados_totales, hay_alerta):
                 let fallback = localStorage.getItem('ultimo_conteo_global');
                 if (!fallback) {{
                     fallback = 1250;
-                }} else {{
+                }} else if (sessionStorage.getItem('visita_registrada') !== 'true') {{
                     fallback = parseInt(fallback) + 1;
+                    sessionStorage.setItem('visita_registrada', 'true');
                 }}
                 localStorage.setItem('ultimo_conteo_global', fallback);
                 elem.innerText = fallback + " *";
             }}
         }}
 
-        actualizarContadorGlobal();
+        // Ejecutar asegurando visibilidad real
+        document.addEventListener("DOMContentLoaded", () => {{
+            setTimeout(actualizarContadorGlobal, 1000);
+        }});
 
         var map = L.map('map').setView([-37.5, -73.2], 7);
         L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
@@ -901,7 +914,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con el ícono de ojo (👁️) en lugar del texto de visitas.")
+    print("✓ index.html actualizado con control estricto anti-bots/cronjobs para las visitas.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -955,7 +968,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Cambiar texto de visitas por icono de ojo en el pie de pagina [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Actualizar contador para evitar conteos de visitas por CronJob [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
