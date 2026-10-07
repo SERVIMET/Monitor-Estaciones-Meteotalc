@@ -879,10 +879,12 @@ def generar_html(resultados_totales, hay_alerta):
         fetch('https://countapi.mileshilliard.com/api/v1/hit/monitor-estaciones-meteotalc/visitas')
             .then(response => response.json())
             .then(data => {
-                document.getElementById('visit-count').innerText = parseInt(data.value).toLocaleString();
+                let visitas = data.value !== undefined ? data.value : (data.views !== undefined ? data.views : 0);
+                let num = parseInt(visitas);
+                document.getElementById('visit-count').innerText = isNaN(num) ? "0" : num.toLocaleString();
             })
             .catch(error => {
-                document.getElementById('visit-count').innerText = "1";
+                document.getElementById('visit-count').innerText = "0";
             });
     </script>
 </body>
