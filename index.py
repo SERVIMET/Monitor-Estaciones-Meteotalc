@@ -572,7 +572,7 @@ def generar_html(resultados_totales, hay_alerta):
     alerta_banner = '<div class="banner-alerta">⚠️ ¡ATENCIÓN: HAY ESTACIONES CON FALLAS, DESACTUALIZADAS O CONGELADAS! ⚠️</div>' if hay_alerta else ""
     hora_actual_chile = obtener_hora_chile().strftime("%d-%m-%Y %H:%M:%S")
 
-    html = f"""<!DOCTYPE html>
+    html = """<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -581,7 +581,7 @@ def generar_html(resultados_totales, hay_alerta):
     <title>Monitor de Estaciones Automáticas</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root {{
+        :root {
             --bg-color: #f4f6f9;
             --text-color: #1e293b;
             --h1-color: #0f2942;
@@ -602,9 +602,9 @@ def generar_html(resultados_totales, hay_alerta):
             --click-color: #1d4ed8;
             --wind-color: #1d4ed8;
             --footer-border: rgba(255, 255, 255, 0.4);
-        }}
+        }
 
-        body.dark-mode {{
+        body.dark-mode {
             --bg-color: #121212;
             --text-color: #e0e0e0;
             --h1-color: #ffffff;
@@ -625,40 +625,40 @@ def generar_html(resultados_totales, hay_alerta):
             --click-color: #60a5fa;
             --wind-color: #60a5fa;
             --footer-border: rgba(255, 255, 255, 0.1);
-        }}
+        }
 
-        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); padding: 15px; margin: 0; transition: background-color 0.3s ease, color 0.3s ease; }}
-        h1 {{ text-align: center; color: var(--h1-color); margin-bottom: 0; font-size: 22px; line-height: 1.2; font-weight: 700; }}
-        .subtitle-line2 {{ text-align: center; color: var(--sub2-color); margin-bottom: 6px; font-size: 16px; font-weight: bold; }}
-        .subtitle {{ text-align: center; color: var(--sub-color); margin-bottom: 12px; font-size: 12px; }}
-        .summary {{ text-align: center; font-weight: bold; margin-bottom: 15px; color: var(--summary-text); font-size: 14px; background: var(--summary-bg); padding: 6px 16px; border-radius: 20px; max-width: 280px; margin-left: auto; margin-right: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.06); border: 1px solid var(--summary-border); }}
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); padding: 15px; margin: 0; transition: background-color 0.3s ease, color 0.3s ease; }
+        h1 { text-align: center; color: var(--h1-color); margin-bottom: 0; font-size: 22px; line-height: 1.2; font-weight: 700; }
+        .subtitle-line2 { text-align: center; color: var(--sub2-color); margin-bottom: 6px; font-size: 16px; font-weight: bold; }
+        .subtitle { text-align: center; color: var(--sub-color); margin-bottom: 12px; font-size: 12px; }
+        .summary { text-align: center; font-weight: bold; margin-bottom: 15px; color: var(--summary-text); font-size: 14px; background: var(--summary-bg); padding: 6px 16px; border-radius: 20px; max-width: 280px; margin-left: auto; margin-right: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.06); border: 1px solid var(--summary-border); }
         
-        @keyframes parpadeoFondo {{ 
-            0% {{ background-color: var(--bg-color); }} 
-            50% {{ background-color: #fca5a5; }} 
-            100% {{ background-color: var(--bg-color); }} 
-        }}
-        body.alerta-activa {{ animation: parpadeoFondo 1.5s infinite; }}
+        @keyframes parpadeoFondo { 
+            0% { background-color: var(--bg-color); } 
+            50% { background-color: #fca5a5; } 
+            100% { background-color: var(--bg-color); } 
+        }
+        body.alerta-activa { animation: parpadeoFondo 1.5s infinite; }
         
-        body.dark-mode.alerta-activa {{ 
+        body.dark-mode.alerta-activa { 
             animation: none !important; 
             background-color: #121212 !important; 
-        }}
+        }
 
-        .banner-alerta {{ background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }}
-        #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
+        .banner-alerta { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+        #map { height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }
         
-        .grid {{ 
+        .grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); 
             gap: 15px; 
             max-width: 1200px; 
             margin: 0 auto; 
             align-items: stretch; 
-        }}
+        }
         
-        .card-link {{ text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; }}
-        .card {{ 
+        .card-link { text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; }
+        .card { 
             border-radius: 14px; 
             padding: 10px 10px; 
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
@@ -670,47 +670,47 @@ def generar_html(resultados_totales, hay_alerta):
             justify-content: space-between;
             height: 100%; 
             box-sizing: border-box;
-        }}
-        .card.ok {{ 
+        }
+        .card.ok { 
             background: var(--card-ok-bg); 
             border: 1px solid var(--card-ok-border);
             border-left: 6px solid #16a34a; 
-        }}
-        .card.error {{ 
+        }
+        .card.error { 
             background: var(--card-error-bg); 
             border: 1px solid var(--card-error-border);
             border-left: 6px solid #dc2626; 
-        }}
-        .card:hover {{ 
+        }
+        .card:hover { 
             transform: translateY(-3px); 
             box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); 
-        }}
-        .card.error:hover {{
+        }
+        .card.error:hover {
             box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3); 
-        }}
+        }
         
-        .card-header {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }}
-        .station-name {{ font-weight: bold; font-size: 13.5px; color: var(--station-name-color); line-height: 1.1; }}
-        .status-badge {{ font-size: 11px; }}
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+        .station-name { font-weight: bold; font-size: 13.5px; color: var(--station-name-color); line-height: 1.1; }
+        .status-badge { font-size: 11px; }
         
-        .card-body-content {{
+        .card-body-content {
             display: flex;
             flex-direction: column;
             gap: 4px;
             margin: 4px 0;
-        }}
-        .row-top, .row-bottom {{
+        }
+        .row-top, .row-bottom {
             display: grid;
             gap: 4px;
-        }}
-        .row-top {{
+        }
+        .row-top {
             grid-template-columns: 1.1fr 1fr 1fr;
-        }}
-        .row-bottom {{
+        }
+        .row-bottom {
             grid-template-columns: 1fr 1fr;
-        }}
+        }
         
-        .item-box {{
+        .item-box {
             background: var(--item-bg);
             padding: 4px 2px;
             border-radius: 6px;
@@ -722,20 +722,20 @@ def generar_html(resultados_totales, hay_alerta):
             align-items: center;
             white-space: nowrap;
             color: var(--item-text);
-        }}
-        .temp-box {{
+        }
+        .temp-box {
             font-size: 0.85em;
             font-weight: 800;
             color: var(--item-text);
-        }}
+        }
         
-        .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; }}
-        .time {{ font-size: 0.68em; color: var(--time-color); }}
-        .click-text {{ font-size: 0.68em; color: var(--click-color); font-weight: bold; font-style: italic; }}
+        .card-footer-info { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; }
+        .time { font-size: 0.68em; color: var(--time-color); }
+        .click-text { font-size: 0.68em; color: var(--click-color); font-weight: bold; font-style: italic; }
         
-        .footer-dev {{ background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: inline-flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: center; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }}
+        .footer-dev { background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: inline-flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: center; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }
         
-        .floating-controls {{
+        .floating-controls {
             position: fixed;
             top: 10px;
             right: 10px;
@@ -743,9 +743,9 @@ def generar_html(resultados_totales, hay_alerta):
             flex-direction: column;
             gap: 6px;
             z-index: 1000;
-        }}
+        }
 
-        .icon-btn {{
+        .icon-btn {
             width: 36px;
             height: 36px;
             border-radius: 50%;
@@ -760,39 +760,39 @@ def generar_html(resultados_totales, hay_alerta):
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             transition: all 0.2s ease;
             padding: 0;
-        }}
+        }
         
-        .icon-btn:hover {{
+        .icon-btn:hover {
             transform: scale(1.1);
-        }}
+        }
 
-        .wind-unit-btn {{
+        .wind-unit-btn {
             font-size: 11px;
             font-weight: 800;
             letter-spacing: -0.5px;
-        }}
+        }
 
-        @media (max-width: 600px) {{
-            h1 {{
+        @media (max-width: 600px) {
+            h1 {
                 padding-right: 45px;
                 font-size: 19px;
-            }}
-            .floating-controls {{
+            }
+            .floating-controls {
                 top: 8px;
                 right: 8px;
-            }}
-            .icon-btn {{
+            }
+            .icon-btn {
                 width: 32px;
                 height: 32px;
                 font-size: 12px;
-            }}
-            .wind-unit-btn {{
+            }
+            .wind-unit-btn {
                 font-size: 10px;
-            }}
-        }}
+            }
+        }
     </style>
 </head>
-<body class="{alerta_class}">
+<body class=""" + alerta_class + '">\n' + f"""
     <div class="floating-controls">
         <button class="icon-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="Cambiar Modo Oscuro/Claro">🌙</button>
         <button class="icon-btn wind-unit-btn" onclick="toggleWindUnit()" id="windUnitBtn" title="Cambiar Unidad de Viento">kt</button>
@@ -809,4 +809,156 @@ def generar_html(resultados_totales, hay_alerta):
     <div style="text-align: center;">
         <div class="footer-dev">
             <span>Sgto 2 (Met) Luis Diego Achurra Garces</span>
-            <span style="font-size: 0.9em; opacity: 0.85; border-left: 1px solid rgba(
+            <span style="font-size: 0.9em; opacity: 0.85; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 15px;">
+                👁️ Vistas: <span id="visit-count">...</span>
+            </span>
+        </div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([-37.5, -73.2], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 12, attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        """ + markers_js + """
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            updateButtonText(isDark);
+        }
+
+        function updateButtonText(isDark) {
+            const btn = document.getElementById('darkModeBtn');
+            if (btn) btn.innerHTML = isDark ? '☀️' : '🌙';
+        }
+
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+            updateButtonText(true);
+        }
+
+        let windInKnots = true;
+
+        function toggleWindUnit() {
+            windInKnots = !windInKnots;
+            localStorage.setItem('windUnit', windInKnots ? 'kt' : 'khr');
+            updateWindDisplay();
+        }
+
+        function updateWindDisplay() {
+            const btn = document.getElementById('windUnitBtn');
+            if (btn) btn.innerHTML = windInKnots ? 'kt' : 'kmh';
+
+            const itemBoxes = document.querySelectorAll('.card-body-content .item-box');
+            itemBoxes.forEach(box => {
+                let text = box.innerHTML;
+                if (text.includes('kt') || text.includes('k/hr')) {
+                    box.innerHTML = text.replace(/([\\d.,]+)\\s*(kt|k\\/hr)/gi, (match, p1, p2) => {
+                        let num = parseFloat(p1.replace(',', '.'));
+                        if (isNaN(num)) return match;
+                        if (!windInKnots && p2.toLowerCase() === 'kt') {
+                            let converted = (num * 1.852).toFixed(1).replace('.', ',');
+                            return `${converted} k/hr`;
+                        } else if (windInKnots && p2.toLowerCase() !== 'kt') {
+                            let converted = (num / 1.852).toFixed(1).replace('.', ',');
+                            return `${converted} kt`;
+                        }
+                        return match;
+                    });
+                }
+            });
+        }
+
+        if (localStorage.getItem('windUnit') === 'khr') {
+            windInKnots = false;
+            setTimeout(updateWindDisplay, 100);
+        }
+
+        fetch('https://countapi.mileshilliard.com/api/v1/hit/monitor-estaciones-meteotalc/visitas')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('visit-count').innerText = parseInt(data.value).toLocaleString();
+            })
+            .catch(error => {
+                document.getElementById('visit-count').innerText = "1";
+            });
+    </script>
+</body>
+</html>"""
+
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html)
+    print("✓ index.html actualizado correctamente.")
+
+def generar_json_esp32(resultados_totales):
+    estados_12_estaciones = [r['ok'] for r in resultados_totales]
+    data_json = {
+        "estaciones": estados_12_estaciones
+    }
+    
+    with open("estado_leds.json", "w", encoding="utf-8") as f:
+        json.dump(data_json, f)
+    print("✓ estado_leds.json generado con las 12 estaciones.")
+
+def ejecutar_monitoreo():
+    print(f"\n--- [{obtener_hora_chile().strftime('%H:%M:%S')}] Verificando litoral ---")
+    resultados_dict = {}
+    hubo_fallas = False
+
+    for est in ESTACIONES_DIRECTEMAR:
+        ok, estado, ultimo, temp, pres, viento, dir_viento, racha, precipitacion = consultar_directemar(est)
+        if not ok: hubo_fallas = True
+        resultados_dict[est["nombre"]] = {
+            "nombre": est["nombre"], "url": est["url"], "lat": est["lat"], "lon": est["lon"],
+            "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
+            "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
+        }
+
+    for faro in ESTACIONES_FAROS:
+        ok, estado, temp, pres, viento, dir_viento, racha, precipitacion, ultimo = consultar_wunderground_web(faro)
+        if not ok: hubo_fallas = True
+        resultados_dict[faro["nombre"]] = {
+            "nombre": faro["nombre"], "url": faro["url"], "lat": faro["lat"], "lon": faro["lon"],
+            "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
+            "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
+        }
+
+    for est_ifop in ESTACIONES_IFOP:
+        ok, estado, ultimo, temp, pres, viento, dir_viento, racha, precipitacion = consultar_ifop(est_ifop)
+        if not ok: hubo_fallas = True
+        resultados_dict[est_ifop["nombre"]] = {
+            "nombre": est_ifop["nombre"], "url": est_ifop["url"], "lat": est_ifop["lat"], "lon": est_ifop["lon"],
+            "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
+            "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
+        }
+
+    resultados_totales = [resultados_dict[nombre] for nombre in ORDEN_ESTACIONES if nombre in resultados_dict]
+    
+    generar_html(resultados_totales, hubo_fallas)
+    generar_json_esp32(resultados_totales)
+    subir_a_github()
+
+def subir_a_github():
+    try:
+        print("Sincronizando cambios con GitHub...")
+        subprocess.run(["git", "config", "--global", "user.name", "GitHub Actions Bot"], check=True)
+        subprocess.run(["git", "config", "--global", "user.email", "actions@github.com"], check=True)
+        
+        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Actualizar monitor y contador [skip ci]"], capture_output=True, text=True)
+        
+        if resultado.returncode != 0:
+            if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
+                print("Sin cambios nuevos para subir.")
+                return
+                
+        subprocess.run(["git", "pull", "--rebase"], check=True)
+        subprocess.run(["git", "push"], check=True)
+        print("✓ Sincronización completada con éxito.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error al sincronizar con Git: {e}")
+
+if __name__ == "__main__":
+    ejecutar_monitoreo()
