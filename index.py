@@ -819,11 +819,15 @@ def generar_html(resultados_totales, hay_alerta):
 
             try {{
                 let endpoint = 'get'; // Por defecto solo consultamos
-
-                // Suma 'hit' únicamente si el navegador está visible (humano real) y es la primera vez en la sesión
-                if (!sessionStorage.getItem('visita_registrada') && document.visibilityState === 'visible') {{
+                const ultimaVisita = localStorage.getItem('tiempo_ultima_visita');
+                const ahora = new Date().getTime();
+                
+                // Si nunca ha entrado o han pasado más de 30 minutos desde la última vez, y la página está visible
+                const tiempoTranscurrido = ultimaVisita ? (ahora - parseInt(ultimaVisita)) : Infinity;
+                
+                if (tiempoTranscurrido > 30 * 60 * 1000 && document.visibilityState === 'visible') {{
                     endpoint = 'hit';
-                    sessionStorage.setItem('visita_registrada', 'true');
+                    localStorage.setItem('tiempo_ultima_visita', ahora);
                 }}
 
                 let response = await fetch(`https://api.countapi.xyz/${{endpoint}}/${{namespace}}/${{key}}`, {{ signal: AbortSignal.timeout(4000) }});
@@ -832,19 +836,12 @@ def generar_html(resultados_totales, hay_alerta):
                 elem.innerText = data.value;
                 localStorage.setItem('ultimo_conteo_global', data.value);
             }} catch (error) {{
-                let fallback = localStorage.getItem('ultimo_conteo_global');
-                if (!fallback) {{
-                    fallback = 1250;
-                }} else if (sessionStorage.getItem('visita_registrada') !== 'true') {{
-                    fallback = parseInt(fallback) + 1;
-                    sessionStorage.setItem('visita_registrada', 'true');
-                }}
-                localStorage.setItem('ultimo_conteo_global', fallback);
+                let fallback = localStorage.getItem('ultimo_conteo_global') || 1250;
                 elem.innerText = fallback + " *";
             }}
         }}
 
-        // Ejecutar asegurando visibilidad real
+        // Ejecutar al cargar la página
         document.addEventListener("DOMContentLoaded", () => {{
             setTimeout(actualizarContadorGlobal, 1000);
         }});
@@ -914,7 +911,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con control estricto anti-bots/cronjobs para las visitas.")
+    print("✓ index.html actualizado con control de visitas por intervalo de tiempo.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -968,7 +965,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Actualizar contador para evitar conteos de visitas por CronJob [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Actualizar contador por intervalo de tiempo en localStorage [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
