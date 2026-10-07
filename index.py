@@ -880,7 +880,7 @@ def generar_html(resultados_totales, hay_alerta):
         try {
             let visits = localStorage.getItem('meteotalc_visits');
             if (!visits) {
-                visits = 1250; // Base inicial para que no empiece en 0
+                visits = 1; // <--- Modificado a 1 para comenzar desde el inicio
             } else {
                 visits = parseInt(visits) + 1;
             }
