@@ -341,4 +341,118 @@ def consultar_directemar(est):
                 return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
             if dif_min <= TOLERANCIA_MINUTOS or (170 <= dif_min <= 200):
-                return True, "OPERATIVA", fecha_str, temp, pres, viento,
+                return True, "OPERATIVA", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
+            else:
+                return False, f"DESACTUALIZADA ({int(dif_min)} min)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
+
+    except Exception as e:
+        print(f"Error Directemar {est['nombre']}: {e}")
+        return False, "SIN CONEXIÓN", "Error de red", "--", "--", "--", "", "--", "--"
+
+def consultar_wunderground_web(est):
+    try:
+        api_url = f"https://api.weather.com/v2/pws/observations/current?stationId={est['id']}&format=json&units=e&apiKey=e1f10a1e78da46f5b10a1e78da96f525"
+        req = urllib.request.Request(api_url, headers=HEADERS)
+        with urllib.request.urlopen(req, timeout=10, context=ctx) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            obs = data["observations"][0]
+            imperial = obs["imperial"]
+
+            temp_f = imperial.get("temp")
+            temp = f"{(temp_f - 32.0) * 5.0 / 9.0:.1f}°C" if temp_f is not None else "--"
+
+            pres_inHg = imperial.get("pressure")
+            pres = "--"
+            if pres_inHg is not None:
+                pres_val = pres_inHg * 33.86389
+                tendencia = gestionar_historial_presion(est["nombre"], pres_val)
+                pres = f"{pres_val:.1f} hPa{tendencia}"
+
+            viento_mph = imperial.get("windSpeed")
+            viento = f"{viento_mph / 1.15077945:.1f} kt" if viento_mph is not None else "--"
+
+            gust_mph = imperial.get("windGust")
+            racha = f"{gust_mph / 1.15077945:.1f} kt" if gust_mph is not None else "--"
+
+            wind_dir_deg = obs.get("winddir")
+            dir_viento = grados_a_cardinal(wind_dir_deg)
+
+            precip_in = imperial.get("precipTotal", 0.0)
+            if precip_in is not None:
+                precip_mm = precip_in * 25.4
+                precipitacion = f"{precip_mm:.1f} mm"
+            else:
+                precipitacion = "0.0 mm"
+
+            obs_time = obs.get("obsTimeLocal", "Reciente")
+
+            congelada = verificar_estacion_congelada(est["nombre"], temp, viento, racha)
+            if congelada:
+                return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", temp, pres, viento, dir_viento, racha, precipitacion, str(obs_time)
+
+            return True, "OPERATIVA", temp, pres, viento, dir_viento, racha, precipitacion, str(obs_time)
+    except Exception as e:
+        print(f"Error WU [{est['nombre']}]: {e}")
+        
+    return False, "SIN CONEXIÓN", "--", "--", "--", "", "--", "--", "Error de red"
+
+def consultar_ifop(est):
+    try:
+        req = urllib.request.Request(est["api_url"], headers=HEADERS)
+        with urllib.request.urlopen(req, timeout=10, context=ctx) as response:
+            texto_raw = response.read().decode("utf-8")
+            data = json.loads(texto_raw)
+
+            if isinstance(data, dict):
+                def extraer_datos_serie():
+                    val_t, fecha_t, val_p, p_pasado, val_v, val_r, val_d, val_pp = None, None, None, None, None, None, None, None
+                    hoy_chile = obtener_hora_chile().date()
+                    
+                    for k, serie in data.items():
+                        if isinstance(serie, dict):
+                            k_lower = k.lower().strip()
+                            lista_data = serie.get("data", [])
+                            
+                            if isinstance(lista_data, list) and len(lista_data) > 0:
+                                item_data = lista_data[0]
+                                if isinstance(item_data, dict) and "y" in item_data:
+                                    y_vals = item_data["y"]
+                                    x_vals = item_data.get("x", [])
+                                    if isinstance(y_vals, list) and len(y_vals) > 0:
+                                        actual = y_vals[-1]
+                                        f_act = x_vals[-1] if x_vals and len(x_vals) > 0 else None
+                                        
+                                        if any(sub in k_lower for sub in ["temp", "temperatura", "ta", "t_aire"]):
+                                            val_t, fecha_t = actual, f_act
+                                        elif any(sub in k_lower for sub in ["pres", "presion", "barom", "qfe", "qff"]):
+                                            val_p = actual
+                                            if len(y_vals) >= 180:
+                                                p_pasado = y_vals[-180]
+                                            elif len(y_vals) > 1:
+                                                p_pasado = y_vals[0]
+                                        elif any(sub in k_lower for sub in ["dir_viento", "dd", "dir", "direccion"]):
+                                            val_d = actual
+                                        elif any(sub in k_lower for sub in ["ff", "viento", "speed", "vel", "intensidad"]):
+                                            val_v = actual
+                                        elif any(sub in k_lower for sub in ["racha", "ráfaga", "rafaga", "gust", "max", "fx", "vmax", "vel_max"]):
+                                            val_r = actual
+                                        elif any(sub in k_lower for sub in ["lluvia", "pp", "precip", "precipitacion", "agua", "acum", "mm", "rain"]):
+                                            valores_hoy = []
+                                            if isinstance(x_vals, list) and len(x_vals) == len(y_vals):
+                                                for xv, yv in zip(x_vals, y_vals):
+                                                    if yv is not None and isinstance(yv, (int, float)):
+                                                        try:
+                                                            if isinstance(xv, (int, float)):
+                                                                dt = datetime.fromtimestamp(xv / 1000.0 if xv > 1e11 else xv, tz=ZONA_CHILE)
+                                                            elif isinstance(xv, str):
+                                                                dt = datetime.fromisoformat(xv.replace('Z', '+00:00')).astimezone(ZONA_CHILE)
+                                                            else:
+                                                                dt = None
+                                                            
+                                                            if dt and dt.date() == hoy_chile:
+                                                                valores_hoy.append(yv)
+                                                        except Exception:
+                                                            pass
+                                            
+                                            if valores_hoy:
+                                                val_pp = max(valores_hoy
