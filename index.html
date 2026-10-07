@@ -225,7 +225,7 @@
     </div>
     <h1>Monitor de Estaciones Automaticas</h1>
     <div class="subtitle-line2">Centro Zonal de Meteorologia Marina de Talcahuano</div>
-    <div class="subtitle">Ultima verificacion: 07-10-2026 08:50:22 (Tolerancia: 12 min)</div>
+    <div class="subtitle">Ultima verificacion: 07-10-2026 08:55:22 (Tolerancia: 12 min)</div>
     <div class="banner-alerta">⚠️ ¡ATENCION: HAY ESTACIONES CON FALLAS, DESACTUALIZADAS O CONGELADAS! ⚠️</div>
     <div class="summary">Estaciones Operativas: 11 de 12</div>
     <div id="map"></div>
@@ -329,7 +329,7 @@
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: 2026-10-07 08:50:17</span>
+                    <span class="time">Reporte: 2026-10-07 08:55:17</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -345,8 +345,8 @@
             <div class="card-body-content">
                 <div class="row-top">
                     <div class="item-box temp-box">🌡️ 13.4°C</div>
-                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ N/NE</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">0.2 kt</span></div>
-                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">3.5 kt</span></div>
+                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ N/NE</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">2.0 kt</span></div>
+                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">6.1 kt</span></div>
                 </div>
                 <div class="row-bottom">
                     <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1011.2 hPa ↗</span></div>
@@ -355,7 +355,7 @@
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: 07-10-2026 08:50:00</span>
+                    <span class="time">Reporte: 07-10-2026 08:55:00</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -381,7 +381,7 @@
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: 2026-10-07 08:50:00</span>
+                    <span class="time">Reporte: 2026-10-07 08:55:00</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -397,8 +397,8 @@
             <div class="card-body-content">
                 <div class="row-top">
                     <div class="item-box temp-box">🌡️ 13.4°C</div>
-                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ E/NE</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">3.5 kt</span></div>
-                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">6.1 kt</span></div>
+                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ E/NE</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">4.1 kt</span></div>
+                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">7.8 kt</span></div>
                 </div>
                 <div class="row-bottom">
                     <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1009.5 hPa ↗</span></div>
@@ -407,7 +407,7 @@
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: 07-10-2026 08:50:00</span>
+                    <span class="time">Reporte: 07-10-2026 08:55:00</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -557,11 +557,15 @@
 
             try {
                 let endpoint = 'get'; // Por defecto solo consultamos
-
-                // Suma 'hit' únicamente si el navegador está visible (humano real) y es la primera vez en la sesión
-                if (!sessionStorage.getItem('visita_registrada') && document.visibilityState === 'visible') {
+                const ultimaVisita = localStorage.getItem('tiempo_ultima_visita');
+                const ahora = new Date().getTime();
+                
+                // Si nunca ha entrado o han pasado más de 30 minutos desde la última vez, y la página está visible
+                const tiempoTranscurrido = ultimaVisita ? (ahora - parseInt(ultimaVisita)) : Infinity;
+                
+                if (tiempoTranscurrido > 30 * 60 * 1000 && document.visibilityState === 'visible') {
                     endpoint = 'hit';
-                    sessionStorage.setItem('visita_registrada', 'true');
+                    localStorage.setItem('tiempo_ultima_visita', ahora);
                 }
 
                 let response = await fetch(`https://api.countapi.xyz/${endpoint}/${namespace}/${key}`, { signal: AbortSignal.timeout(4000) });
@@ -570,19 +574,12 @@
                 elem.innerText = data.value;
                 localStorage.setItem('ultimo_conteo_global', data.value);
             } catch (error) {
-                let fallback = localStorage.getItem('ultimo_conteo_global');
-                if (!fallback) {
-                    fallback = 1250;
-                } else if (sessionStorage.getItem('visita_registrada') !== 'true') {
-                    fallback = parseInt(fallback) + 1;
-                    sessionStorage.setItem('visita_registrada', 'true');
-                }
-                localStorage.setItem('ultimo_conteo_global', fallback);
+                let fallback = localStorage.getItem('ultimo_conteo_global') || 1250;
                 elem.innerText = fallback + " *";
             }
         }
 
-        // Ejecutar asegurando visibilidad real
+        // Ejecutar al cargar la página
         document.addEventListener("DOMContentLoaded", () => {
             setTimeout(actualizarContadorGlobal, 1000);
         });
@@ -606,19 +603,19 @@
         
         L.circleMarker([-36.607, -73.049], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Faro Isla Quiriquina</b><br>Estado: OPERATIVA<br>Temp: 12.8°C | Viento: 13.9 kt (N/NE) | Racha: 18.2 kt | Pres: 1011.2 hPa ↗ | Lluvia: 6.3 mm<br>Reporte: 2026-10-07 08:50:17<br><a href='https://www.wunderground.com/dashboard/pws/ITALCA20' target='_blank'>Abrir enlace ↗</a>");
+        }).addTo(map).bindPopup("<b>Faro Isla Quiriquina</b><br>Estado: OPERATIVA<br>Temp: 12.8°C | Viento: 13.9 kt (N/NE) | Racha: 18.2 kt | Pres: 1011.2 hPa ↗ | Lluvia: 6.3 mm<br>Reporte: 2026-10-07 08:55:17<br><a href='https://www.wunderground.com/dashboard/pws/ITALCA20' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-36.712, -73.115], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Gobernacion Maritima de Talcahuano</b><br>Estado: OPERATIVA<br>Temp: 13.4°C | Viento: 0.2 kt (N/NE) | Racha: 3.5 kt | Pres: 1011.2 hPa ↗ | Lluvia: 13.4 mm<br>Reporte: 07-10-2026 08:50:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm' target='_blank'>Abrir enlace ↗</a>");
+        }).addTo(map).bindPopup("<b>Gobernacion Maritima de Talcahuano</b><br>Estado: OPERATIVA<br>Temp: 13.4°C | Viento: 2.0 kt (N/NE) | Racha: 6.1 kt | Pres: 1011.2 hPa ↗ | Lluvia: 13.4 mm<br>Reporte: 07-10-2026 08:55:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-36.745, -73.185], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Faro Punta Hualpen</b><br>Estado: OPERATIVA<br>Temp: 13.3°C | Viento: 8.7 kt (NE) | Racha: 11.3 kt | Pres: 1009.8 hPa ↗ | Lluvia: 14.2 mm<br>Reporte: 2026-10-07 08:50:00<br><a href='https://www.wunderground.com/dashboard/pws/IHUALP1' target='_blank'>Abrir enlace ↗</a>");
+        }).addTo(map).bindPopup("<b>Faro Punta Hualpen</b><br>Estado: OPERATIVA<br>Temp: 13.3°C | Viento: 8.7 kt (NE) | Racha: 11.3 kt | Pres: 1009.8 hPa ↗ | Lluvia: 14.2 mm<br>Reporte: 2026-10-07 08:55:00<br><a href='https://www.wunderground.com/dashboard/pws/IHUALP1' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-37.02, -73.15], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Capitania de Puerto Coronel</b><br>Estado: OPERATIVA<br>Temp: 13.4°C | Viento: 3.5 kt (E/NE) | Racha: 6.1 kt | Pres: 1009.5 hPa ↗ | Lluvia: 28.2 mm<br>Reporte: 07-10-2026 08:50:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/coronel/index.htm' target='_blank'>Abrir enlace ↗</a>");
+        }).addTo(map).bindPopup("<b>Capitania de Puerto Coronel</b><br>Estado: OPERATIVA<br>Temp: 13.4°C | Viento: 4.1 kt (E/NE) | Racha: 7.8 kt | Pres: 1009.5 hPa ↗ | Lluvia: 28.2 mm<br>Reporte: 07-10-2026 08:55:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/coronel/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-37.09, -73.15], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
