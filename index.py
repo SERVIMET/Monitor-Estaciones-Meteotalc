@@ -511,32 +511,6 @@ def consultar_ifop(est):
         print(f"Error IFOP [{est['nombre']}]: {e}")
         return False, "SIN CONEXION", str(e)[:30], "--", "--", "--", "", "--", "--"
 
-def crear_manifest():
-    """Crea el archivo manifest.json necesario para la PWA."""
-    manifest_data = {
-        "name": "Monitor Estaciones MeteoTalcahuano",
-        "short_name": "MeteoTalcahuano",
-        "start_url": "./index.html",
-        "display": "standalone",
-        "background_color": "#f4f6f9",
-        "theme_color": "#0f2942",
-        "icons": [
-            {
-                "src": "icon-192.png",
-                "sizes": "192x192",
-                "type": "image/png"
-            },
-            {
-                "src": "icon-512.png",
-                "sizes": "512x512",
-                "type": "image/png"
-            }
-        ]
-    }
-    
-    with open("manifest.json", "w", encoding="utf-8") as f:
-        json.dump(manifest_data, f, indent=4, ensure_ascii=False)
-
 def generar_html(resultados_totales, hay_alerta):
     total_estaciones = len(resultados_totales)
     operativas = sum(1 for r in resultados_totales if r['ok'] is True)
@@ -604,15 +578,6 @@ def generar_html(resultados_totales, hay_alerta):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="30">
-    
-    <!-- Configuraciones PWA y Móviles -->
-    <meta name="theme-color" content="#0f2942">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="MeteoTalcahuano">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-
     <title>Monitor de Estaciones Automaticas</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -842,7 +807,7 @@ def generar_html(resultados_totales, hay_alerta):
         {cards_html}
     </div>
     <div style="text-align: center;">
-        <div class="footer-dev">Desarrollado por Sgto 2° (Met.) Luis Diego Achurra Garcés &nbsp;|&nbsp; 👁️ <span id="visit-count">Cargando...</span></div>
+        <div class="footer-dev">Desarrollado por Sgto 2° (Met.) Luis Diego Achurra Garcés &nbsp;|&nbsp; 👁️ <a href="https://www.freecounterstat.com" title="web counter" style="color: inherit; text-decoration: none;"><img src="https://counter9.optistat.ovh/private/freecounterstat.ch?c=6b4j5x89e2wks8lyhpxq4384j227s92k" border="0" title="web counter" alt="web counter" style="vertical-align: middle; display: inline-block;"></a></div>
     </div>
     
     <!-- Banner amigable para instalar la App -->
@@ -896,41 +861,6 @@ def generar_html(resultados_totales, hay_alerta):
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        async function actualizarContadorGlobal() {{
-            const namespace = 'meteotalcahuano_estaciones';
-            const key = 'visitas_totales';
-            const elem = document.getElementById('visit-count');
-            if (!elem) return;
-
-            try {{
-                let endpoint = 'get'; // Por defecto solo consultamos
-                const ultimaVisita = localStorage.getItem('tiempo_ultima_visita');
-                const ahora = new Date().getTime();
-                
-                // Si nunca ha entrado o han pasado más de 30 minutos desde la última vez, y la página está visible
-                const tiempoTranscurrido = ultimaVisita ? (ahora - parseInt(ultimaVisita)) : Infinity;
-                
-                if (tiempoTranscurrido > 30 * 60 * 1000 && document.visibilityState === 'visible') {{
-                    endpoint = 'hit';
-                    localStorage.setItem('tiempo_ultima_visita', ahora);
-                }}
-
-                let response = await fetch(`https://api.countapi.xyz/${{endpoint}}/${{namespace}}/${{key}}`, {{ signal: AbortSignal.timeout(4000) }});
-                if (!response.ok) throw new Error('Error en red');
-                let data = await response.json();
-                elem.innerText = data.value;
-                localStorage.setItem('ultimo_conteo_global', data.value);
-            }} catch (error) {{
-                let fallback = localStorage.getItem('ultimo_conteo_global') || 1250;
-                elem.innerText = fallback + " *";
-            }}
-        }}
-
-        // Ejecutar al cargar la página
-        document.addEventListener("DOMContentLoaded", () => {{
-            setTimeout(actualizarContadorGlobal, 1000);
-        }});
-
         var map = L.map('map').setView([-37.5, -73.2], 7);
         L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
             maxZoom: 12, attribution: '© OpenStreetMap contributors'
@@ -996,7 +926,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con control de visitas por intervalo de tiempo y PWA.")
+    print("✓ index.html actualizado con contador web robusto sin asteriscos.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1042,7 +972,6 @@ def ejecutar_monitoreo():
 
     resultados_totales = [resultados_dict[nombre] for nombre in ORDEN_ESTACIONES if nombre in resultados_dict]
     
-    crear_manifest()
     generar_html(resultados_totales, hubo_fallas)
     generar_json_esp32(resultados_totales)
     subir_a_github()
@@ -1050,8 +979,8 @@ def ejecutar_monitoreo():
 def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
-        subprocess.run(["git", "add", "index.html", "manifest.json", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Actualizar contador por intervalo de tiempo y soporte PWA [skip ci]"], capture_output=True, text=True)
+        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Actualizar contador de visitas robusto sin asteriscos [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
