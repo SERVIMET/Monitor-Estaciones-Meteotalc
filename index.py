@@ -877,13 +877,19 @@ def generar_html(resultados_totales, hay_alerta):
         }
 
         fetch('https://api.counterapi.dev/v1/monitor-estaciones-meteotalc/visitas/up')
+            .then(response => {
+                if (!response.ok) {
+                    return fetch('https://api.counterapi.dev/v0/monitor-estaciones-meteotalc/visitas/up');
+                }
+                return response;
+            })
             .then(response => response.json())
             .then(data => {
-                let visitas = data.count !== undefined ? data.count : 0;
+                let visitas = data.count !== undefined ? data.count : (data.value !== undefined ? data.value : 0);
                 document.getElementById('visit-count').innerText = visitas.toLocaleString();
             })
             .catch(error => {
-                document.getElementById('visit-count').innerText = "0";
+                document.getElementById('visit-count').innerText = "1";
             });
     </script>
 </body>
