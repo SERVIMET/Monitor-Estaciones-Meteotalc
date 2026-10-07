@@ -9,12 +9,11 @@ import time
 import urllib.request
 
 # ==========================================
-# CONFIGURACION GENERAL
+# CONFIGURACIÓN GENERAL
 # ==========================================
 TOLERANCIA_MINUTOS = 12
 LIMITE_LECTURAS_REPETIDAS = 10
 ZONA_CHILE = ZoneInfo("America/Santiago")
-ZONA_PASCUA = ZoneInfo("Pacific/Easter")  # Zona horaria específica para Isla de Pascua y estaciones insulares
 ARCHIVO_HISTORIAL = "historial_presion.json"
 ARCHIVO_CONGELADAS = "historial_congeladas.json"
 
@@ -24,145 +23,117 @@ HEADERS = {
     "Accept-Language": "es-ES,es;q=0.9",
 }
 
-# Contexto SSL flexible para evitar bloqueos por certificados en servidores antiguos
 ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
 # ==========================================
-# ESTACIONES DIRECTEMAR (Clásicas de texto)
+# ESTACIONES DIRECTEMAR
 # ==========================================
 ESTACIONES_DIRECTEMAR = [
     {
-        "nombre": "Capitania de Puerto Chanaral",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/chanaral/index.htm",
-        "lat": -26.347,
-        "lon": -70.621,
+        "nombre": "Capitanía de Puerto Constitución",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/constitucion/index.htm",
+        "lat": -35.3241667,
+        "lon": -72.40805555,
     },
     {
-        "nombre": "Capitania de Puerto Caldera",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/caldera/index.htm",
-        "lat": -27.068,
-        "lon": -70.819,
+        "nombre": "Capitanía de Puerto Lirquén",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/lirquen/index.htm",
+        "lat": -36.7027778,
+        "lon": -72.9775,
     },
     {
-        "nombre": "Capitania de Puerto Hanga Roa",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/pascua/index.htm",
-        "lat": -27.150,
-        "lon": -109.429,
-        "es_insular": True,
+        "nombre": "Gobernación Marítima de Talcahuano",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm",
+        "lat": -36.712,
+        "lon": -73.115,
     },
     {
-        "nombre": "Capitania de Puerto Huasco",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/huasco/index.htm",
-        "lat": -28.468,
-        "lon": -71.226,
+        "nombre": "Capitanía de Puerto Coronel",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/coronel/index.htm",
+        "lat": -37.020,
+        "lon": -73.150,
     },
     {
-        "nombre": "Faro Punta Tortuga Coquimbo",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/tortuga/index.htm",
-        "lat": -29.939,
-        "lon": -71.352,
+        "nombre": "Capitanía de Puerto Lota",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/lota/index.htm",
+        "lat": -37.090,
+        "lon": -73.150,
     },
     {
-        "nombre": "Capitania de Puerto Los Vilos",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/losvilos/index.htm",
-        "lat": -31.916,
-        "lon": -71.516,
+        "nombre": "Capitanía de Puerto Lebu",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/lebu/index.htm",
+        "lat": -37.606,
+        "lon": -73.650,
     },
     {
-        "nombre": "Capitania de Puerto Quintero",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/quintero/index.htm",
-        "lat": -32.778,
-        "lon": -71.531,
+        "nombre": "Capitanía de Puerto Carahue",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/carahue/index.htm",
+        "lat": -38.788,
+        "lon": -73.397,
     },
     {
-        "nombre": "Colegio Capellan Pascal (Las Salinas)",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/lassalinas/index.htm",
-        "lat": -33.015,
-        "lon": -71.550,
-    },
-    {
-        "nombre": "Faro Extremo Molo de Abrigo Valparaiso",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/valparaiso/index.htm",
-        "lat": -33.036,
-        "lon": -71.631,
-    },
-    {
-        "nombre": "Faro Punta Panul San Antonio",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/panul/index.htm",
-        "lat": -33.578,
-        "lon": -71.616,
-    },
-    {
-        "nombre": "Capitania de Puerto Juan Fernandez",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/cumberland/index.htm",
-        "lat": -33.635,
-        "lon": -78.841,
-        "es_insular": True,
-    },
-    {
-        "nombre": "Capitania de Puerto Pichilemu",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/pichilemu/index.htm",
-        "lat": -34.391,
-        "lon": -72.001,
+        "nombre": "Capitanía de Puerto Corral",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/corral/index.htm",
+        "lat": -39.883,
+        "lon": -73.433,
     },
 ]
 
 # ==========================================
-# ESTACIONES WEATHERLINK
+# FAROS WEATHER UNDERGROUND
 # ==========================================
-ESTACIONES_WEATHERLINK = [
+ESTACIONES_FAROS = [
     {
-        "nombre": "Universidad de Valparaiso (sede Montemar)",
-        "url": "https://weatherlink.com/embeddablePage/show/a1debe35d26b4e2dbcf82122501f5fa6/fullscreen",
-        "lat": -32.952,
-        "lon": -71.553,
+        "nombre": "Faro Isla Quiriquina",
+        "id": "ITALCA20",
+        "url": "https://www.wunderground.com/dashboard/pws/ITALCA20",
+        "lat": -36.607,
+        "lon": -73.049,
     },
     {
-        "nombre": "Club de Yates Recreo (Vina del Mar)",
-        "url": "https://weatherlink.com/embeddablePage/show/0c66339eed4f47d4a9240ed0b66c992/fullscreen",
-        "lat": -33.027,
-        "lon": -71.554,
+        "nombre": "Faro Punta Hualpén",
+        "id": "IHUALP1",
+        "url": "https://www.wunderground.com/dashboard/pws/IHUALP1",
+        "lat": -36.745,
+        "lon": -73.185,
+    },
+]
+
+# ==========================================
+# ESTACIONES IFOP / API JSON
+# ==========================================
+ESTACIONES_IFOP = [
+    {
+        "nombre": "Faro Cabo Carranza",
+        "url": "https://giscc.ifop.cl/doma_met/",
+        "api_url": "https://giscc.ifop.cl/siom-enoscc//get_est_met/22",
+        "lat": -35.5608333,
+        "lon": -72.6177777,
     },
     {
-        "nombre": "WL Chilquinta Muelle Baron (Valparaiso)",
-        "url": "https://weatherlink.com/embeddablePage/show/6342b5802c854216a359487f335f3718/fullscreen",
-        "lat": -33.042,
-        "lon": -71.603,
-    },
-    {
-        "nombre": "Dique Flotante Valparaiso III",
-        "url": "https://weatherlink.com/embeddablePage/show/1e4869cc59824e6893fc56b963304664/fullscreen",
-        "lat": -33.038,
-        "lon": -71.621,
-    },
-    {
-        "nombre": "Cofradia Nautica del Pacifico (Algarrobo)",
-        "url": "https://weatherlink.com/embeddablePage/show/9fa531d050e648a9a8aa6bb7026c3902/fullscreen",
-        "lat": -33.367,
-        "lon": -71.666,
+        "nombre": "Faro Isla Mocha",
+        "url": "https://giscc.ifop.cl/doma_met/",
+        "api_url": "https://giscc.ifop.cl/siom-enoscc//get_est_met/34",
+        "lat": -38.3849472,
+        "lon": -73.8688523,
     },
 ]
 
 ORDEN_ESTACIONES = [
-    "Capitania de Puerto Chanaral",
-    "Capitania de Puerto Caldera",
-    "Capitania de Puerto Hanga Roa",
-    "Capitania de Puerto Huasco",
-    "Faro Punta Tortuga Coquimbo",
-    "Capitania de Puerto Los Vilos",
-    "Capitania de Puerto Quintero",
-    "Universidad de Valparaiso (sede Montemar)",
-    "Colegio Capellan Pascal (Las Salinas)",
-    "Club de Yates Recreo (Vina del Mar)",
-    "WL Chilquinta Muelle Baron (Valparaiso)",
-    "Dique Flotante Valparaiso III",
-    "Faro Extremo Molo de Abrigo Valparaiso",
-    "Cofradia Nautica del Pacifico (Algarrobo)",
-    "Faro Punta Panul San Antonio",
-    "Capitania de Puerto Juan Fernandez",
-    "Capitania de Puerto Pichilemu",
+    "Capitanía de Puerto Constitución",
+    "Faro Cabo Carranza",
+    "Capitanía de Puerto Lirquén",
+    "Faro Isla Quiriquina",
+    "Gobernación Marítima de Talcahuano",
+    "Faro Punta Hualpén",
+    "Capitanía de Puerto Coronel",
+    "Capitanía de Puerto Lota",
+    "Capitanía de Puerto Lebu",
+    "Faro Isla Mocha",
+    "Capitanía de Puerto Carahue",
+    "Capitanía de Puerto Corral",
 ]
 
 def obtener_hora_chile():
@@ -197,6 +168,10 @@ def grados_a_cardinal(grados):
     return formatear_direccion(direcciones[indice])
 
 def verificar_estacion_congelada(nombre_estacion, temp, viento, racha):
+    estaciones_excluidas = ["faro cabo carranza", "faro isla mocha"]
+    if nombre_estacion.lower() in estaciones_excluidas:
+        return False
+
     historial = {}
     if os.path.exists(ARCHIVO_CONGELADAS):
         try:
@@ -346,7 +321,7 @@ def consultar_directemar(est):
 
             match_fecha = re.search(r'(?:Page\s+updated|Actualizado)\s+(\d{1,2}-\d{1,2}-\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?)', texto_plano, re.IGNORECASE)
             if not match_fecha:
-                return False, "SIN FECHA", "N/D", temp, pres, viento, dir_viento, racha, precipitacion
+                return False, "SIN DATOS VÁLIDOS", "N/D", temp, pres, viento, dir_viento, racha, precipitacion
 
             fecha_str = match_fecha.group(1)
             partes_f = fecha_str.split()
@@ -358,529 +333,76 @@ def consultar_directemar(est):
                     fecha_str = f"{fecha_p} {':'.join(sub_hora)}"
 
             formato_fecha = "%d-%m-%Y %H:%M:%S" if fecha_str.count(":") == 2 else "%d-%m-%Y %H:%M"
-            
-            try:
-                if est.get("es_insular"):
-                    fecha_estacion = datetime.strptime(fecha_str, formato_fecha).replace(tzinfo=ZONA_PASCUA)
-                    ahora_local = datetime.now(ZONA_PASCUA)
-                else:
-                    fecha_estacion = datetime.strptime(fecha_str, formato_fecha).replace(tzinfo=ZONA_CHILE)
-                    ahora_local = obtener_hora_chile()
-
-                dif_min = abs((ahora_local - fecha_estacion).total_seconds() / 60)
-                limite_actual = TOLERANCIA_MINUTOS
-            except Exception:
-                dif_min = 0 
+            fecha_estacion = datetime.strptime(fecha_str, formato_fecha).replace(tzinfo=ZONA_CHILE)
+            dif_min = abs((obtener_hora_chile() - fecha_estacion).total_seconds() / 60)
 
             congelada = verificar_estacion_congelada(est["nombre"], temp, viento, racha)
             if congelada:
                 return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
-            if dif_min <= limite_actual:
+            if dif_min <= TOLERANCIA_MINUTOS or (170 <= dif_min <= 200):
                 return True, "OPERATIVA", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
             else:
                 return False, f"DESACTUALIZADA ({int(dif_min)} min)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
     except Exception as e:
         print(f"Error Directemar {est['nombre']}: {e}")
-        return False, "SIN CONEXION", "Error de red", "--", "--", "--", "", "--", "--"
+        return False, "SIN CONEXIÓN", "Error de red", "--", "--", "--", "", "--", "--"
 
-def consultar_weatherlink(est):
+def consultar_wunderground_web(est):
     try:
-        req = urllib.request.Request(est["url"], headers=HEADERS)
+        api_url = f"https://api.weather.com/v2/pws/observations/current?stationId={est['id']}&format=json&units=e&apiKey=e1f10a1e78da46f5b10a1e78da96f525"
+        req = urllib.request.Request(api_url, headers=HEADERS)
         with urllib.request.urlopen(req, timeout=10, context=ctx) as response:
-            html = response.read().decode("utf-8", errors="ignore")
-            
-            texto_plano = re.sub(r'<[^>]+>', ' ', html)
-            texto_plano = texto_plano.replace('\xa5', ' ').replace('\xa0', ' ').replace('&nbsp;', ' ').replace('&deg;', '°').replace('&#176;', '°')
-            texto_plano = re.sub(r'\s+', ' ', texto_plano).strip()
+            data = json.loads(response.read().decode("utf-8"))
+            obs = data["observations"][0]
+            imperial = obs["imperial"]
 
-            temp, pres, viento, dir_viento, racha, precipitacion = "--", "--", "--", "", "--", "--"
-            pres_val = None
+            temp_f = imperial.get("temp")
+            temp = f"{(temp_f - 32.0) * 5.0 / 9.0:.1f}°C" if temp_f is not None else "--"
 
-            temp_match = re.search(r'([\-]?\d+(?:[.,]\d+)?)\s*°\s*C\s+currently', texto_plano, re.IGNORECASE)
-            if temp_match:
-                val = convertir_numero(temp_match.group(1))
-                if val is not None:
-                    temp = f"{val:.1f}°C"
+            pres_inHg = imperial.get("pressure")
+            pres = "--"
+            if pres_inHg is not None:
+                pres_val = pres_inHg * 33.86389
+                tendencia = gestionar_historial_presion(est["nombre"], pres_val)
+                pres = f"{pres_val:.1f} hPa{tendencia}"
 
-            viento_match = re.search(r'Wind\s*[:]\s*(\d+(?:[.,]\d+)?)\s*(?:knots|kt|nudos|km/h)?\s*([N,S,E,W]{1,3})?', texto_plano, re.IGNORECASE)
-            if viento_match:
-                val = convertir_numero(viento_match.group(1))
-                if val is not None:
-                    unidad_v = "km/h" if "km/h" in texto_plano.lower() else "kt"
-                    viento = f"{val:.1f} {unidad_v}"
-                if viento_match.group(2):
-                    dir_viento = formatear_direccion(viento_match.group(2))
+            viento_mph = imperial.get("windSpeed")
+            viento = f"{viento_mph / 1.15077945:.1f} kt" if viento_mph is not None else "--"
 
-            racha_match = re.search(r'High\s+gust\s*(\d+(?:[.,]\d+)?)\s*(?:knots|kt|nudos|km/h)?', texto_plano, re.IGNORECASE)
-            if racha_match:
-                val = convertir_numero(racha_match.group(1))
-                if val is not None:
-                    racha = f"{val:.1f} kt"
+            gust_mph = imperial.get("windGust")
+            racha = f"{gust_mph / 1.15077945:.1f} kt" if gust_mph is not None else "--"
 
-            pres_match = re.search(r'Barometer\s*[:]?\s*([\d.,]+)\s*(?:hPa|mb)', texto_plano, re.IGNORECASE)
-            if pres_match:
-                pres_val = convertir_numero(pres_match.group(1))
-                if pres_val is not None:
-                    tendencia = gestionar_historial_presion(est["nombre"], pres_val)
-                    pres = f"{pres_val:.1f} hPa{tendencia}"
+            wind_dir_deg = obs.get("winddir")
+            dir_viento = grados_a_cardinal(wind_dir_deg)
 
-            pp_match = re.search(r'Rain\s*[:]?\s*([\d.,]+)\s*mm', texto_plano, re.IGNORECASE)
-            if pp_match:
-                val = convertir_numero(pp_match.group(1))
-                if val is not None:
-                    precipitacion = f"{val:.1f} mm"
+            precip_in = imperial.get("precipTotal", 0.0)
+            if precip_in is not None:
+                precip_mm = precip_in * 25.4
+                precipitacion = f"{precip_mm:.1f} mm"
+            else:
+                precipitacion = "0.0 mm"
 
-            match_fecha = re.search(r'Weather\s+Conditions\s+as\s+of\s*[:]?\s*([^\n]+)', texto_plano, re.IGNORECASE)
-            fecha_str = match_fecha.group(1).strip() if match_fecha else "Reciente"
+            obs_time = obs.get("obsTimeLocal", "Reciente")
 
-            es_valido = (temp != "--" or viento != "--" or pres != "--")
             congelada = verificar_estacion_congelada(est["nombre"], temp, viento, racha)
             if congelada:
-                return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
+                return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", temp, pres, viento, dir_viento, racha, precipitacion, str(obs_time)
 
-            estado_txt = "OPERATIVA" if es_valido else "SIN DATOS VALIDOS"
-            return es_valido, estado_txt, fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
-
+            return True, "OPERATIVA", temp, pres, viento, dir_viento, racha, precipitacion, str(obs_time)
     except Exception as e:
-        print(f"Error WeatherLink [{est['nombre']}]: {e}")
-        return False, "SIN CONEXION", str(e)[:30], "--", "--", "--", "", "--", "--"
-
-def generar_html(resultados_totales, hay_alerta):
-    total_estaciones = len(resultados_totales)
-    operativas = sum(1 for r in resultados_totales if r['ok'] is True)
-
-    markers_js = ""
-    for r in resultados_totales:
-        color = "green" if r['ok'] else "red"
-        dir_txt = f" ({r['dir_viento']})" if r['dir_viento'] else ""
-        popup_txt = f"<b>{r['nombre']}</b><br>Estado: {r['estado']}<br>Temp: {r['temp']} | Viento: {r['viento']}{dir_txt} | Racha: {r['racha']} | Pres: {r['pres']} | Lluvia: {r['precipitacion']}<br>Reporte: {r['ultimo']}<br><a href='{r['url']}' target='_blank'>Abrir enlace ↗</a>"
+        print(f"Error WU [{est['nombre']}]: {e}")
         
-        markers_js += f"""
-        L.circleMarker([{r['lat']}, {r['lon']}], {{
-            color: '{color}', fillColor: '{color}', fillOpacity: 0.8, radius: 9
-        }}).addTo(map).bindPopup("{popup_txt}");
-        """
+    return False, "SIN CONEXIÓN", "--", "--", "--", "", "--", "--", "Error de red"
 
-    cards_html = ""
-    for r in resultados_totales:
-        clase = "ok" if r['ok'] else "error"
-        icono = "🔴" if not r['ok'] else "🟢"
-        footer_texto = f"Reporte: {r['ultimo']}"
-
-        if r['dir_viento']:
-            viento_contenido = f'<span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ {r["dir_viento"]}</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
-        else:
-            viento_contenido = f'<span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
-
-        cuerpo_tarjeta = f"""
-            <div class="card-body-content">
-                <div class="row-top">
-                    <div class="item-box temp-box">🌡️ {r['temp']}</div>
-                    <div class="item-box">{viento_contenido}</div>
-                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r['racha']}</span></div>
-                </div>
-                <div class="row-bottom">
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ {r['pres']}</span></div>
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ {r['precipitacion']}</span></div>
-                </div>
-            </div>
-        """
-
-        cards_html += f"""
-        <a href="{r['url']}" target="_blank" class="card-link">
-            <div class="card {clase}">
-                <div class="card-header">
-                    <span class="station-name">{r['nombre']}</span>
-                    <span class="status-badge">{icono}</span>
-                </div>
-                {cuerpo_tarjeta}
-                <div class="card-footer-info">
-                    <span class="time">{footer_texto}</span>
-                    <span class="click-text">Ver ↗</span>
-                </div>
-            </div>
-        </a>
-        """
-
-    alerta_class = "alerta-activa" if hay_alerta else ""
-    alerta_banner = '<div class="banner-alerta">⚠️ ¡ATENCION: HAY ESTACIONES CON FALLAS, DESACTUALIZADAS O CONGELADAS! ⚠️</div>' if hay_alerta else ""
-    hora_actual_chile = obtener_hora_chile().strftime("%d-%m-%Y %H:%M:%S")
-
-    html = f"""<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="30">
-    <title>Monitor de Estaciones Automaticas</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        :root {{
-            --bg-color: #f4f6f9;
-            --text-color: #1e293b;
-            --h1-color: #0f2942;
-            --sub2-color: #1e40af;
-            --sub-color: #64748b;
-            --summary-bg: #ffffff;
-            --summary-border: #cbd5e1;
-            --summary-text: #0f2942;
-            --card-ok-bg: linear-gradient(135deg, #dbeafe 0%, #cbd5e1 55%, #94a3b8 100%);
-            --card-ok-border: #94a3b8;
-            --card-error-bg: linear-gradient(135deg, #fee2e2 0%, #fecaca 55%, #f87171 100%);
-            --card-error-border: #f87171;
-            --station-name-color: #0f172a;
-            --item-bg: rgba(255, 255, 255, 0.9);
-            --item-border: rgba(255, 255, 255, 0.95);
-            --item-text: #0f172a;
-            --time-color: #334155;
-            --click-color: #1d4ed8;
-            --wind-color: #1d4ed8;
-            --footer-border: rgba(255, 255, 255, 0.4);
-        }}
-
-        body.dark-mode {{
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            --h1-color: #ffffff;
-            --sub2-color: #60a5fa;
-            --sub-color: #94a3b8;
-            --summary-bg: #1e1e1e;
-            --summary-border: #333333;
-            --summary-text: #ffffff;
-            --card-ok-bg: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            --card-ok-border: #334155;
-            --card-error-bg: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
-            --card-error-border: #991b1b;
-            --station-name-color: #f8fafc;
-            --item-bg: rgba(30, 41, 59, 0.85);
-            --item-border: rgba(51, 65, 85, 0.8);
-            --item-text: #f1f5f9;
-            --time-color: #cbd5e1;
-            --click-color: #60a5fa;
-            --wind-color: #60a5fa;
-            --footer-border: rgba(255, 255, 255, 0.1);
-        }}
-
-        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); padding: 15px; margin: 0; transition: background-color 0.3s ease, color 0.3s ease; }}
-        h1 {{ text-align: center; color: var(--h1-color); margin-bottom: 0; font-size: 22px; line-height: 1.2; font-weight: 700; }}
-        .subtitle-line2 {{ text-align: center; color: var(--sub2-color); margin-bottom: 6px; font-size: 16px; font-weight: bold; }}
-        .subtitle {{ text-align: center; color: var(--sub-color); margin-bottom: 12px; font-size: 12px; }}
-        .summary {{ text-align: center; font-weight: bold; margin-bottom: 15px; color: var(--summary-text); font-size: 14px; background: var(--summary-bg); padding: 6px 16px; border-radius: 20px; max-width: 280px; margin-left: auto; margin-right: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.06); border: 1px solid var(--summary-border); }}
-        
-        @keyframes parpadeoFondo {{ 
-            0% {{ background-color: var(--bg-color); }} 
-            50% {{ background-color: #fca5a5; }} 
-            100% {{ background-color: var(--bg-color); }} 
-        }}
-        body.alerta-activa {{ animation: parpadeoFondo 1.5s infinite; }}
-        
-        body.dark-mode.alerta-activa {{ 
-            animation: none !important; 
-            background-color: #121212 !important; 
-        }}
-
-        .banner-alerta {{ background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }}
-        #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
-        
-        .grid {{ 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); 
-            gap: 15px; 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            align-items: stretch; 
-        }}
-        
-        .card-link {{ text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; }}
-        .card {{ 
-            border-radius: 14px; 
-            padding: 10px 10px; 
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%; 
-            box-sizing: border-box;
-        }}
-        .card.ok {{ 
-            background: var(--card-ok-bg); 
-            border: 1px solid var(--card-ok-border);
-            border-left: 6px solid #16a34a; 
-        }}
-        .card.error {{ 
-            background: var(--card-error-bg); 
-            border: 1px solid var(--card-error-border);
-            border-left: 6px solid #dc2626; 
-        }}
-        .card:hover {{ 
-            transform: translateY(-3px); 
-            box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); 
-        }}
-        .card.error:hover {{
-            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3); 
-        }}
-        
-        .card-header {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }}
-        .station-name {{ font-weight: bold; font-size: 13.5px; color: var(--station-name-color); line-height: 1.1; }}
-        .status-badge {{ font-size: 11px; }}
-        
-        .card-body-content {{
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            margin: 4px 0;
-        }}
-        .row-top, .row-bottom {{
-            display: grid;
-            gap: 4px;
-        }}
-        .row-top {{
-            grid-template-columns: 1.1fr 1fr 1fr;
-        }}
-        .row-bottom {{
-            grid-template-columns: 1fr 1fr;
-        }}
-        
-        .item-box {{
-            background: var(--item-bg);
-            padding: 4px 2px;
-            border-radius: 6px;
-            border: 1px solid var(--item-border);
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            white-space: nowrap;
-            color: var(--item-text);
-        }}
-        .temp-box {{
-            font-size: 0.85em;
-            font-weight: 800;
-            color: var(--item-text);
-        }}
-        
-        .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; }}
-        .time {{ font-size: 0.68em; color: var(--time-color); }}
-        .click-text {{ font-size: 0.68em; color: var(--click-color); font-weight: bold; font-style: italic; }}
-        
-        .footer-dev {{ background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: inline-flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: center; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }}
-        
-        .floating-controls {{
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            z-index: 1000;
-        }}
-
-        .icon-btn {{
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--summary-bg);
-            color: var(--text-color);
-            border: 1px solid var(--summary-border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            transition: all 0.2s ease;
-            padding: 0;
-        }}
-        
-        .icon-btn:hover {{
-            transform: scale(1.1);
-        }}
-
-        .wind-unit-btn {{
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }}
-
-        @media (max-width: 600px) {{
-            h1 {{
-                padding-right: 45px;
-                font-size: 19px;
-            }}
-            .floating-controls {{
-                top: 8px;
-                right: 8px;
-            }}
-            .icon-btn {{
-                width: 32px;
-                height: 32px;
-                font-size: 12px;
-            }}
-            .wind-unit-btn {{
-                font-size: 10px;
-            }}
-        }}
-    </style>
-</head>
-<body class="{alerta_class}">
-    <div class="floating-controls">
-        <button class="icon-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="Cambiar Modo Oscuro/Claro">🌙</button>
-        <button class="icon-btn wind-unit-btn" onclick="toggleWindUnit()" id="windUnitBtn" title="Cambiar Unidad de Viento">kt</button>
-    </div>
-    <h1>Monitor de Estaciones Automaticas</h1>
-    <div class="subtitle-line2">Centro Zonal de Meteorologia Marina de Talcahuano</div>
-    <div class="subtitle">Ultima verificacion: {hora_actual_chile} (Tolerancia: {TOLERANCIA_MINUTOS} min)</div>
-    {alerta_banner}
-    <div class="summary">Estaciones Operativas: {operativas} de {total_estaciones}</div>
-    <div id="map"></div>
-    <div class="grid">
-        {cards_html}
-    </div>
-    <div style="text-align: center;">
-        <div class="footer-dev">
-            <span>Sgto 2 (Met) Luis Diego Achurra Garces</span>
-            <span style="font-size: 0.9em; opacity: 0.85; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 15px;">
-                👁️ Vistas: <span id="visit-count">...</span>
-            </span>
-        </div>
-    </div>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        var map = L.map('map').setView([-30.5, -71.5], 6);
-        L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
-            maxZoom: 12, attribution: '© OpenStreetMap contributors'
-        }}).addTo(map);
-        {markers_js}
-
-        function toggleDarkMode() {{
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-            updateButtonText(isDark);
-        }}
-
-        function updateButtonText(isDark) {{
-            const btn = document.getElementById('darkModeBtn');
-            if (btn) btn.innerHTML = isDark ? '☀️' : '🌙';
-        }}
-
-        if (localStorage.getItem('darkMode') === 'enabled') {{
-            document.body.classList.add('dark-mode');
-            updateButtonText(true);
-        }}
-
-        let windInKnots = true;
-
-        function toggleWindUnit() {{
-            windInKnots = !windInKnots;
-            localStorage.setItem('windUnit', windInKnots ? 'kt' : 'khr');
-            updateWindDisplay();
-        }}
-
-        function updateWindDisplay() {{
-            const btn = document.getElementById('windUnitBtn');
-            if (btn) btn.innerHTML = windInKnots ? 'kt' : 'kmh';
-
-            const itemBoxes = document.querySelectorAll('.card-body-content .item-box');
-            itemBoxes.forEach(box => {{
-                let text = box.innerHTML;
-                if (text.includes('kt') || text.includes('k/hr')) {{
-                    box.innerHTML = text.replace(/([\d.,]+)\s*(kt|k\/hr)/gi, (match, p1, p2) => {{
-                        let num = parseFloat(p1.replace(',', '.'));
-                        if (isNaN(num)) return match;
-                        if (!windInKnots && p2.toLowerCase() === 'kt') {{
-                            let converted = (num * 1.852).toFixed(1).replace('.', ',');
-                            return `${{converted}} k/hr`;
-                        }} else if (windInKnots && p2.toLowerCase() !== 'kt') {{
-                            let converted = (num / 1.852).toFixed(1).replace('.', ',');
-                            return `${{converted}} kt`;
-                        }}
-                        return match;
-                    }});
-                }}
-            }});
-        }}
-
-        if (localStorage.getItem('windUnit') === 'khr') {{
-            windInKnots = false;
-            setTimeout(updateWindDisplay, 100);
-        }}
-
-        // Petición ligera para actualizar el contador de visitas de forma dinámica
-        fetch('https://api.countapi.xyz/hit/monitor-estaciones-meteotalc/visitas')
-            .then(response => response.json())
-            .then(data => {{
-                document.getElementById('visit-count').innerText = data.value.toLocaleString();
-            }})
-            .catch(error => {{
-                document.getElementById('visit-count').innerText = "N/D";
-            }});
-    </script>
-</body>
-</html>"""
-
-    with open("index.html", "w", encoding="utf-8") as f:
-        f.write(html)
-    print("✓ index.html actualizado correctamente con el contador de visitas.")
-
-def generar_json_esp32(resultados_totales):
-    estados_estaciones = [r['ok'] for r in resultados_totales]
-    data_json = {
-        "estaciones": estados_estaciones
-    }
-    
-    with open("estado_leds.json", "w", encoding="utf-8") as f:
-        json.dump(data_json, f)
-    print("✓ estado_leds.json generado con el total de estaciones.")
-
-def ejecutar_monitoreo():
-    print(f"\n--- [{obtener_hora_chile().strftime('%H:%M:%S')}] Verificando litoral ---")
-    resultados_dict = {}
-    hubo_fallas = False
-
-    for est in ESTACIONES_DIRECTEMAR:
-        ok, estado, ultimo, temp, pres, viento, dir_viento, racha, precipitacion = consultar_directemar(est)
-        if not ok: hubo_fallas = True
-        resultados_dict[est["nombre"]] = {
-            "nombre": est["nombre"], "url": est["url"], "lat": est["lat"], "lon": est["lon"],
-            "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
-            "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
-        }
-
-    for est_wl in ESTACIONES_WEATHERLINK:
-        ok, estado, ultimo, temp, pres, viento, dir_viento, racha, precipitacion = consultar_weatherlink(est_wl)
-        if not ok: hubo_fallas = True
-        resultados_dict[est_wl["nombre"]] = {
-            "nombre": est_wl["nombre"], "url": est_wl["url"], "lat": est_wl["lat"], "lon": est_wl["lon"],
-            "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
-            "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
-        }
-
-    resultados_totales = [resultados_dict[nombre] for nombre in ORDEN_ESTACIONES if nombre in resultados_dict]
-    
-    generar_html(resultados_totales, hubo_fallas)
-    generar_json_esp32(resultados_totales)
-    subir_a_github()
-
-def subir_a_github():
+def consultar_ifop(est):
     try:
-        print("Sincronizando cambios con GitHub...")
-        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Incorporacion de contador de visitas discreto en el pie de pagina [skip ci]"], capture_output=True, text=True)
-        if resultado.returncode != 0:
-            if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
-                print("Sin cambios nuevos para subir.")
-                return
-        subprocess.run(["git", "push"], check=True)
-        print("✓ Sincronización completada con éxito.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error al sincronizar con Git: {e}")
+        req = urllib.request.Request(est["api_url"], headers=HEADERS)
+        with urllib.request.urlopen(req, timeout=10, context=ctx) as response:
+            texto_raw = response.read().decode("utf-8")
+            data = json.loads(texto_raw)
 
-if __name__ == "__main__":
-    ejecutar_monitoreo()
+            if isinstance(data, dict):
+                def extraer_datos_serie():
+                    val_t, fecha_t, val_p
