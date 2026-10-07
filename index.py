@@ -9,11 +9,12 @@ import time
 import urllib.request
 
 # ==========================================
-# CONFIGURACIÓN GENERAL
+# CONFIGURACION GENERAL
 # ==========================================
 TOLERANCIA_MINUTOS = 12
 LIMITE_LECTURAS_REPETIDAS = 10
 ZONA_CHILE = ZoneInfo("America/Santiago")
+ZONA_PASCUA = ZoneInfo("Pacific/Easter")
 ARCHIVO_HISTORIAL = "historial_presion.json"
 ARCHIVO_CONGELADAS = "historial_congeladas.json"
 
@@ -32,108 +33,135 @@ ctx.verify_mode = ssl.CERT_NONE
 # ==========================================
 ESTACIONES_DIRECTEMAR = [
     {
-        "nombre": "Capitanía de Puerto Constitución",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/constitucion/index.htm",
-        "lat": -35.3241667,
-        "lon": -72.40805555,
+        "nombre": "Capitania de Puerto Chanaral",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/chanaral/index.htm",
+        "lat": -26.347,
+        "lon": -70.621,
     },
     {
-        "nombre": "Capitanía de Puerto Lirquén",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/lirquen/index.htm",
-        "lat": -36.7027778,
-        "lon": -72.9775,
+        "nombre": "Capitania de Puerto Caldera",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/caldera/index.htm",
+        "lat": -27.068,
+        "lon": -70.819,
     },
     {
-        "nombre": "Gobernación Marítima de Talcahuano",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm",
-        "lat": -36.712,
-        "lon": -73.115,
+        "nombre": "Capitania de Puerto Hanga Roa",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/pascua/index.htm",
+        "lat": -27.150,
+        "lon": -109.429,
+        "es_insular": True,
     },
     {
-        "nombre": "Capitanía de Puerto Coronel",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/coronel/index.htm",
-        "lat": -37.020,
-        "lon": -73.150,
+        "nombre": "Capitania de Puerto Huasco",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/huasco/index.htm",
+        "lat": -28.468,
+        "lon": -71.226,
     },
     {
-        "nombre": "Capitanía de Puerto Lota",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/lota/index.htm",
-        "lat": -37.090,
-        "lon": -73.150,
+        "nombre": "Faro Punta Tortuga Coquimbo",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/tortuga/index.htm",
+        "lat": -29.939,
+        "lon": -71.352,
     },
     {
-        "nombre": "Capitanía de Puerto Lebu",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/lebu/index.htm",
-        "lat": -37.606,
-        "lon": -73.650,
+        "nombre": "Capitania de Puerto Los Vilos",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/losvilos/index.htm",
+        "lat": -31.916,
+        "lon": -71.516,
     },
     {
-        "nombre": "Capitanía de Puerto Carahue",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/carahue/index.htm",
-        "lat": -38.788,
-        "lon": -73.397,
+        "nombre": "Capitania de Puerto Quintero",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/quintero/index.htm",
+        "lat": -32.778,
+        "lon": -71.531,
     },
     {
-        "nombre": "Capitanía de Puerto Corral",
-        "url": "http://web.directemar.cl/met/jturno/estaciones/corral/index.htm",
-        "lat": -39.883,
-        "lon": -73.433,
+        "nombre": "Colegio Capellan Pascal (Las Salinas)",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/lassalinas/index.htm",
+        "lat": -33.015,
+        "lon": -71.550,
+    },
+    {
+        "nombre": "Faro Extremo Molo de Abrigo Valparaiso",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/valparaiso/index.htm",
+        "lat": -33.036,
+        "lon": -71.631,
+    },
+    {
+        "nombre": "Faro Punta Panul San Antonio",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/panul/index.htm",
+        "lat": -33.578,
+        "lon": -71.616,
+    },
+    {
+        "nombre": "Capitania de Puerto Juan Fernandez",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/cumberland/index.htm",
+        "lat": -33.635,
+        "lon": -78.841,
+        "es_insular": True,
+    },
+    {
+        "nombre": "Capitania de Puerto Pichilemu",
+        "url": "http://web.directemar.cl/met/jturno/estaciones/pichilemu/index.htm",
+        "lat": -34.391,
+        "lon": -72.001,
     },
 ]
 
 # ==========================================
-# FAROS WEATHER UNDERGROUND
+# ESTACIONES WEATHERLINK
 # ==========================================
-ESTACIONES_FAROS = [
+ESTACIONES_WEATHERLINK = [
     {
-        "nombre": "Faro Isla Quiriquina",
-        "id": "ITALCA20",
-        "url": "https://www.wunderground.com/dashboard/pws/ITALCA20",
-        "lat": -36.607,
-        "lon": -73.049,
+        "nombre": "Universidad de Valparaiso (sede Montemar)",
+        "url": "https://weatherlink.com/embeddablePage/show/a1debe35d26b4e2dbcf82122501f5fa6/fullscreen",
+        "lat": -32.952,
+        "lon": -71.553,
     },
     {
-        "nombre": "Faro Punta Hualpén",
-        "id": "IHUALP1",
-        "url": "https://www.wunderground.com/dashboard/pws/IHUALP1",
-        "lat": -36.745,
-        "lon": -73.185,
-    },
-]
-
-# ==========================================
-# ESTACIONES IFOP / API JSON
-# ==========================================
-ESTACIONES_IFOP = [
-    {
-        "nombre": "Faro Cabo Carranza",
-        "url": "https://giscc.ifop.cl/doma_met/",
-        "api_url": "https://giscc.ifop.cl/siom-enoscc//get_est_met/22",
-        "lat": -35.5608333,
-        "lon": -72.6177777,
+        "nombre": "Club de Yates Recreo (Vina del Mar)",
+        "url": "https://weatherlink.com/embeddablePage/show/0c66339eed4f47d4a9240ed0b66c992/fullscreen",
+        "lat": -33.027,
+        "lon": -71.554,
     },
     {
-        "nombre": "Faro Isla Mocha",
-        "url": "https://giscc.ifop.cl/doma_met/",
-        "api_url": "https://giscc.ifop.cl/siom-enoscc//get_est_met/34",
-        "lat": -38.3849472,
-        "lon": -73.8688523,
+        "nombre": "WL Chilquinta Muelle Baron (Valparaiso)",
+        "url": "https://weatherlink.com/embeddablePage/show/6342b5802c854216a359487f335f3718/fullscreen",
+        "lat": -33.042,
+        "lon": -71.603,
+    },
+    {
+        "nombre": "Dique Flotante Valparaiso III",
+        "url": "https://weatherlink.com/embeddablePage/show/1e4869cc59824e6893fc56b963304664/fullscreen",
+        "lat": -33.038,
+        "lon": -71.621,
+    },
+    {
+        "nombre": "Cofradia Nautica del Pacifico (Algarrobo)",
+        "url": "https://weatherlink.com/embeddablePage/show/9fa531d050e648a9a8aa6bb7026c3902/fullscreen",
+        "lat": -33.367,
+        "lon": -71.666,
     },
 ]
 
 ORDEN_ESTACIONES = [
-    "Capitanía de Puerto Constitución",
-    "Faro Cabo Carranza",
-    "Capitanía de Puerto Lirquén",
-    "Faro Isla Quiriquina",
-    "Gobernación Marítima de Talcahuano",
-    "Faro Punta Hualpén",
-    "Capitanía de Puerto Coronel",
-    "Capitanía de Puerto Lota",
-    "Capitanía de Puerto Lebu",
-    "Faro Isla Mocha",
-    "Capitanía de Puerto Carahue",
-    "Capitanía de Puerto Corral",
+    "Capitania de Puerto Chanaral",
+    "Capitania de Puerto Caldera",
+    "Capitania de Puerto Hanga Roa",
+    "Capitania de Puerto Huasco",
+    "Faro Punta Tortuga Coquimbo",
+    "Capitania de Puerto Los Vilos",
+    "Capitania de Puerto Quintero",
+    "Universidad de Valparaiso (sede Montemar)",
+    "Colegio Capellan Pascal (Las Salinas)",
+    "Club de Yates Recreo (Vina del Mar)",
+    "WL Chilquinta Muelle Baron (Valparaiso)",
+    "Dique Flotante Valparaiso III",
+    "Faro Extremo Molo de Abrigo Valparaiso",
+    "Cofradia Nautica del Pacifico (Algarrobo)",
+    "Faro Punta Panul San Antonio",
+    "Capitania de Puerto Juan Fernandez",
+    "Capitania de Puerto Pichilemu",
 ]
 
 def obtener_hora_chile():
@@ -168,10 +196,6 @@ def grados_a_cardinal(grados):
     return formatear_direccion(direcciones[indice])
 
 def verificar_estacion_congelada(nombre_estacion, temp, viento, racha):
-    estaciones_excluidas = ["faro cabo carranza", "faro isla mocha"]
-    if nombre_estacion.lower() in estaciones_excluidas:
-        return False
-
     historial = {}
     if os.path.exists(ARCHIVO_CONGELADAS):
         try:
@@ -321,7 +345,7 @@ def consultar_directemar(est):
 
             match_fecha = re.search(r'(?:Page\s+updated|Actualizado)\s+(\d{1,2}-\d{1,2}-\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?)', texto_plano, re.IGNORECASE)
             if not match_fecha:
-                return False, "SIN DATOS VÁLIDOS", "N/D", temp, pres, viento, dir_viento, racha, precipitacion
+                return False, "SIN FECHA", "N/D", temp, pres, viento, dir_viento, racha, precipitacion
 
             fecha_str = match_fecha.group(1)
             partes_f = fecha_str.split()
@@ -333,76 +357,50 @@ def consultar_directemar(est):
                     fecha_str = f"{fecha_p} {':'.join(sub_hora)}"
 
             formato_fecha = "%d-%m-%Y %H:%M:%S" if fecha_str.count(":") == 2 else "%d-%m-%Y %H:%M"
-            fecha_estacion = datetime.strptime(fecha_str, formato_fecha).replace(tzinfo=ZONA_CHILE)
-            dif_min = abs((obtener_hora_chile() - fecha_estacion).total_seconds() / 60)
+            
+            try:
+                if est.get("es_insular"):
+                    fecha_estacion = datetime.strptime(fecha_str, formato_fecha).replace(tzinfo=ZONA_PASCUA)
+                    ahora_local = datetime.now(ZONA_PASCUA)
+                else:
+                    fecha_estacion = datetime.strptime(fecha_str, formato_fecha).replace(tzinfo=ZONA_CHILE)
+                    ahora_local = obtener_hora_chile()
+
+                dif_min = abs((ahora_local - fecha_estacion).total_seconds() / 60)
+                limite_actual = TOLERANCIA_MINUTOS
+            except Exception:
+                dif_min = 0 
 
             congelada = verificar_estacion_congelada(est["nombre"], temp, viento, racha)
             if congelada:
                 return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
-            if dif_min <= TOLERANCIA_MINUTOS or (170 <= dif_min <= 200):
+            if dif_min <= limite_actual:
                 return True, "OPERATIVA", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
             else:
                 return False, f"DESACTUALIZADA ({int(dif_min)} min)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
     except Exception as e:
         print(f"Error Directemar {est['nombre']}: {e}")
-        return False, "SIN CONEXIÓN", "Error de red", "--", "--", "--", "", "--", "--"
+        return False, "SIN CONEXION", "Error de red", "--", "--", "--", "", "--", "--"
 
-def consultar_wunderground_web(est):
+def consultar_weatherlink(est):
     try:
-        api_url = f"https://api.weather.com/v2/pws/observations/current?stationId={est['id']}&format=json&units=e&apiKey=e1f10a1e78da46f5b10a1e78da96f525"
-        req = urllib.request.Request(api_url, headers=HEADERS)
+        req = urllib.request.Request(est["url"], headers=HEADERS)
         with urllib.request.urlopen(req, timeout=10, context=ctx) as response:
-            data = json.loads(response.read().decode("utf-8"))
-            obs = data["observations"][0]
-            imperial = obs["imperial"]
+            html = response.read().decode("utf-8", errors="ignore")
+            
+            texto_plano = re.sub(r'<[^>]+>', ' ', html)
+            texto_plano = texto_plano.replace('\xa5', ' ').replace('\xa0', ' ').replace('&nbsp;', ' ').replace('&deg;', '°').replace('&#176;', '°')
+            texto_plano = re.sub(r'\s+', ' ', texto_plano).strip()
 
-            temp_f = imperial.get("temp")
-            temp = f"{(temp_f - 32.0) * 5.0 / 9.0:.1f}°C" if temp_f is not None else "--"
+            temp, pres, viento, dir_viento, racha, precipitacion = "--", "--", "--", "", "--", "--"
+            pres_val = None
 
-            pres_inHg = imperial.get("pressure")
-            pres = "--"
-            if pres_inHg is not None:
-                pres_val = pres_inHg * 33.86389
-                tendencia = gestionar_historial_presion(est["nombre"], pres_val)
-                pres = f"{pres_val:.1f} hPa{tendencia}"
+            temp_match = re.search(r'([\-]?\d+(?:[.,]\d+)?)\s*°\s*C\s+currently', texto_plano, re.IGNORECASE)
+            if temp_match:
+                val = convertir_numero(temp_match.group(1))
+                if val is not None:
+                    temp = f"{val:.1f}°C"
 
-            viento_mph = imperial.get("windSpeed")
-            viento = f"{viento_mph / 1.15077945:.1f} kt" if viento_mph is not None else "--"
-
-            gust_mph = imperial.get("windGust")
-            racha = f"{gust_mph / 1.15077945:.1f} kt" if gust_mph is not None else "--"
-
-            wind_dir_deg = obs.get("winddir")
-            dir_viento = grados_a_cardinal(wind_dir_deg)
-
-            precip_in = imperial.get("precipTotal", 0.0)
-            if precip_in is not None:
-                precip_mm = precip_in * 25.4
-                precipitacion = f"{precip_mm:.1f} mm"
-            else:
-                precipitacion = "0.0 mm"
-
-            obs_time = obs.get("obsTimeLocal", "Reciente")
-
-            congelada = verificar_estacion_congelada(est["nombre"], temp, viento, racha)
-            if congelada:
-                return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", temp, pres, viento, dir_viento, racha, precipitacion, str(obs_time)
-
-            return True, "OPERATIVA", temp, pres, viento, dir_viento, racha, precipitacion, str(obs_time)
-    except Exception as e:
-        print(f"Error WU [{est['nombre']}]: {e}")
-        
-    return False, "SIN CONEXIÓN", "--", "--", "--", "", "--", "--", "Error de red"
-
-def consultar_ifop(est):
-    try:
-        req = urllib.request.Request(est["api_url"], headers=HEADERS)
-        with urllib.request.urlopen(req, timeout=10, context=ctx) as response:
-            texto_raw = response.read().decode("utf-8")
-            data = json.loads(texto_raw)
-
-            if isinstance(data, dict):
-                def extraer_datos_serie():
-                    val_t, fecha_t, val_p
+            viento_match = re.search
