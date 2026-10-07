@@ -32,49 +32,49 @@ ctx.verify_mode = ssl.CERT_NONE
 # ==========================================
 ESTACIONES_DIRECTEMAR = [
     {
-        "nombre": "Capitanía de Puerto Constitución",
+        "nombre": "Capitania de Puerto Constitucion",
         "url": "http://web.directemar.cl/met/jturno/estaciones/constitucion/index.htm",
         "lat": -35.3241667,
         "lon": -72.40805555,
     },
     {
-        "nombre": "Capitanía de Puerto Lirquén",
+        "nombre": "Capitania de Puerto Lirquen",
         "url": "http://web.directemar.cl/met/jturno/estaciones/lirquen/index.htm",
         "lat": -36.7027778,
         "lon": -72.9775,
     },
     {
-        "nombre": "Gobernación Marítima de Talcahuano",
+        "nombre": "Gobernacion Maritima de Talcahuano",
         "url": "http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm",
         "lat": -36.712,
         "lon": -73.115,
     },
     {
-        "nombre": "Capitanía de Puerto Coronel",
+        "nombre": "Capitania de Puerto Coronel",
         "url": "http://web.directemar.cl/met/jturno/estaciones/coronel/index.htm",
         "lat": -37.020,
         "lon": -73.150,
     },
     {
-        "nombre": "Capitanía de Puerto Lota",
+        "nombre": "Capitania de Puerto Lota",
         "url": "http://web.directemar.cl/met/jturno/estaciones/lota/index.htm",
         "lat": -37.090,
         "lon": -73.150,
     },
     {
-        "nombre": "Capitanía de Puerto Lebu",
+        "nombre": "Capitania de Puerto Lebu",
         "url": "http://web.directemar.cl/met/jturno/estaciones/lebu/index.htm",
         "lat": -37.606,
         "lon": -73.650,
     },
     {
-        "nombre": "Capitanía de Puerto Carahue",
+        "nombre": "Capitania de Puerto Carahue",
         "url": "http://web.directemar.cl/met/jturno/estaciones/carahue/index.htm",
         "lat": -38.788,
         "lon": -73.397,
     },
     {
-        "nombre": "Capitanía de Puerto Corral",
+        "nombre": "Capitania de Puerto Corral",
         "url": "http://web.directemar.cl/met/jturno/estaciones/corral/index.htm",
         "lat": -39.883,
         "lon": -73.433,
@@ -93,7 +93,7 @@ ESTACIONES_FAROS = [
         "lon": -73.049,
     },
     {
-        "nombre": "Faro Punta Hualpén",
+        "nombre": "Faro Punta Hualpen",
         "id": "IHUALP1",
         "url": "https://www.wunderground.com/dashboard/pws/IHUALP1",
         "lat": -36.745,
@@ -122,18 +122,18 @@ ESTACIONES_IFOP = [
 ]
 
 ORDEN_ESTACIONES = [
-    "Capitanía de Puerto Constitución",
+    "Capitania de Puerto Constitucion",
     "Faro Cabo Carranza",
-    "Capitanía de Puerto Lirquén",
+    "Capitania de Puerto Lirquen",
     "Faro Isla Quiriquina",
-    "Gobernación Marítima de Talcahuano",
-    "Faro Punta Hualpén",
-    "Capitanía de Puerto Coronel",
-    "Capitanía de Puerto Lota",
-    "Capitanía de Puerto Lebu",
+    "Gobernacion Maritima de Talcahuano",
+    "Faro Punta Hualpen",
+    "Capitania de Puerto Coronel",
+    "Capitania de Puerto Lota",
+    "Capitania de Puerto Lebu",
     "Faro Isla Mocha",
-    "Capitanía de Puerto Carahue",
-    "Capitanía de Puerto Corral",
+    "Capitania de Puerto Carahue",
+    "Capitania de Puerto Corral",
 ]
 
 def obtener_hora_chile():
@@ -272,7 +272,7 @@ def consultar_directemar(est):
                 if val is not None:
                     temp = f"{val:.1f}°C"
 
-            pres_match = re.search(r'(?:Barometer|Presi[oó]n)[^\d]*([\-]?\d+(?:[.,]\d+)?)\s*(?:hPa|mb)?', texto_plano, re.IGNORECASE)
+            pres_match = re.search(r'(?:Barometer|Presion)[^\d]*([\-]?\d+(?:[.,]\d+)?)\s*(?:hPa|mb)?', texto_plano, re.IGNORECASE)
             if pres_match:
                 pres_val = convertir_numero(pres_match.group(1))
                 if pres_val is not None:
@@ -281,11 +281,11 @@ def consultar_directemar(est):
 
             bearing_match = re.search(r'Wind\s*Bearing[^\d]*\d+(?:[.,]\d+)?\s*°?\s*([N,S,E,W]{1,3})', texto_plano, re.IGNORECASE)
             if not bearing_match:
-                bearing_match = re.search(r'(?:Direcci[oó]n\s*Viento|Wind\s*Direction)[^\w]*([N,S,E,W]{1,3})', texto_plano, re.IGNORECASE)
+                bearing_match = re.search(r'(?:Direccion\s*Viento|Wind\s*Direction)[^\w]*([N,S,E,W]{1,3})', texto_plano, re.IGNORECASE)
             if not bearing_match:
-                bearing_match = re.search(r'(?:Direcci[oó]n|Dir)[^\w]*(?:del\s*)?(?:Viento)?[^\w]*([N,S,E,W]{1,3})', texto_plano, re.IGNORECASE)
+                bearing_match = re.search(r'(?:Direccion|Dir)[^\w]*(?:del\s*)?(?:Viento)?[^\w]*([N,S,E,W]{1,3})', texto_plano, re.IGNORECASE)
             if not bearing_match:
-                deg_match = re.search(r'(?:Direcci[oó]n|Dir|Wind\s*Direction|Bearing)[^\d]*(\d+(?:[.,]\d+)?)\s*°', texto_plano, re.IGNORECASE)
+                deg_match = re.search(r'(?:Direccion|Dir|Wind\s*Direction|Bearing)[^\d]*(\d+(?:[.,]\d+)?)\s*°', texto_plano, re.IGNORECASE)
                 if deg_match:
                     grados_val = convertir_numero(deg_match.group(1))
                     if grados_val is not None:
@@ -305,7 +305,7 @@ def consultar_directemar(est):
                 if val is not None:
                     viento = f"{val:.1f} kt"
 
-            racha_match = re.search(r'(?:Wind\s*Speed\s*\(gust\)|Gust|Racha|Ráfaga|Rafaga)[^\d]*(\d+(?:[.,]\d+)?)\s*(?:kts|kt|knots|nudos)?', texto_plano, re.IGNORECASE)
+            racha_match = re.search(r'(?:Wind\s*Speed\s*\(gust\)|Gust|Racha|Rafaga|Rafaga)[^\d]*(\d+(?:[.,]\d+)?)\s*(?:kts|kt|knots|nudos)?', texto_plano, re.IGNORECASE)
             if racha_match:
                 val = convertir_numero(racha_match.group(1))
                 if val is not None:
@@ -313,7 +313,7 @@ def consultar_directemar(est):
 
             pp_match = re.search(r'Rainfall[\s\-_]+today[^\d]*(\d+(?:[.,]\d+)?)', texto_plano, re.IGNORECASE)
             if not pp_match:
-                pp_match = re.search(r'(?:Precipitaci[oó]n|Lluvia|Rain|Precip)[^\d]*(\d+(?:[.,]\d+)?)', texto_plano, re.IGNORECASE)
+                pp_match = re.search(r'(?:Precipitacion|Lluvia|Rain|Precip)[^\d]*(\d+(?:[.,]\d+)?)', texto_plano, re.IGNORECASE)
             if pp_match:
                 val = convertir_numero(pp_match.group(1))
                 if val is not None:
@@ -321,7 +321,7 @@ def consultar_directemar(est):
 
             match_fecha = re.search(r'(?:Page\s+updated|Actualizado)\s+(\d{1,2}-\d{1,2}-\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?)', texto_plano, re.IGNORECASE)
             if not match_fecha:
-                return False, "SIN DATOS VÁLIDOS", "N/D", temp, pres, viento, dir_viento, racha, precipitacion
+                return False, "SIN DATOS VALIDOS", "N/D", temp, pres, viento, dir_viento, racha, precipitacion
 
             fecha_str = match_fecha.group(1)
             partes_f = fecha_str.split()
@@ -347,7 +347,7 @@ def consultar_directemar(est):
 
     except Exception as e:
         print(f"Error Directemar {est['nombre']}: {e}")
-        return False, "SIN CONEXIÓN", "Error de red", "--", "--", "--", "", "--", "--"
+        return False, "SIN CONEXION", "Error de red", "--", "--", "--", "", "--", "--"
 
 def consultar_wunderground_web(est):
     try:
@@ -394,7 +394,7 @@ def consultar_wunderground_web(est):
     except Exception as e:
         print(f"Error WU [{est['nombre']}]: {e}")
         
-    return False, "SIN CONEXIÓN", "--", "--", "--", "", "--", "--", "Error de red"
+    return False, "SIN CONEXION", "--", "--", "--", "", "--", "--", "Error de red"
 
 def consultar_ifop(est):
     try:
@@ -434,7 +434,7 @@ def consultar_ifop(est):
                                             val_d = actual
                                         elif any(sub in k_lower for sub in ["ff", "viento", "speed", "vel", "intensidad"]):
                                             val_v = actual
-                                        elif any(sub in k_lower for sub in ["racha", "ráfaga", "rafaga", "gust", "max", "fx", "vmax", "vel_max"]):
+                                        elif any(sub in k_lower for sub in ["racha", "rafaga", "rafaga", "gust", "max", "fx", "vmax", "vel_max"]):
                                             val_r = actual
                                         elif any(sub in k_lower for sub in ["lluvia", "pp", "precip", "precipitacion", "agua", "acum", "mm", "rain"]):
                                             valores_hoy = []
@@ -501,15 +501,15 @@ def consultar_ifop(est):
                 if congelada:
                     return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
-                estado_txt = "OPERATIVA" if es_valido else "SIN DATOS VÁLIDOS"
+                estado_txt = "OPERATIVA" if es_valido else "SIN DATOS VALIDOS"
 
                 return es_valido, estado_txt, fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
-            return False, "DATOS NO VÁLIDOS", "Estructura desconocida", "--", "--", "--", "", "--", "--"
+            return False, "DATOS NO VALIDOS", "Estructura desconocida", "--", "--", "--", "", "--", "--"
 
     except Exception as e:
         print(f"Error IFOP [{est['nombre']}]: {e}")
-        return False, "SIN CONEXIÓN", str(e)[:30], "--", "--", "--", "", "--", "--"
+        return False, "SIN CONEXION", str(e)[:30], "--", "--", "--", "", "--", "--"
 
 def generar_html(resultados_totales, hay_alerta):
     total_estaciones = len(resultados_totales)
@@ -569,7 +569,7 @@ def generar_html(resultados_totales, hay_alerta):
         """
 
     alerta_class = "alerta-activa" if hay_alerta else ""
-    alerta_banner = '<div class="banner-alerta">⚠️ ¡ATENCIÓN: HAY ESTACIONES CON FALLAS, DESACTUALIZADAS O CONGELADAS! ⚠️</div>' if hay_alerta else ""
+    alerta_banner = '<div class="banner-alerta">⚠️ ¡ATENCION: HAY ESTACIONES CON FALLAS, DESACTUALIZADAS O CONGELADAS! ⚠️</div>' if hay_alerta else ""
     hora_actual_chile = obtener_hora_chile().strftime("%d-%m-%Y %H:%M:%S")
 
     html = f"""<!DOCTYPE html>
@@ -578,7 +578,7 @@ def generar_html(resultados_totales, hay_alerta):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="30">
-    <title>Monitor de Estaciones Automáticas</title>
+    <title>Monitor de Estaciones Automaticas</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {{
@@ -797,9 +797,9 @@ def generar_html(resultados_totales, hay_alerta):
         <button class="icon-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="Cambiar Modo Oscuro/Claro">🌙</button>
         <button class="icon-btn wind-unit-btn" onclick="toggleWindUnit()" id="windUnitBtn" title="Cambiar Unidad de Viento">kt</button>
     </div>
-    <h1>Monitor de Estaciones Automáticas</h1>
-    <div class="subtitle-line2">Centro Zonal de Meteorología Marina de Talcahuano</div>
-    <div class="subtitle">Última verificación: {hora_actual_chile} (Tolerancia: {TOLERANCIA_MINUTOS} min)</div>
+    <h1>Monitor de Estaciones Automaticas</h1>
+    <div class="subtitle-line2">Centro Zonal de Meteorologia Marina de Talcahuano</div>
+    <div class="subtitle">Ultima verificacion: {hora_actual_chile} (Tolerancia: {TOLERANCIA_MINUTOS} min)</div>
     {alerta_banner}
     <div class="summary">Estaciones Operativas: {operativas} de {total_estaciones} | Visitas: <span id="visit-count">Cargando...</span></div>
     <div id="map"></div>
@@ -811,30 +811,26 @@ def generar_html(resultados_totales, hay_alerta):
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Contador de visitas GLOBAL centralizado usando CountAPI con respaldo local automático
         async function actualizarContadorGlobal() {{
             const namespace = 'meteotalcahuano_estaciones';
             const key = 'visitas_totales';
             const elem = document.getElementById('visit-count');
 
             try {{
-                // Intenta sumar una visita de forma global en el servicio libre CountAPI
                 let response = await fetch(`https://api.countapi.xyz/hit/${{namespace}}/${{key}}`);
                 if (!response.ok) throw new Error('Error en red');
                 let data = await response.json();
                 elem.innerText = data.value;
-                // Guardamos en caché local el último valor real obtenido por si hay fallas posteriores
                 localStorage.setItem('ultimo_conteo_global', data.value);
-            } catch (error) {{
-                // Si el servicio externo falla o demora, usamos un respaldo basado en caché local para nunca mostrar N/D
+            }} catch (error) {{
                 let fallback = localStorage.getItem('ultimo_conteo_global');
                 if (!fallback) {{
-                    fallback = 1250; // Valor base inicial si es la primera vez absoluta offline
+                    fallback = 1250;
                 }} else {{
                     fallback = parseInt(fallback) + 1;
                 }}
                 localStorage.setItem('ultimo_conteo_global', fallback);
-                elem.innerText = fallback + " *"; // El asterisco indica modo seguro local temporal
+                elem.innerText = fallback + " *";
             }}
         }}
 
@@ -879,7 +875,7 @@ def generar_html(resultados_totales, hay_alerta):
             itemBoxes.forEach(box => {{
                 let text = box.innerHTML;
                 if (text.includes('kt') || text.includes('k/hr')) {{
-                    box.innerHTML = text.replace(/([\d.,]+)\s*(kt|k\/hr)/gi, (match, p1, p2) => {{
+                    box.innerHTML = text.replace(/([\\d.,]+)\\s*(kt|k\\/hr)/gi, (match, p1, p2) => {{
                         let num = parseFloat(p1.replace(',', '.'));
                         if (isNaN(num)) return match;
                         if (!windInKnots && p2.toLowerCase() === 'kt') {{
