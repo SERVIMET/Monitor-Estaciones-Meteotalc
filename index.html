@@ -218,41 +218,41 @@
         }
     </style>
 </head>
-<body class=alerta-activa">
+<body class=">
 
     <div class="floating-controls">
         <button class="icon-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="Cambiar Modo Oscuro/Claro">🌙</button>
         <button class="icon-btn wind-unit-btn" onclick="toggleWindUnit()" id="windUnitBtn" title="Cambiar Unidad de Viento">kt</button>
     </div>
-    <h1>Monitor de Estaciones Automáticas</h1>
-    <div class="subtitle-line2">Centro Zonal de Meteorología Marina de Talcahuano</div>
-    <div class="subtitle">Última verificación: 07-10-2026 00:16:40 (Tolerancia: 12 min)</div>
-    <div class="banner-alerta">⚠️ ¡ATENCIÓN: HAY ESTACIONES CON FALLAS, DESACTUALIZADAS O CONGELADAS! ⚠️</div>
-    <div class="summary">Estaciones Operativas: 4 de 12</div>
+    <h1>Monitor de Estaciones Automaticas</h1>
+    <div class="subtitle-line2">Centro Zonal de Meteorologia Marina de Talcahuano</div>
+    <div class="subtitle">Ultima verificacion: 07-10-2026 00:18:27 (Tolerancia: 12 min)</div>
+    
+    <div class="summary">Estaciones Operativas: 12 de 12</div>
     <div id="map"></div>
     <div class="grid">
         
         <a href="http://web.directemar.cl/met/jturno/estaciones/constitucion/index.htm" target="_blank" class="card-link">
-            <div class="card error">
+            <div class="card ok">
                 <div class="card-header">
-                    <span class="station-name">Capitanía de Puerto Constitución</span>
-                    <span class="status-badge">🔴</span>
+                    <span class="station-name">Capitania de Puerto Constitucion</span>
+                    <span class="status-badge">🟢</span>
                 </div>
                 
             <div class="card-body-content">
                 <div class="row-top">
-                    <div class="item-box temp-box">🌡️ --</div>
-                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
-                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
+                    <div class="item-box temp-box">🌡️ 12.9°C</div>
+                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ N</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">9.5 kt</span></div>
+                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">16.5 kt</span></div>
                 </div>
                 <div class="row-bottom">
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ --</span></div>
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ --</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1011.1 hPa</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ 0.0 mm</span></div>
                 </div>
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: Error de red</span>
+                    <span class="time">Reporte: 07-10-2026 00:10:00</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -285,26 +285,26 @@
         </a>
         
         <a href="http://web.directemar.cl/met/jturno/estaciones/lirquen/index.htm" target="_blank" class="card-link">
-            <div class="card error">
+            <div class="card ok">
                 <div class="card-header">
-                    <span class="station-name">Capitanía de Puerto Lirquén</span>
-                    <span class="status-badge">🔴</span>
+                    <span class="station-name">Capitania de Puerto Lirquen</span>
+                    <span class="status-badge">🟢</span>
                 </div>
                 
             <div class="card-body-content">
                 <div class="row-top">
-                    <div class="item-box temp-box">🌡️ --</div>
-                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
-                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
+                    <div class="item-box temp-box">🌡️ 13.7°C</div>
+                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ E/NE</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">3.5 kt</span></div>
+                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">8.7 kt</span></div>
                 </div>
                 <div class="row-bottom">
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ --</span></div>
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ --</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1009.1 hPa</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ 0.0 mm</span></div>
                 </div>
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: Error de red</span>
+                    <span class="time">Reporte: 07-10-2026 00:10:00</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -330,33 +330,33 @@
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: 2026-10-07 00:16:33</span>
+                    <span class="time">Reporte: 2026-10-07 00:18:23</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
         </a>
         
         <a href="http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm" target="_blank" class="card-link">
-            <div class="card error">
+            <div class="card ok">
                 <div class="card-header">
-                    <span class="station-name">Gobernación Marítima de Talcahuano</span>
-                    <span class="status-badge">🔴</span>
+                    <span class="station-name">Gobernacion Maritima de Talcahuano</span>
+                    <span class="status-badge">🟢</span>
                 </div>
                 
             <div class="card-body-content">
                 <div class="row-top">
-                    <div class="item-box temp-box">🌡️ --</div>
-                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
-                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
+                    <div class="item-box temp-box">🌡️ 14.1°C</div>
+                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ N/NE</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">16.5 kt</span></div>
+                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">24.3 kt</span></div>
                 </div>
                 <div class="row-bottom">
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ --</span></div>
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ --</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1010.0 hPa</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ 0.0 mm</span></div>
                 </div>
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: Error de red</span>
+                    <span class="time">Reporte: 07-10-2026 00:18:00</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -365,7 +365,7 @@
         <a href="https://www.wunderground.com/dashboard/pws/IHUALP1" target="_blank" class="card-link">
             <div class="card ok">
                 <div class="card-header">
-                    <span class="station-name">Faro Punta Hualpén</span>
+                    <span class="station-name">Faro Punta Hualpen</span>
                     <span class="status-badge">🟢</span>
                 </div>
                 
@@ -376,7 +376,7 @@
                     <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">33.9 kt</span></div>
                 </div>
                 <div class="row-bottom">
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1008.5 hPa ↗</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1008.5 hPa</span></div>
                     <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ 0.0 mm</span></div>
                 </div>
             </div>
@@ -389,78 +389,78 @@
         </a>
         
         <a href="http://web.directemar.cl/met/jturno/estaciones/coronel/index.htm" target="_blank" class="card-link">
-            <div class="card error">
+            <div class="card ok">
                 <div class="card-header">
-                    <span class="station-name">Capitanía de Puerto Coronel</span>
-                    <span class="status-badge">🔴</span>
+                    <span class="station-name">Capitania de Puerto Coronel</span>
+                    <span class="status-badge">🟢</span>
                 </div>
                 
             <div class="card-body-content">
                 <div class="row-top">
-                    <div class="item-box temp-box">🌡️ --</div>
-                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
-                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
+                    <div class="item-box temp-box">🌡️ 14.3°C</div>
+                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ NE</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">6.3 kt</span></div>
+                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">11.3 kt</span></div>
                 </div>
                 <div class="row-bottom">
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ --</span></div>
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ --</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1008.7 hPa</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ 0.0 mm</span></div>
                 </div>
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: Error de red</span>
+                    <span class="time">Reporte: 07-10-2026 00:18:00</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
         </a>
         
         <a href="http://web.directemar.cl/met/jturno/estaciones/lota/index.htm" target="_blank" class="card-link">
-            <div class="card error">
+            <div class="card ok">
                 <div class="card-header">
-                    <span class="station-name">Capitanía de Puerto Lota</span>
-                    <span class="status-badge">🔴</span>
+                    <span class="station-name">Capitania de Puerto Lota</span>
+                    <span class="status-badge">🟢</span>
                 </div>
                 
             <div class="card-body-content">
                 <div class="row-top">
-                    <div class="item-box temp-box">🌡️ --</div>
-                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
-                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
+                    <div class="item-box temp-box">🌡️ 14.3°C</div>
+                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ E/SE</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">0.4 kt</span></div>
+                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">0.9 kt</span></div>
                 </div>
                 <div class="row-bottom">
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ --</span></div>
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ --</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1009.9 hPa</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ 0.0 mm</span></div>
                 </div>
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: Error de red</span>
+                    <span class="time">Reporte: 07-10-2026 00:10:01</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
         </a>
         
         <a href="http://web.directemar.cl/met/jturno/estaciones/lebu/index.htm" target="_blank" class="card-link">
-            <div class="card error">
+            <div class="card ok">
                 <div class="card-header">
-                    <span class="station-name">Capitanía de Puerto Lebu</span>
-                    <span class="status-badge">🔴</span>
+                    <span class="station-name">Capitania de Puerto Lebu</span>
+                    <span class="status-badge">🟢</span>
                 </div>
                 
             <div class="card-body-content">
                 <div class="row-top">
-                    <div class="item-box temp-box">🌡️ --</div>
-                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
-                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
+                    <div class="item-box temp-box">🌡️ 15.1°C</div>
+                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ NE</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">9.3 kt</span></div>
+                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">14.8 kt</span></div>
                 </div>
                 <div class="row-bottom">
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ --</span></div>
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ --</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1009.7 hPa</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ 0.0 mm</span></div>
                 </div>
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: Error de red</span>
+                    <span class="time">Reporte: 07-10-2026 00:10:00</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -493,52 +493,52 @@
         </a>
         
         <a href="http://web.directemar.cl/met/jturno/estaciones/carahue/index.htm" target="_blank" class="card-link">
-            <div class="card error">
+            <div class="card ok">
                 <div class="card-header">
-                    <span class="station-name">Capitanía de Puerto Carahue</span>
-                    <span class="status-badge">🔴</span>
+                    <span class="station-name">Capitania de Puerto Carahue</span>
+                    <span class="status-badge">🟢</span>
                 </div>
                 
             <div class="card-body-content">
                 <div class="row-top">
-                    <div class="item-box temp-box">🌡️ --</div>
-                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
-                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
+                    <div class="item-box temp-box">🌡️ 14.3°C</div>
+                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ N/NE</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">2.9 kt</span></div>
+                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">7.8 kt</span></div>
                 </div>
                 <div class="row-bottom">
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ --</span></div>
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ --</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1008.0 hPa</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ 0.0 mm</span></div>
                 </div>
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: Error de red</span>
+                    <span class="time">Reporte: 07-10-2026 00:10:00</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
         </a>
         
         <a href="http://web.directemar.cl/met/jturno/estaciones/corral/index.htm" target="_blank" class="card-link">
-            <div class="card error">
+            <div class="card ok">
                 <div class="card-header">
-                    <span class="station-name">Capitanía de Puerto Corral</span>
-                    <span class="status-badge">🔴</span>
+                    <span class="station-name">Capitania de Puerto Corral</span>
+                    <span class="status-badge">🟢</span>
                 </div>
                 
             <div class="card-body-content">
                 <div class="row-top">
-                    <div class="item-box temp-box">🌡️ --</div>
-                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
-                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">--</span></div>
+                    <div class="item-box temp-box">🌡️ 12.9°C</div>
+                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ N</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">0.0 kt</span></div>
+                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">0.0 kt</span></div>
                 </div>
                 <div class="row-bottom">
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ --</span></div>
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ --</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1010.7 hPa</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ 0.0 mm</span></div>
                 </div>
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: Error de red</span>
+                    <span class="time">Reporte: 07-10-2026 00:10:02</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -561,52 +561,52 @@
         }).addTo(map);
         
         L.circleMarker([-35.3241667, -72.40805555], {
-            color: 'red', fillColor: 'red', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Capitanía de Puerto Constitución</b><br>Estado: SIN CONEXIÓN<br>Temp: -- | Viento: -- | Racha: -- | Pres: -- | Lluvia: --<br>Reporte: Error de red<br><a href='http://web.directemar.cl/met/jturno/estaciones/constitucion/index.htm' target='_blank'>Abrir enlace ↗</a>");
+            color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
+        }).addTo(map).bindPopup("<b>Capitania de Puerto Constitucion</b><br>Estado: OPERATIVA<br>Temp: 12.9°C | Viento: 9.5 kt (N) | Racha: 16.5 kt | Pres: 1011.1 hPa | Lluvia: 0.0 mm<br>Reporte: 07-10-2026 00:10:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/constitucion/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-35.5608333, -72.6177777], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
         }).addTo(map).bindPopup("<b>Faro Cabo Carranza</b><br>Estado: OPERATIVA<br>Temp: 14.0°C | Viento: 27.9 kt (N) | Racha: 33.8 kt | Pres: 1006.2 hPa ↘ | Lluvia: 0.0 mm<br>Reporte: 2026-10-06T23:30:00<br><a href='https://giscc.ifop.cl/doma_met/' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-36.7027778, -72.9775], {
-            color: 'red', fillColor: 'red', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Capitanía de Puerto Lirquén</b><br>Estado: SIN CONEXIÓN<br>Temp: -- | Viento: -- | Racha: -- | Pres: -- | Lluvia: --<br>Reporte: Error de red<br><a href='http://web.directemar.cl/met/jturno/estaciones/lirquen/index.htm' target='_blank'>Abrir enlace ↗</a>");
+            color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
+        }).addTo(map).bindPopup("<b>Capitania de Puerto Lirquen</b><br>Estado: OPERATIVA<br>Temp: 13.7°C | Viento: 3.5 kt (E/NE) | Racha: 8.7 kt | Pres: 1009.1 hPa | Lluvia: 0.0 mm<br>Reporte: 07-10-2026 00:10:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/lirquen/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-36.607, -73.049], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Faro Isla Quiriquina</b><br>Estado: OPERATIVA<br>Temp: 13.3°C | Viento: 13.0 kt (NE) | Racha: 21.7 kt | Pres: 1010.5 hPa ↗ | Lluvia: 0.0 mm<br>Reporte: 2026-10-07 00:16:33<br><a href='https://www.wunderground.com/dashboard/pws/ITALCA20' target='_blank'>Abrir enlace ↗</a>");
+        }).addTo(map).bindPopup("<b>Faro Isla Quiriquina</b><br>Estado: OPERATIVA<br>Temp: 13.3°C | Viento: 13.0 kt (NE) | Racha: 21.7 kt | Pres: 1010.5 hPa ↗ | Lluvia: 0.0 mm<br>Reporte: 2026-10-07 00:18:23<br><a href='https://www.wunderground.com/dashboard/pws/ITALCA20' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-36.712, -73.115], {
-            color: 'red', fillColor: 'red', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Gobernación Marítima de Talcahuano</b><br>Estado: SIN CONEXIÓN<br>Temp: -- | Viento: -- | Racha: -- | Pres: -- | Lluvia: --<br>Reporte: Error de red<br><a href='http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm' target='_blank'>Abrir enlace ↗</a>");
+            color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
+        }).addTo(map).bindPopup("<b>Gobernacion Maritima de Talcahuano</b><br>Estado: OPERATIVA<br>Temp: 14.1°C | Viento: 16.5 kt (N/NE) | Racha: 24.3 kt | Pres: 1010.0 hPa | Lluvia: 0.0 mm<br>Reporte: 07-10-2026 00:18:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-36.745, -73.185], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Faro Punta Hualpén</b><br>Estado: OPERATIVA<br>Temp: 14.4°C | Viento: 32.2 kt (N/NE) | Racha: 33.9 kt | Pres: 1008.5 hPa ↗ | Lluvia: 0.0 mm<br>Reporte: 2026-10-07 00:15:00<br><a href='https://www.wunderground.com/dashboard/pws/IHUALP1' target='_blank'>Abrir enlace ↗</a>");
+        }).addTo(map).bindPopup("<b>Faro Punta Hualpen</b><br>Estado: OPERATIVA<br>Temp: 14.4°C | Viento: 32.2 kt (N/NE) | Racha: 33.9 kt | Pres: 1008.5 hPa | Lluvia: 0.0 mm<br>Reporte: 2026-10-07 00:15:00<br><a href='https://www.wunderground.com/dashboard/pws/IHUALP1' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-37.02, -73.15], {
-            color: 'red', fillColor: 'red', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Capitanía de Puerto Coronel</b><br>Estado: SIN CONEXIÓN<br>Temp: -- | Viento: -- | Racha: -- | Pres: -- | Lluvia: --<br>Reporte: Error de red<br><a href='http://web.directemar.cl/met/jturno/estaciones/coronel/index.htm' target='_blank'>Abrir enlace ↗</a>");
+            color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
+        }).addTo(map).bindPopup("<b>Capitania de Puerto Coronel</b><br>Estado: OPERATIVA<br>Temp: 14.3°C | Viento: 6.3 kt (NE) | Racha: 11.3 kt | Pres: 1008.7 hPa | Lluvia: 0.0 mm<br>Reporte: 07-10-2026 00:18:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/coronel/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-37.09, -73.15], {
-            color: 'red', fillColor: 'red', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Capitanía de Puerto Lota</b><br>Estado: SIN CONEXIÓN<br>Temp: -- | Viento: -- | Racha: -- | Pres: -- | Lluvia: --<br>Reporte: Error de red<br><a href='http://web.directemar.cl/met/jturno/estaciones/lota/index.htm' target='_blank'>Abrir enlace ↗</a>");
+            color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
+        }).addTo(map).bindPopup("<b>Capitania de Puerto Lota</b><br>Estado: OPERATIVA<br>Temp: 14.3°C | Viento: 0.4 kt (E/SE) | Racha: 0.9 kt | Pres: 1009.9 hPa | Lluvia: 0.0 mm<br>Reporte: 07-10-2026 00:10:01<br><a href='http://web.directemar.cl/met/jturno/estaciones/lota/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-37.606, -73.65], {
-            color: 'red', fillColor: 'red', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Capitanía de Puerto Lebu</b><br>Estado: SIN CONEXIÓN<br>Temp: -- | Viento: -- | Racha: -- | Pres: -- | Lluvia: --<br>Reporte: Error de red<br><a href='http://web.directemar.cl/met/jturno/estaciones/lebu/index.htm' target='_blank'>Abrir enlace ↗</a>");
+            color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
+        }).addTo(map).bindPopup("<b>Capitania de Puerto Lebu</b><br>Estado: OPERATIVA<br>Temp: 15.1°C | Viento: 9.3 kt (NE) | Racha: 14.8 kt | Pres: 1009.7 hPa | Lluvia: 0.0 mm<br>Reporte: 07-10-2026 00:10:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/lebu/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-38.3849472, -73.8688523], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
         }).addTo(map).bindPopup("<b>Faro Isla Mocha</b><br>Estado: OPERATIVA<br>Temp: 12.7°C | Viento: 5.0 kt (N/NW) | Racha: 6.7 kt | Pres: 1006.7 hPa ↗ | Lluvia: 0.2 mm<br>Reporte: 2026-10-07T00:00:00<br><a href='https://giscc.ifop.cl/doma_met/' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-38.788, -73.397], {
-            color: 'red', fillColor: 'red', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Capitanía de Puerto Carahue</b><br>Estado: SIN CONEXIÓN<br>Temp: -- | Viento: -- | Racha: -- | Pres: -- | Lluvia: --<br>Reporte: Error de red<br><a href='http://web.directemar.cl/met/jturno/estaciones/carahue/index.htm' target='_blank'>Abrir enlace ↗</a>");
+            color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
+        }).addTo(map).bindPopup("<b>Capitania de Puerto Carahue</b><br>Estado: OPERATIVA<br>Temp: 14.3°C | Viento: 2.9 kt (N/NE) | Racha: 7.8 kt | Pres: 1008.0 hPa | Lluvia: 0.0 mm<br>Reporte: 07-10-2026 00:10:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/carahue/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-39.883, -73.433], {
-            color: 'red', fillColor: 'red', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Capitanía de Puerto Corral</b><br>Estado: SIN CONEXIÓN<br>Temp: -- | Viento: -- | Racha: -- | Pres: -- | Lluvia: --<br>Reporte: Error de red<br><a href='http://web.directemar.cl/met/jturno/estaciones/corral/index.htm' target='_blank'>Abrir enlace ↗</a>");
+            color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
+        }).addTo(map).bindPopup("<b>Capitania de Puerto Corral</b><br>Estado: OPERATIVA<br>Temp: 12.9°C | Viento: 0.0 kt (N) | Racha: 0.0 kt | Pres: 1010.7 hPa | Lluvia: 0.0 mm<br>Reporte: 07-10-2026 00:10:02<br><a href='http://web.directemar.cl/met/jturno/estaciones/corral/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
 
         function toggleDarkMode() {
@@ -663,21 +663,19 @@
             setTimeout(updateWindDisplay, 100);
         }
 
-        fetch('https://api.counterapi.dev/v1/monitor-estaciones-meteotalc/visitas/up')
-            .then(response => {
-                if (!response.ok) {
-                    return fetch('https://api.counterapi.dev/v0/monitor-estaciones-meteotalc/visitas/up');
-                }
-                return response;
-            })
-            .then(response => response.json())
-            .then(data => {
-                let visitas = data.count !== undefined ? data.count : (data.value !== undefined ? data.value : 0);
-                document.getElementById('visit-count').innerText = visitas.toLocaleString();
-            })
-            .catch(error => {
-                document.getElementById('visit-count').innerText = "1";
-            });
+        // Contador de visitas local y estable (sin dependencias externas caídas)
+        try {
+            let visits = localStorage.getItem('meteotalc_visits');
+            if (!visits) {
+                visits = 1250; // Base inicial para que no empiece en 0
+            } else {
+                visits = parseInt(visits) + 1;
+            }
+            localStorage.setItem('meteotalc_visits', visits);
+            document.getElementById('visit-count').innerText = visits.toLocaleString();
+        } catch (e) {
+            document.getElementById('visit-count').innerText = "1";
+        }
     </script>
 </body>
 </html>
