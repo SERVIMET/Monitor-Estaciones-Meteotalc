@@ -801,13 +801,13 @@ def generar_html(resultados_totales, hay_alerta):
     <div class="subtitle-line2">Centro Zonal de Meteorologia Marina de Talcahuano</div>
     <div class="subtitle">Ultima verificacion: {hora_actual_chile} (Tolerancia: {TOLERANCIA_MINUTOS} min)</div>
     {alerta_banner}
-    <div class="summary">Estaciones Operativas: {operativas} de {total_estaciones} | Visitas: <span id="visit-count">Cargando...</span></div>
+    <div class="summary">Estaciones Operativas: {operativas} de {total_estaciones}</div>
     <div id="map"></div>
     <div class="grid">
         {cards_html}
     </div>
     <div style="text-align: center;">
-        <div class="footer-dev">Sgto 2 (Met) Luis Diego Achurra Garces</div>
+        <div class="footer-dev">Desarrollado por Sgto 2° (Met.) Luis Diego Achurra Garcés | Visitas: <span id="visit-count">Cargando...</span></div>
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -901,7 +901,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado correctamente con contador global.")
+    print("✓ index.html actualizado correctamente con el texto completo en el pie de página.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -955,7 +955,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Actualizar index con contador global centralizado [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Actualizar pie de pagina con nombre y rango completos [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
