@@ -876,12 +876,11 @@ def generar_html(resultados_totales, hay_alerta):
             setTimeout(updateWindDisplay, 100);
         }
 
-        fetch('https://countapi.mileshilliard.com/api/v1/hit/monitor-estaciones-meteotalc/visitas')
+        fetch('https://api.counterapi.dev/v1/monitor-estaciones-meteotalc/visitas/up')
             .then(response => response.json())
             .then(data => {
-                let visitas = data.value !== undefined ? data.value : (data.views !== undefined ? data.views : 0);
-                let num = parseInt(visitas);
-                document.getElementById('visit-count').innerText = isNaN(num) ? "0" : num.toLocaleString();
+                let visitas = data.count !== undefined ? data.count : 0;
+                document.getElementById('visit-count').innerText = visitas.toLocaleString();
             })
             .catch(error => {
                 document.getElementById('visit-count').innerText = "0";
