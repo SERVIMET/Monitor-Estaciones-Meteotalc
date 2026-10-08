@@ -861,27 +861,69 @@ def generar_html(resultados_totales, hay_alerta):
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Lógica del contador de visitas inteligente configurado para iniciar en 100
+        // Lógica del contador de visitas conectada a JSONBin.io con tus credenciales integradas
         (function() {{
-            let count = parseInt(localStorage.getItem('meteo_visit_count'));
-            
-            // Si es la primera vez que entra o no hay registro, inicializa en 100
-            if (isNaN(count)) {{
-                count = 100;
-                localStorage.setItem('meteo_visit_count', count);
-            }} else {{
-                const lastVisitTime = sessionStorage.getItem('meteo_session_active');
-                // Si es una pestaña nueva o sesión nueva, incrementa 1 visita real
-                if (!lastVisitTime) {{
-                    count++;
-                    localStorage.setItem('meteo_visit_count', count);
-                    sessionStorage.setItem('meteo_session_active', 'true');
-                }}
+            const BIN_ID = '6ac7a693ffd5d160535962e9';
+            const API_KEY = '$2a$10$cDHP/e2xTNQCfjFeB/JiROhMfW9Xt8yf6tmHSl6gZGzfZApMlSwjy';
+            const url = `https://api.jsonbin.io/v3/b/${{BIN_ID}}/latest`;
+            const updateUrl = `https://api.jsonbin.io/v3/b/${{BIN_ID}}`;
+
+            if (sessionStorage.getItem('meteo_visita_registrada')) {{
+                obtenerContador(false);
+                return;
             }}
+
+            const ultimaVisita = localStorage.getItem('meteo_ultimo_registro');
+            const ahora = new Date().getTime();
             
-            const counterElement = document.getElementById('visitor-count');
-            if (counterElement) {{
-                counterElement.innerText = count.toLocaleString('es-CL');
+            if (ultimaVisita && (ahora - ultimaVisita < 30000)) {{
+                obtenerContador(false);
+                return;
+            }}
+
+            obtenerContador(true);
+
+            function obtenerContador(incrementar) {{
+                fetch(url, {{
+                    headers: {{
+                        'X-Master-Key': API_KEY
+                    }}
+                }})
+                .then(response => response.json())
+                .then(data => {{
+                    const total = data.record.visitas || 100;
+                    actualizarDOM(total);
+                    
+                    if (incrementar) {{
+                        guardarNuevoTotal(total + 1);
+                    }}
+                }})
+                .catch(err => console.error("Error al leer visitas:", err));
+            }}
+
+            function guardarNuevoTotal(nuevoValor) {{
+                fetch(updateUrl, {{
+                    method: 'PUT',
+                    headers: {{
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': API_KEY
+                    }},
+                    body: JSON.stringify({{ visitas: nuevoValor }})
+                }})
+                .then(response => response.json())
+                .then(data => {{
+                    actualizarDOM(nuevoValor);
+                    sessionStorage.setItem('meteo_visita_registrada', 'true');
+                    localStorage.setItem('meteo_ultimo_registro', new Date().getTime());
+                }})
+                .catch(err => console.error("Error al actualizar visitas:", err));
+            }}
+
+            function actualizarDOM(valor) {{
+                const elemento = document.getElementById('visitor-count');
+                if (elemento) {{
+                    elemento.innerText = valor.toLocaleString('es-CL');
+                }}
             }}
         }})();
 
@@ -950,7 +992,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con contador inicializado desde 100.")
+    print("✓ index.html actualizado con el contador de JSONBin.io.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -990,7 +1032,7 @@ def ejecutar_monitoreo():
         if not ok: hubo_fallas = True
         resultados_dict[est_ifop["nombre"]] = {
             "nombre": est_ifop["nombre"], "url": est_ifop["url"], "lat": est_ifop["lat"], "lon": est_ifop["lon"],
-            "ok": ok, "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
+            "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
             "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
         }
 
@@ -1004,7 +1046,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Actualizar contador iniciando desde 100 [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Actualizar contador global con JSONBin [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
