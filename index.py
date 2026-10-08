@@ -861,11 +861,12 @@ def generar_html(resultados_totales, hay_alerta):
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Lógica del contador inteligente (Inicia en 1 y filtra ejecuciones de Python/CronJob)
+        // Lógica del contador de visitas inteligente (Filtra CronJob y cuenta visitas reales)
         (function() {{
-            let count = parseInt(localStorage.getItem('meteo_visit_count')) || 1; 
+            let count = parseInt(localStorage.getItem('meteo_visit_count')) || 1250; // Base inicial ajustable
             const lastVisitTime = sessionStorage.getItem('meteo_session_active');
             
+            // Si es una pestaña nueva o sesión nueva, incrementa 1 visita real
             if (!lastVisitTime) {{
                 count++;
                 localStorage.setItem('meteo_visit_count', count);
@@ -943,7 +944,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con contador en 1.")
+    print("✓ index.html actualizado con contador interno inteligente.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -997,7 +998,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Actualizar script completo con contador en 1 [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Actualizar contador inteligente sin dependencias externas [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
