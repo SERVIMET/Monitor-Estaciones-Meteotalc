@@ -336,14 +336,16 @@ def consultar_directemar(est):
             fecha_estacion = datetime.strptime(fecha_str, formato_fecha).replace(tzinfo=ZONA_CHILE)
             dif_min = abs((obtener_hora_chile() - fecha_estacion).total_seconds() / 60)
 
+            # PRIMERO: Evaluamos si está fuera de tiempo (Desactualizada / Offline)
+            if dif_min > TOLERANCIA_MINUTOS and not (170 <= dif_min <= 200):
+                return False, f"DESACTUALIZADA ({int(dif_min)} min)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
+
+            # SEGUNDO: Si la fecha está al día, evaluamos si los datos están congelados
             congelada = verificar_estacion_congelada(est["nombre"], temp, viento, racha)
             if congelada:
                 return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
-            if dif_min <= TOLERANCIA_MINUTOS or (170 <= dif_min <= 200):
-                return True, "OPERATIVA", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
-            else:
-                return False, f"DESACTUALIZADA ({int(dif_min)} min)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
+            return True, "OPERATIVA", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
     except Exception as e:
         print(f"Error Directemar {est['nombre']}: {e}")
@@ -532,7 +534,7 @@ def generar_html(resultados_totales, hay_alerta):
         clase = "ok" if r['ok'] else "error"
         icono = "🔴" if not r['ok'] else "🟢"
         
-        # Prioridad absoluta: Si está desactualizada / sin conexión, marca (offline) por encima de (sin red)
+        # Asignación de etiquetas según estado procesado
         etiqueta_estado = ""
         if not r['ok']:
             est_txt_lower = r['estado'].lower()
@@ -969,7 +971,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con prioridad de estado (offline sobre sin red).")
+    print("✓ index.html actualizado priorizando desactualizada (offline) sobre congelada (sin red).")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1023,7 +1025,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Ajustar prioridad de etiquetas offline por sobre sin red [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Invertir orden de validación para priorizar offline sobre congelada [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
