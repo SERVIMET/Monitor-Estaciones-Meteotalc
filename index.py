@@ -532,11 +532,13 @@ def generar_html(resultados_totales, hay_alerta):
         clase = "ok" if r['ok'] else "error"
         icono = "🔴" if not r['ok'] else "🟢"
         
-        # Determinamos el mensaje exacto al lado del círculo rojo según el estado
+        # Prioridad absoluta: Si está desactualizada / sin conexión, marca (offline) por encima de (sin red)
         etiqueta_estado = ""
         if not r['ok']:
             est_txt_lower = r['estado'].lower()
-            if "congelada" in est_txt_lower or "sin conexion" in est_txt_lower:
+            if "desactualizada" in est_txt_lower or "sin conexion" in est_txt_lower or "sin datos" in est_txt_lower:
+                etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
+            elif "congelada" in est_txt_lower:
                 etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(sin red)</span>'
             else:
                 etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
@@ -967,7 +969,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con etiquetas (offline) y (sin red).")
+    print("✓ index.html actualizado con prioridad de estado (offline sobre sin red).")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1021,7 +1023,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Agregar etiquetas offline y sin red en tarjetas de estaciones [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Ajustar prioridad de etiquetas offline por sobre sin red [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
