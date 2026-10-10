@@ -531,6 +531,16 @@ def generar_html(resultados_totales, hay_alerta):
     for r in resultados_totales:
         clase = "ok" if r['ok'] else "error"
         icono = "🔴" if not r['ok'] else "🟢"
+        
+        # Determinamos el mensaje exacto al lado del círculo rojo según el estado
+        etiqueta_estado = ""
+        if not r['ok']:
+            est_txt_lower = r['estado'].lower()
+            if "congelada" in est_txt_lower or "sin conexion" in est_txt_lower:
+                etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(sin red)</span>'
+            else:
+                etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
+
         footer_texto = f"Reporte: {r['ultimo']}"
 
         if r['dir_viento']:
@@ -557,7 +567,7 @@ def generar_html(resultados_totales, hay_alerta):
             <div class="card {clase}">
                 <div class="card-header">
                     <span class="station-name">{r['nombre']}</span>
-                    <span class="status-badge">{icono}</span>
+                    <span class="status-badge">{icono}{etiqueta_estado}</span>
                 </div>
                 {cuerpo_tarjeta}
                 <div class="card-footer-info">
@@ -698,7 +708,7 @@ def generar_html(resultados_totales, hay_alerta):
         
         .card-header {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }}
         .station-name {{ font-weight: bold; font-size: 13.5px; color: var(--station-name-color); line-height: 1.1; }}
-        .status-badge {{ font-size: 11px; }}
+        .status-badge {{ font-size: 11px; display: flex; align-items: center; }}
         
         .card-body-content {{
             display: flex;
@@ -957,7 +967,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con el contador global de Google Sheets.")
+    print("✓ index.html actualizado con etiquetas (offline) y (sin red).")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1011,7 +1021,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Actualizar index.html con contador global de Google Sheets [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Agregar etiquetas offline y sin red en tarjetas de estaciones [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
