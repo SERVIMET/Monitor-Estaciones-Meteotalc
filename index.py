@@ -16,7 +16,6 @@ LIMITE_LECTURAS_REPETIDAS = 10
 ZONA_CHILE = ZoneInfo("America/Santiago")
 ARCHIVO_HISTORIAL = "historial_presion.json"
 ARCHIVO_CONGELADAS = "historial_congeladas.json"
-ARCHIVO_VISITAS = "visitas.json"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -253,14 +252,6 @@ def gestionar_historial_presion(nombre_estacion, presion_actual):
         return " ↘"
     else:
         return " ➔"
-
-def inicializar_visitas_json():
-    if not os.path.exists(ARCHIVO_VISITAS):
-        try:
-            with open(ARCHIVO_VISITAS, "w", encoding="utf-8") as f:
-                json.dump({"visitas": 150}, f)
-        except Exception:
-            pass
 
 def consultar_directemar(est):
     try:
@@ -852,7 +843,7 @@ def generar_html(resultados_totales, hay_alerta):
                 installBanner.style.display = 'flex';
                 btnInstall.innerText = 'Ver pasos';
                 btnInstall.onclick = () => {{
-                    alert("Para instalar em iPhone/iPad:\\n1. Toca el botón 'Compartir' 📤 abajo en Safari.\\n2. Selecciona 'Agregar al est. de inicio' ➕.");
+                    alert("Para instalar en iPhone/iPad:\\n1. Toca el botón 'Compartir' 📤 abajo en Safari.\\n2. Selecciona 'Agregar al est. de inicio' ➕.");
                 }};
             }} else {{
                 window.addEventListener('beforeinstallprompt', (e) => {{
@@ -877,26 +868,28 @@ def generar_html(resultados_totales, hay_alerta):
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Lógica del contador global mediante visitas.json local inteligente
+        // Lógica del contador global conectado a Google Sheets (sin alterar por CronJob)
         (function() {{
-            fetch('visitas.json?' + new Date().getTime())
+            const scriptURL = "https://script.google.com/macros/s/AKfycbx50xKakQAimpxLblmVOyE7BGHGWxsyw9Bde3VJio-vDiV2iGoHbS85pS07xXeSGLgW/exec";
+            let urlFinal = scriptURL;
+
+            // Evitamos que cuente si ya se registró en esta sesión de navegador
+            if (!sessionStorage.getItem('meteo_visita_contada')) {{
+                urlFinal += "?accion=incrementar";
+                sessionStorage.setItem('meteo_visita_contada', 'true');
+            }}
+
+            fetch(urlFinal)
                 .then(response => response.json())
                 .then(data => {{
-                    let baseVisitas = data.visitas || 150;
-                    
-                    if (!sessionStorage.getItem('meteo_visita_contada')) {{
-                        baseVisitas++;
-                        sessionStorage.setItem('meteo_visita_contada', 'true');
-                    }}
-                    
-                    const elemento = document.getElementById('visitor-count');
-                    if (elemento) {{
-                        elemento.innerText = baseVisitas.toLocaleString('es-CL');
+                    if (data && data.visitas !== undefined) {{
+                        const elemento = document.getElementById('visitor-count');
+                        if (elemento) {{
+                            elemento.innerText = Number(data.visitas).toLocaleString('es-CL');
+                        }}
                     }}
                 }})
-                .catch(err => {{
-                    console.error("Error al leer visitas:", err);
-                }});
+                .catch(err => console.error("Error al conectar con el contador global:", err));
         }})();
 
         var map = L.map('map').setView([-37.5, -73.2], 7);
@@ -964,7 +957,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado.")
+    print("✓ index.html actualizado con el contador global de Google Sheets.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -978,7 +971,6 @@ def generar_json_esp32(resultados_totales):
 
 def ejecutar_monitoreo():
     print(f"\n--- [{obtener_hora_chile().strftime('%H:%M:%S')}] Verificando litoral ---")
-    inicializar_visitas_json()
     resultados_dict = {}
     hubo_fallas = False
 
@@ -1018,13 +1010,8 @@ def ejecutar_monitoreo():
 def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
-        # Añadimos visitas.json para que se suba junto a los demás archivos
-        archivos_a_subir = ["index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS]
-        if os.path.exists(ARCHIVO_VISITAS):
-            archivos_a_subir.append(ARCHIVO_VISITAS)
-
-        subprocess.run(["git", "add"] + archivos_a_subir, check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Actualizar monitor y contador de visitas [skip ci]"], capture_output=True, text=True)
+        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Actualizar index.html con contador global de Google Sheets [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
