@@ -16,6 +16,7 @@ LIMITE_LECTURAS_REPETIDAS = 10
 ZONA_CHILE = ZoneInfo("America/Santiago")
 ARCHIVO_HISTORIAL = "historial_presion.json"
 ARCHIVO_CONGELADAS = "historial_congeladas.json"
+ARCHIVO_VISITAS = "visitas.json"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -252,6 +253,14 @@ def gestionar_historial_presion(nombre_estacion, presion_actual):
         return " ↘"
     else:
         return " ➔"
+
+def inicializar_visitas_json():
+    if not os.path.exists(ARCHIVO_VISITAS):
+        try:
+            with open(ARCHIVO_VISITAS, "w", encoding="utf-8") as f:
+                json.dump({"visitas": 150}, f)
+        except Exception:
+            pass
 
 def consultar_directemar(est):
     try:
@@ -814,7 +823,7 @@ def generar_html(resultados_totales, hay_alerta):
         {cards_html}
     </div>
     <div style="text-align: center;">
-        <div class="footer-dev">Desarrollado por Sgto 2° (Met.) Luis Diego Achurra Garcés &nbsp;|&nbsp; 👁️ Visitas: <span id="visitor-count" style="font-weight: bold; color: #60a5fa;">100</span></div>
+        <div class="footer-dev">Desarrollado por Sgto 2° (Met.) Luis Diego Achurra Garcés &nbsp;|&nbsp; 👁️ Visitas: <span id="visitor-count" style="font-weight: bold; color: #60a5fa;">150</span></div>
     </div>
     
     <!-- Banner amigable para instalar la App -->
@@ -843,7 +852,7 @@ def generar_html(resultados_totales, hay_alerta):
                 installBanner.style.display = 'flex';
                 btnInstall.innerText = 'Ver pasos';
                 btnInstall.onclick = () => {{
-                    alert("Para instalar en iPhone/iPad:\\n1. Toca el botón 'Compartir' 📤 abajo en Safari.\\n2. Selecciona 'Agregar al est. de inicio' ➕.");
+                    alert("Para instalar em iPhone/iPad:\\n1. Toca el botón 'Compartir' 📤 abajo en Safari.\\n2. Selecciona 'Agregar al est. de inicio' ➕.");
                 }};
             }} else {{
                 window.addEventListener('beforeinstallprompt', (e) => {{
@@ -868,70 +877,26 @@ def generar_html(resultados_totales, hay_alerta):
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Lógica del contador de visitas conectada a JSONBin.io con tus credenciales integradas
+        // Lógica del contador global mediante visitas.json local inteligente
         (function() {{
-            const BIN_ID = '6ac7a693ffd5d160535962e9';
-            const API_KEY = '$2a$10$cDHP/e2xTNQCfjFeB/JiROhMfW9Xt8yf6tmHSl6gZGzfZApMlSwjy';
-            const url = `https://api.jsonbin.io/v3/b/${{BIN_ID}}/latest`;
-            const updateUrl = `https://api.jsonbin.io/v3/b/${{BIN_ID}}`;
-
-            if (sessionStorage.getItem('meteo_visita_registrada')) {{
-                obtenerContador(false);
-                return;
-            }}
-
-            const ultimaVisita = localStorage.getItem('meteo_ultimo_registro');
-            const ahora = new Date().getTime();
-            
-            if (ultimaVisita && (ahora - ultimaVisita < 30000)) {{
-                obtenerContador(false);
-                return;
-            }}
-
-            obtenerContador(true);
-
-            function obtenerContador(incrementar) {{
-                fetch(url, {{
-                    headers: {{
-                        'X-Master-Key': API_KEY
-                    }}
-                }})
+            fetch('visitas.json?' + new Date().getTime())
                 .then(response => response.json())
                 .then(data => {{
-                    const total = data.record.visitas || 100;
-                    actualizarDOM(total);
+                    let baseVisitas = data.visitas || 150;
                     
-                    if (incrementar) {{
-                        guardarNuevoTotal(total + 1);
+                    if (!sessionStorage.getItem('meteo_visita_contada')) {{
+                        baseVisitas++;
+                        sessionStorage.setItem('meteo_visita_contada', 'true');
+                    }}
+                    
+                    const elemento = document.getElementById('visitor-count');
+                    if (elemento) {{
+                        elemento.innerText = baseVisitas.toLocaleString('es-CL');
                     }}
                 }})
-                .catch(err => console.error("Error al leer visitas:", err));
-            }}
-
-            function guardarNuevoTotal(nuevoValor) {{
-                fetch(updateUrl, {{
-                    method: 'PUT',
-                    headers: {{
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': API_KEY
-                    }},
-                    body: JSON.stringify({{ visitas: nuevoValor }})
-                }})
-                .then(response => response.json())
-                .then(data => {{
-                    actualizarDOM(nuevoValor);
-                    sessionStorage.setItem('meteo_visita_registrada', 'true');
-                    localStorage.setItem('meteo_ultimo_registro', new Date().getTime());
-                }})
-                .catch(err => console.error("Error al actualizar visitas:", err));
-            }}
-
-            function actualizarDOM(valor) {{
-                const elemento = document.getElementById('visitor-count');
-                if (elemento) {{
-                    elemento.innerText = valor.toLocaleString('es-CL');
-                }}
-            }}
+                .catch(err => {{
+                    console.error("Error al leer visitas:", err);
+                }});
         }})();
 
         var map = L.map('map').setView([-37.5, -73.2], 7);
@@ -999,7 +964,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con el manifiesto, íconos PWA, banner de instalación y contador.")
+    print("✓ index.html actualizado.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1013,6 +978,7 @@ def generar_json_esp32(resultados_totales):
 
 def ejecutar_monitoreo():
     print(f"\n--- [{obtener_hora_chile().strftime('%H:%M:%S')}] Verificando litoral ---")
+    inicializar_visitas_json()
     resultados_dict = {}
     hubo_fallas = False
 
@@ -1052,8 +1018,13 @@ def ejecutar_monitoreo():
 def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
-        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Actualizar index.html con enlace a manifest y PWA [skip ci]"], capture_output=True, text=True)
+        # Añadimos visitas.json para que se suba junto a los demás archivos
+        archivos_a_subir = ["index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS]
+        if os.path.exists(ARCHIVO_VISITAS):
+            archivos_a_subir.append(ARCHIVO_VISITAS)
+
+        subprocess.run(["git", "add"] + archivos_a_subir, check=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Actualizar monitor y contador de visitas [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
