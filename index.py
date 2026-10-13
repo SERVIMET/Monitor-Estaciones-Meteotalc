@@ -260,8 +260,6 @@ def gestionar_historial_lluvia(nombre_estacion, lluvia_str):
         return
 
     ahora = obtener_hora_chile()
-    fecha_hoy = ahora.strftime("%Y-%m-%d")
-
     historial = {}
     if os.path.exists(ARCHIVO_LLUVIA):
         try:
@@ -271,12 +269,15 @@ def gestionar_historial_lluvia(nombre_estacion, lluvia_str):
             historial = {}
 
     if nombre_estacion not in historial:
-        historial[nombre_estacion] = {}
+        historial[nombre_estacion] = []
 
-    est_lluvia = historial[nombre_estacion]
-    actual_max = est_lluvia.get(fecha_hoy, 0.0)
-    if val_lluvia > actual_max:
-        est_lluvia[fecha_hoy] = val_lluvia
+    registros = historial[nombre_estacion]
+    registros.append({"t": ahora.timestamp(), "pp": val_lluvia})
+
+    # Guardar últimas 25 horas para el gráfico de 24h
+    limite_tiempo = ahora.timestamp() - (25 * 3600)
+    registros = [r for r in registros if r["t"] >= limite_tiempo]
+    historial[nombre_estacion] = registros
 
     try:
         with open(ARCHIVO_LLUVIA, "w", encoding="utf-8") as f:
@@ -586,7 +587,7 @@ def generar_html(resultados_totales, hay_alerta):
         else:
             viento_contenido = f'<span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
 
-        # Estructura corregida: Presión (con su valor y mini sparkline) y Lluvia (con su valor limpio interactivo) en dos columnas iguales
+        # Tarjeta optimizada con 3 columnas en la fila inferior: Presión, Mini Sparkline de Presión y Precipitación interactiva
         cuerpo_tarjeta = f"""
             <div class="card-body-content">
                 <div class="row-top">
@@ -594,13 +595,14 @@ def generar_html(resultados_totales, hay_alerta):
                     <div class="item-box">{viento_contenido}</div>
                     <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r['racha']}</span></div>
                 </div>
-                <div class="row-bottom-2">
+                <div class="row-bottom-3">
+                    <div class="item-box"><span style="font-size: 0.62em; font-weight: 700;">⏲️ {r['pres']}</span></div>
                     <div class="item-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalPresion('{r['nombre']}');" title="Ver gráfico de presión 24h">
-                        <span style="font-size: 0.52em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.0;">⏲️ {r['pres']}</span>
-                        <svg class="mini-sparkline" data-estacion="{r['nombre']}" width="110" height="16" style="overflow:visible; margin-top:2px;"></svg>
+                        <span style="font-size: 0.52em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.0;">📈 TENDENCIA 24H</span>
+                        <svg class="mini-sparkline" data-estacion="{r['nombre']}" width="70" height="18" style="overflow:visible;"></svg>
                     </div>
-                    <div class="item-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalLluvia('{r['nombre']}');" title="Ver gráfico mensual de precipitación" style="justify-content: center; height: 100%;">
-                        <span style="font-size: 0.75em; font-weight: 700;">🌧️ {r['precipitacion']}</span>
+                    <div class="item-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalLluvia('{r['nombre']}');" title="Ver gráfico de precipitación 24h">
+                        <span style="font-size: 0.62em; font-weight: 700;">🌧️ {r['precipitacion']}</span>
                     </div>
                 </div>
             </div>
@@ -760,20 +762,20 @@ def generar_html(resultados_totales, hay_alerta):
             gap: 4px;
             margin: 4px 0;
         }}
-        .row-top, .row-bottom-2 {{
+        .row-top, .row-bottom-3 {{
             display: grid;
             gap: 4px;
         }}
         .row-top {{
             grid-template-columns: 1.1fr 1fr 1fr;
         }}
-        .row-bottom-2 {{
-            grid-template-columns: 1fr 1fr;
+        .row-bottom-3 {{
+            grid-template-columns: 1fr 1.1fr 1fr;
         }}
         
         .item-box {{
             background: var(--item-bg);
-            padding: 4px 4px;
+            padding: 4px 2px;
             border-radius: 6px;
             border: 1px solid var(--item-border);
             text-align: center;
@@ -802,6 +804,8 @@ def generar_html(resultados_totales, hay_alerta):
         .time {{ font-size: 0.68em; color: var(--time-color); }}
         .click-text {{ font-size: 0.68em; color: var(--click-color); font-weight: bold; font-style: italic; }}
         
+        .footer-dev {{ background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: table; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }}
+        
         .floating-controls {{
             position: fixed;
             top: 10px;
@@ -828,8 +832,16 @@ def generar_html(resultados_totales, hay_alerta):
             transition: all 0.2s ease;
             padding: 0;
         }}
-        .icon-btn:hover {{ transform: scale(1.1); }}
-        .wind-unit-btn {{ font-size: 11px; font-weight: 800; letter-spacing: -0.5px; }}
+        
+        .icon-btn:hover {{
+            transform: scale(1.1);
+        }}
+
+        .wind-unit-btn {{
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }}
 
         /* Modales */
         .modal-overlay {{
@@ -878,13 +890,27 @@ def generar_html(resultados_totales, hay_alerta):
             cursor: pointer;
             color: var(--sub-color);
         }}
-        .close-modal:hover {{ color: var(--text-color); }}
+        .close-modal:hover {{
+            color: var(--text-color);
+        }}
 
         @media (max-width: 600px) {{
-            h1 {{ padding-right: 45px; font-size: 19px; }}
-            .floating-controls {{ top: 8px; right: 8px; }}
-            .icon-btn {{ width: 32px; height: 32px; font-size: 12px; }}
-            .wind-unit-btn {{ font-size: 10px; }}
+            h1 {{
+                padding-right: 45px;
+                font-size: 19px;
+            }}
+            .floating-controls {{
+                top: 8px;
+                right: 8px;
+            }}
+            .icon-btn {{
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+            }}
+            .wind-unit-btn {{
+                font-size: 10px;
+            }}
         }}
     </style>
 </head>
@@ -919,12 +945,12 @@ def generar_html(resultados_totales, hay_alerta):
         </div>
     </div>
 
-    <!-- Modal del Gráfico de Pluviometría Mensual -->
+    <!-- Modal del Gráfico de Precipitación 24H -->
     <div id="lluviaModal" class="modal-overlay">
         <div class="modal-content-large">
             <span class="close-modal" onclick="closeLluviaModal()">&times;</span>
-            <h3 id="modal-lluvia-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Precipitación Acumulada Mensual</h3>
-            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Registro diario del mes actual</p>
+            <h3 id="modal-lluvia-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Precipitación Acumulada</h3>
+            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Evolución de lluvia de las últimas 24 horas</p>
             <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border);">
                 <svg id="modal-lluvia-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
             </div>
@@ -987,7 +1013,7 @@ def generar_html(resultados_totales, hay_alerta):
             if (event.target === document.getElementById('lluviaModal')) document.getElementById('lluviaModal').style.display = 'none';
         }}
 
-        // Renderizar mini gráficos de presión (sparklines)
+        // Renderizar mini gráficos de presión (sparklines) en las tarjetas
         function renderizarSparklines() {{
             const elements = document.querySelectorAll('.mini-sparkline');
             elements.forEach(svg => {{
@@ -1005,8 +1031,8 @@ def generar_html(resultados_totales, hay_alerta):
                 const maxP = Math.max(...presiones);
                 const rangoP = maxP - minP || 1;
 
-                const w = 110;
-                const h = 16;
+                const w = 70;
+                const h = 18;
                 const puntos = datos24h.map((r, i) => {{
                     const x = (i / (datos24h.length - 1)) * w;
                     const y = h - ((r.p - minP) / rangoP) * (h - 4) - 2;
@@ -1017,7 +1043,7 @@ def generar_html(resultados_totales, hay_alerta):
             }});
         }}
 
-        // Modal Presión 24H
+        // Abrir modal con gráfico detallado de presión 24h
         function abrirModalPresion(estacion) {{
             const registros = historialPresionData[estacion];
             document.getElementById('modal-station-title').innerText = "Tendencia: " + estacion;
@@ -1044,11 +1070,17 @@ def generar_html(resultados_totales, hay_alerta):
             let maxP = Math.max(...presiones);
             if (minP === maxP) {{ minP -= 1; maxP += 1; }}
             const margen = (maxP - minP) * 0.1;
-            minP -= margen; maxP += margen;
+            minP -= margen;
+            maxP += margen;
             const rangoP = maxP - minP;
 
-            const width = 460, height = 180, offsetX = 35, offsetY = 15;
-            let pathD = "", puntosHtml = "";
+            const width = 460;
+            const height = 180;
+            const offsetX = 35;
+            const offsetY = 15;
+
+            let pathD = "";
+            let puntosHtml = "";
 
             datos24h.forEach((r, i) => {{
                 const x = offsetX + (i / (datos24h.length - 1)) * (width - offsetX);
@@ -1059,66 +1091,75 @@ def generar_html(resultados_totales, hay_alerta):
             }});
 
             const medP = (minP + maxP) / 2;
+            const yMin = offsetY + height;
+            const yMed = offsetY + height / 2;
+            const yMax = offsetY;
+
             svgChart.innerHTML = `
-                <line x1="${{offsetX}}" y1="${{offsetY + height}}" x2="${{width}}" y2="${{offsetY + height}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                <line x1="${{offsetX}}" y1="${{offsetY + height/2}}" x2="${{width}}" y2="${{offsetY + height/2}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                <line x1="${{offsetX}}" y1="${{offsetY}}" x2="${{width}}" y2="${{offsetY}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                <text x="${{offsetX - 5}}" y="${{offsetY + height + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{minP.toFixed(1)}}</text>
-                <text x="${{offsetX - 5}}" y="${{offsetY + height/2 + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{medP.toFixed(1)}}</text>
-                <text x="${{offsetX - 5}}" y="${{offsetY + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxP.toFixed(1)}}</text>
+                <line x1="${{offsetX}}" y1="${{yMin}}" x2="${{width}}" y2="${{yMin}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                <line x1="${{offsetX}}" y1="${{yMed}}" x2="${{width}}" y2="${{yMed}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                <line x1="${{offsetX}}" y1="${{yMax}}" x2="${{width}}" y2="${{yMax}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                
+                <text x="${{offsetX - 5}}" y="${{yMin + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{minP.toFixed(1)}}</text>
+                <text x="${{offsetX - 5}}" y="${{yMed + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{medP.toFixed(1)}}</text>
+                <text x="${{offsetX - 5}}" y="${{yMax + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxP.toFixed(1)}}</text>
+                
                 <path d="${{pathD}}" fill="none" stroke="#2563eb" stroke-width="2.5" />
                 ${{puntosHtml}}
             `;
+
             document.getElementById('presionModal').style.display = 'flex';
         }}
 
-        // Modal Lluvia Mensual
+        // Abrir modal con gráfico detallado de precipitación 24h
         function abrirModalLluvia(estacion) {{
-            document.getElementById('modal-lluvia-title').innerText = "Precipitación Mensual: " + estacion;
+            const registros = historialLluviaData[estacion];
+            document.getElementById('modal-lluvia-title').innerText = "Precipitación: " + estacion;
             const svgChart = document.getElementById('modal-lluvia-chart');
-            const registrosDias = historialLluviaData[estacion] || {{}};
-
-            const hoy = new Date();
-            const anioActual = hoy.getFullYear();
-            const mesActual = hoy.getMonth();
-            const diasEnMes = new Date(anioActual, mesActual + 1, 0).getDate();
-
-            let datosMes = [];
-            let maxLluvia = 1.0;
-
-            for (let d = 1; d <= diasEnMes; d++) {{
-                let diaStr = String(d).padStart(2, '0');
-                let mesStr = String(mesActual + 1).padStart(2, '0');
-                let fechaKey = `${{anioActual}}-${{mesStr}}-${{diaStr}}`;
-                let val = registrosDias[fechaKey] || 0.0;
-                datosMes.push({{ dia: d, lluvia: val }});
-                if (val > maxLluvia) maxLluvia = val;
+            
+            if (!registros || registros.length < 2) {{
+                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">No hay suficiente historial de lluvia registrado aún</text>';
+                document.getElementById('lluviaModal').style.display = 'flex';
+                return;
             }}
 
-            const width = 460, height = 170, offsetX = 35, offsetY = 15;
+            const ahora = Date.now() / 1000;
+            const hace24h = ahora - (24 * 3600);
+            const datos24h = registros.filter(r => r.t >= hace24h && r.pp !== null);
+
+            if (datos24h.length < 2) {{
+                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">Esperando más ciclos de lectura (24h)</text>';
+                document.getElementById('lluviaModal').style.display = 'flex';
+                return;
+            }}
+
+            const lluvias = datos24h.map(r => r.pp);
+            let maxPp = Math.max(...lluvias);
+            if (maxPp <= 0) maxPp = 1.0; // Rango mínimo visual
+
+            const width = 460;
+            const height = 180;
+            const offsetX = 35;
+            const offsetY = 15;
+
             let barsHtml = "";
-            let labelsHtml = "";
-            const anchoBarra = (width - offsetX) / diasEnMes - 3;
+            const anchoBarra = Math.max((width - offsetX) / datos24h.length - 2, 2);
 
-            datosMes.forEach((item, i) => {{
-                const x = offsetX + i * ((width - offsetX) / diasEnMes) + 2;
-                const hBarra = (item.lluvia / maxLluvia) * height;
+            datos24h.forEach((r, i) => {{
+                const x = offsetX + (i / (datos24h.length - 1)) * (width - offsetX - 10);
+                const hBarra = (r.pp / maxPp) * height;
                 const y = offsetY + height - hBarra;
-
-                barsHtml += `<rect x="${{x}}" y="${{y}}" width="${{Math.max(anchoBarra, 2)}}" height="${{hBarra}}" fill="#3b82f6" rx="2"><title>Día ${{item.dia}}: ${{item.lluvia.toFixed(1)}} mm</title></rect>`;
-                
-                if (item.dia % 5 === 0 || item.dia === 1) {{
-                    labelsHtml += `<text x="${{x + anchoBarra/2}}" y="${{offsetY + height + 14}}" text-anchor="middle" font-size="9" fill="#64748b">${{item.dia}}</text>`;
-                }}
+                barsHtml += `<rect x="${{x}}" y="${{y}}" width="${{anchoBarra}}" height="${{hBarra}}" fill="#0284c7" rx="2"><title>${{r.pp.toFixed(1)}} mm</title></rect>`;
             }});
 
             svgChart.innerHTML = `
                 <line x1="${{offsetX}}" y1="${{offsetY + height}}" x2="${{width}}" y2="${{offsetY + height}}" stroke="#cbd5e1" />
-                <text x="${{offsetX - 5}}" y="${{offsetY + height + 4}}" text-anchor="end" font-size="10" fill="#64748b">0</text>
-                <text x="${{offsetX - 5}}" y="${{offsetY + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxLluvia.toFixed(1)}} mm</text>
+                <line x1="${{offsetX}}" y1="${{offsetY}}" x2="${{width}}" y2="${{offsetY}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                <text x="${{offsetX - 5}}" y="${{offsetY + height + 4}}" text-anchor="end" font-size="10" fill="#64748b">0.0</text>
+                <text x="${{offsetX - 5}}" y="${{offsetY + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxPp.toFixed(1)}} mm</text>
                 ${{barsHtml}}
-                ${{labelsHtml}}
             `;
+
             document.getElementById('lluviaModal').style.display = 'flex';
         }}
     </script>
@@ -1139,7 +1180,9 @@ def generar_html(resultados_totales, hay_alerta):
                 .then(data => {{
                     if (data && data.visitas !== undefined) {{
                         const elemento = document.getElementById('visitor-count');
-                        if (elemento) elemento.innerText = Number(data.visitas).toLocaleString('es-CL');
+                        if (elemento) {{
+                            elemento.innerText = Number(data.visitas).toLocaleString('es-CL');
+                        }}
                     }}
                 }})
                 .catch(err => console.error("Error al conectar con el contador global:", err));
@@ -1210,11 +1253,14 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html corregido: cuadros de presión y lluvia alineados y funcionales.")
+    print("✓ index.html actualizado con gráfico de precipitación de 24h interactivo.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
-    data_json = { "estaciones": estados_12_estaciones }
+    data_json = {
+        "estaciones": estados_12_estaciones
+    }
+    
     with open("estado_leds.json", "w", encoding="utf-8") as f:
         json.dump(data_json, f)
     print("✓ estado_leds.json generado con las 12 estaciones.")
@@ -1261,7 +1307,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_LLUVIA, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Corregir diseño de tarjeta y funcionalidad de modales de presion y lluvia [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Agregar grafico de precipitacion de 24 horas y modal interactivo [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
