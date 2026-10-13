@@ -336,11 +336,9 @@ def consultar_directemar(est):
             fecha_estacion = datetime.strptime(fecha_str, formato_fecha).replace(tzinfo=ZONA_CHILE)
             dif_min = abs((obtener_hora_chile() - fecha_estacion).total_seconds() / 60)
 
-            # PRIMERO: Evaluamos si está fuera de tiempo (Desactualizada / Offline)
             if dif_min > TOLERANCIA_MINUTOS and not (170 <= dif_min <= 200):
                 return False, f"DESACTUALIZADA ({int(dif_min)} min)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
-            # SEGUNDO: Si la fecha está al día, evaluamos si los datos están congelados
             congelada = verificar_estacion_congelada(est["nombre"], temp, viento, racha)
             if congelada:
                 return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
@@ -534,7 +532,6 @@ def generar_html(resultados_totales, hay_alerta):
         clase = "ok" if r['ok'] else "error"
         icono = "🔴" if not r['ok'] else "🟢"
         
-        # Asignación de etiquetas según estado procesado
         etiqueta_estado = ""
         if not r['ok']:
             est_txt_lower = r['estado'].lower()
@@ -793,6 +790,45 @@ def generar_html(resultados_totales, hay_alerta):
             letter-spacing: -0.5px;
         }}
 
+        /* Estilos del Modal QR */
+        .modal-qr {{
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }}
+        .modal-content {{
+            background: var(--summary-bg);
+            color: var(--text-color);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid var(--summary-border);
+            max-width: 280px;
+            width: 90%;
+            position: relative;
+        }}
+        .close-qr {{
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--sub-color);
+        }}
+        .close-qr:hover {{
+            color: var(--text-color);
+        }}
+
         @media (max-width: 600px) {{
             h1 {{
                 padding-right: 45px;
@@ -817,7 +853,22 @@ def generar_html(resultados_totales, hay_alerta):
     <div class="floating-controls">
         <button class="icon-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="Cambiar Modo Oscuro/Claro">🌙</button>
         <button class="icon-btn wind-unit-btn" onclick="toggleWindUnit()" id="windUnitBtn" title="Cambiar Unidad de Viento">kt</button>
+        <button class="icon-btn" onclick="openQRModal()" title="Ver Código QR de Acceso">📱</button>
     </div>
+
+    <!-- Modal del Código QR -->
+    <div id="qrModal" class="modal-qr">
+        <div class="modal-content">
+            <span class="close-qr" onclick="closeQRModal()">&times;</span>
+            <h3 style="margin-top: 5px; margin-bottom: 15px; font-size: 16px; color: var(--h1-color);">Acceso Directo</h3>
+            <div id="qrcode-container" style="background: white; padding: 10px; border-radius: 12px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <!-- Contenedor donde se dibuja el QR generado por JS -->
+                <div id="qrcode"></div>
+            </div>
+            <p style="font-size: 12px; margin-top: 12px; margin-bottom: 0px; font-weight: bold; color: var(--sub-color);">¡Escanéeme para abrir el monitor!</p>
+        </div>
+    </div>
+
     <h1>Monitor de Estaciones Automaticas</h1>
     <div class="subtitle-line2">Centro Zonal de Meteorologia Marina de Talcahuano</div>
     <div class="subtitle">Ultima verificacion: {hora_actual_chile} (Tolerancia: {TOLERANCIA_MINUTOS} min)</div>
@@ -842,6 +893,39 @@ def generar_html(resultados_totales, hay_alerta):
         </div>
         <button id="btn-install" style="background: #28a745; color: white; border: none; padding: 8px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px;">Instalar</button>
     </div>
+
+    <!-- Librería QRCode.js para generar el QR dinámicamente con la URL actual -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // Generar el QR automáticamente apuntando a la URL actual del navegador
+        window.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href;
+            new QRCode(document.getElementById("qrcode"), {
+                text: currentUrl,
+                width: 180,
+                height: 180,
+                colorDark: "#0f2942",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        });
+
+        function openQRModal() {
+            document.getElementById('qrModal').style.display = 'flex';
+        }
+
+        function closeQRModal() {
+            document.getElementById('qrModal').style.display = 'none';
+        }
+
+        // Cerrar modal al hacer clic fuera del recuadro
+        window.onclick = function(event) {
+            const modal = document.getElementById('qrModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
 
     <!-- Script para gestionar la instalación en Android / iOS -->
     <script>
@@ -887,7 +971,6 @@ def generar_html(resultados_totales, hay_alerta):
             const scriptURL = "https://script.google.com/macros/s/AKfycbx50xKakQAimpxLblmVOyE7BGHGWxsyw9Bde3VJio-vDiV2iGoHbS85pS07xXeSGLgW/exec";
             let urlFinal = scriptURL;
 
-            // Evitamos que cuente si ya se registró en esta sesión de navegador
             if (!sessionStorage.getItem('meteo_visita_contada')) {{
                 urlFinal += "?accion=incrementar";
                 sessionStorage.setItem('meteo_visita_contada', 'true');
@@ -971,7 +1054,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado priorizando desactualizada (offline) sobre congelada (sin red).")
+    print("✓ index.html actualizado con el botón flotante y generador dinámico de Código QR.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1025,7 +1108,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Invertir orden de validación para priorizar offline sobre congelada [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Agregar botón flotante y generador dinámico de Código QR [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
