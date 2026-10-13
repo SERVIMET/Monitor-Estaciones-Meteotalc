@@ -289,7 +289,7 @@ def gestionar_historial_lluvia(nombre_estacion, lluvia_str):
 def consultar_directemar(est):
     try:
         req = urllib.request.Request(est["url"], headers=HEADERS)
-        with urllib.request.urlopen(req, timeout=10, context=ctx) as response:
+        with urllib.request.urlopen(req, timeout=15, context=ctx) as response:
             html = response.read().decode("utf-8", errors="ignore")
             
             texto_plano = re.sub(r'<[^>]+>', ' ', html)
@@ -352,7 +352,10 @@ def consultar_directemar(est):
                 if val is not None:
                     precipitacion = f"{val:.1f} mm"
 
-            gestionar_historial_lluvia(est["nombre"], precipitacion)
+            try:
+                gestionar_historial_lluvia(est["nombre"], precipitacion)
+            except Exception:
+                pass
 
             match_fecha = re.search(r'(?:Page\s+updated|Actualizado)\s+(\d{1,2}-\d{1,2}-\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?)', texto_plano, re.IGNORECASE)
             if not match_fecha:
@@ -388,7 +391,7 @@ def consultar_wunderground_web(est):
     try:
         api_url = f"https://api.weather.com/v2/pws/observations/current?stationId={est['id']}&format=json&units=e&apiKey=e1f10a1e78da46f5b10a1e78da96f525"
         req = urllib.request.Request(api_url, headers=HEADERS)
-        with urllib.request.urlopen(req, timeout=10, context=ctx) as response:
+        with urllib.request.urlopen(req, timeout=15, context=ctx) as response:
             data = json.loads(response.read().decode("utf-8"))
             obs = data["observations"][0]
             imperial = obs["imperial"]
@@ -419,7 +422,10 @@ def consultar_wunderground_web(est):
             else:
                 precipitacion = "0.0 mm"
 
-            gestionar_historial_lluvia(est["nombre"], precipitacion)
+            try:
+                gestionar_historial_lluvia(est["nombre"], precipitacion)
+            except Exception:
+                pass
 
             obs_time = obs.get("obsTimeLocal", "Reciente")
 
@@ -436,7 +442,7 @@ def consultar_wunderground_web(est):
 def consultar_ifop(est):
     try:
         req = urllib.request.Request(est["api_url"], headers=HEADERS)
-        with urllib.request.urlopen(req, timeout=10, context=ctx) as response:
+        with urllib.request.urlopen(req, timeout=15, context=ctx) as response:
             texto_raw = response.read().decode("utf-8")
             data = json.loads(texto_raw)
 
@@ -1307,7 +1313,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_LLUVIA, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Corregir manejo de precipitacion en IFOP [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Proteccion de errores de red y timeouts [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
