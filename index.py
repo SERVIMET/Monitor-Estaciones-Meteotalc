@@ -255,7 +255,9 @@ def gestionar_historial_presion(nombre_estacion, presion_actual):
         return " ➔"
 
 def gestionar_historial_lluvia(nombre_estacion, lluvia_str):
-    val_lluvia = convertir_numero(lluvia_str.replace("mm", ""))
+    if not lluvia_str or "--" in str(lluvia_str):
+        return
+    val_lluvia = convertir_numero(str(lluvia_str).replace("mm", ""))
     if val_lluvia is None:
         return
 
@@ -469,7 +471,7 @@ def consultar_ifop(est):
                                             val_d = actual
                                         elif any(sub in k_lower for sub in ["ff", "viento", "speed", "vel", "intensidad"]):
                                             val_v = actual
-                                        elif any(sub in k_lower for sub in ["racha", "rafaga", "rafaga", "gust", "max", "fx", "vmax", "vel_max"]):
+                                        elif any(sub in k_lower for sub in ["racha", "rafaga", "gust", "max", "fx", "vmax", "vel_max"]):
                                             val_r = actual
                                         elif any(sub in k_lower for sub in ["lluvia", "pp", "precip", "precipitacion", "agua", "acum", "mm", "rain"]):
                                             valores_hoy = []
@@ -521,9 +523,12 @@ def consultar_ifop(est):
                 racha = f"{racha_f:.1f} kt" if racha_f is not None else "--"
 
                 pp_f = convertir_numero(pp_val)
-                precipitacion = f"{pp_f:.1f} mm" if pp_f is not None else "--"
+                precipitacion = f"{pp_f:.1f} mm" if pp_f is not None else "0.0 mm"
 
-                gestionar_historial_lluvia(est["nombre"], precipitacion)
+                try:
+                    gestionar_historial_lluvia(est["nombre"], precipitacion)
+                except Exception:
+                    pass
 
                 dir_num = convertir_numero(dir_val)
                 if dir_num is not None:
@@ -532,7 +537,7 @@ def consultar_ifop(est):
                     dir_viento = formatear_direccion(str(dir_val)) if dir_val is not None else ""
 
                 fecha_str = str(fecha_temp) if fecha_temp else "Reciente"
-                es_valido = (temp_f is not None or viento_f is not None or pres_f is not None or pp_f is not None)
+                es_valido = (temp_f is not None or viento_f is not None or pres_f is not None)
                 
                 congelada = verificar_estacion_congelada(est["nombre"], temp, viento, racha)
                 if congelada:
@@ -1302,7 +1307,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_LLUVIA, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Corrección en la lectura IFOP y grafico de precipitacion 24h [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Corregir manejo de precipitacion en IFOP [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
