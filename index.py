@@ -215,7 +215,8 @@ def gestionar_historial_presion(nombre_estacion, presion_actual):
     registros = historial[nombre_estacion]
     registros.append({"t": ahora.timestamp(), "p": presion_actual})
 
-    limite_tiempo = ahora.timestamp() - (3.5 * 3600)
+    # Ampliado a 25 horas para cubrir holgadamente las últimas 24 horas de registros
+    limite_tiempo = ahora.timestamp() - (25 * 3600)
     registros = [r for r in registros if r["t"] >= limite_tiempo]
     historial[nombre_estacion] = registros
 
@@ -549,6 +550,7 @@ def generar_html(resultados_totales, hay_alerta):
         else:
             viento_contenido = f'<span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
 
+        # Tarjeta optimizada con 3 columnas en la fila inferior: Presión (con botón de gráfico integrado), Mini Sparkline y Lluvia
         cuerpo_tarjeta = f"""
             <div class="card-body-content">
                 <div class="row-top">
@@ -556,9 +558,13 @@ def generar_html(resultados_totales, hay_alerta):
                     <div class="item-box">{viento_contenido}</div>
                     <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r['racha']}</span></div>
                 </div>
-                <div class="row-bottom">
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ {r['pres']}</span></div>
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ {r['precipitacion']}</span></div>
+                <div class="row-bottom-3">
+                    <div class="item-box"><span style="font-size: 0.62em; font-weight: 700;">⏲️ {r['pres']}</span></div>
+                    <div class="item-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalPresion('{r['nombre']}');" title="Ver gráfico de presión 24h">
+                        <span style="font-size: 0.52em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.0;">📈 TENDENCIA 24H</span>
+                        <svg class="mini-sparkline" data-estacion="{r['nombre']}" width="70" height="18" style="overflow:visible;"></svg>
+                    </div>
+                    <div class="item-box"><span style="font-size: 0.62em; font-weight: 700;">🌧️ {r['precipitacion']}</span></div>
                 </div>
             </div>
         """
@@ -717,15 +723,15 @@ def generar_html(resultados_totales, hay_alerta):
             gap: 4px;
             margin: 4px 0;
         }}
-        .row-top, .row-bottom {{
+        .row-top, .row-bottom-3 {{
             display: grid;
             gap: 4px;
         }}
         .row-top {{
             grid-template-columns: 1.1fr 1fr 1fr;
         }}
-        .row-bottom {{
-            grid-template-columns: 1fr 1fr;
+        .row-bottom-3 {{
+            grid-template-columns: 1fr 1.1fr 1fr;
         }}
         
         .item-box {{
@@ -745,6 +751,14 @@ def generar_html(resultados_totales, hay_alerta):
             font-size: 0.85em;
             font-weight: 800;
             color: var(--item-text);
+        }}
+        .sparkline-btn {{
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }}
+        .sparkline-btn:hover {{
+            background: rgba(29, 78, 216, 0.15);
+            border-color: var(--click-color);
         }}
         
         .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; }}
@@ -790,8 +804,8 @@ def generar_html(resultados_totales, hay_alerta):
             letter-spacing: -0.5px;
         }}
 
-        /* Estilos del Modal QR */
-        .modal-qr {{
+        /* Modales (QR y Gráfico de Presión) */
+        .modal-overlay {{
             display: none;
             position: fixed;
             z-index: 2000;
@@ -812,11 +826,23 @@ def generar_html(resultados_totales, hay_alerta):
             text-align: center;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             border: 1px solid var(--summary-border);
-            max-width: 280px;
+            max-width: 320px;
             width: 90%;
             position: relative;
         }}
-        .close-qr {{
+        .modal-content-large {{
+            background: var(--summary-bg);
+            color: var(--text-color);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid var(--summary-border);
+            max-width: 550px;
+            width: 95%;
+            position: relative;
+        }}
+        .close-modal {{
             position: absolute;
             top: 10px;
             right: 15px;
@@ -825,7 +851,7 @@ def generar_html(resultados_totales, hay_alerta):
             cursor: pointer;
             color: var(--sub-color);
         }}
-        .close-qr:hover {{
+        .close-modal:hover {{
             color: var(--text-color);
         }}
 
@@ -857,14 +883,26 @@ def generar_html(resultados_totales, hay_alerta):
     </div>
 
     <!-- Modal del Código QR -->
-    <div id="qrModal" class="modal-qr">
+    <div id="qrModal" class="modal-overlay">
         <div class="modal-content">
-            <span class="close-qr" onclick="closeQRModal()">&times;</span>
+            <span class="close-modal" onclick="closeQRModal()">&times;</span>
             <h3 style="margin-top: 5px; margin-bottom: 15px; font-size: 16px; color: var(--h1-color);">Acceso Directo</h3>
-            <div id="qrcode-container" style="background: white; padding: 10px; border-radius: 12px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="background: white; padding: 10px; border-radius: 12px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 <div id="qrcode"></div>
             </div>
             <p style="font-size: 12px; margin-top: 12px; margin-bottom: 0px; font-weight: bold; color: var(--sub-color);">¡Escanéeme para abrir el monitor!</p>
+        </div>
+    </div>
+
+    <!-- Modal del Gráfico de Presión 24H -->
+    <div id="presionModal" class="modal-overlay">
+        <div class="modal-content-large">
+            <span class="close-modal" onclick="closePresionModal()">&times;</span>
+            <h3 id="modal-station-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Tendencia Barométrica</h3>
+            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Evolución de presión de las últimas 24 horas</p>
+            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border);">
+                <svg id="modal-pressure-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
+            </div>
         </div>
     </div>
 
@@ -893,9 +931,12 @@ def generar_html(resultados_totales, hay_alerta):
         <button id="btn-install" style="background: #28a745; color: white; border: none; padding: 8px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px;">Instalar</button>
     </div>
 
-    <!-- Librería QRCode.js para generar el QR dinámicamente con la URL actual -->
+    <!-- Librería QRCode.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
+        // Base de datos de historial de presión inyectada desde Python
+        const historialPresionData = {json.dumps(dict([(k, v) for k, v in json.load(open(ARCHIVO_HISTORIAL, 'r', encoding='utf-8')).items()]) if os.path.exists(ARCHIVO_HISTORIAL) else {{}})};
+
         window.addEventListener('DOMContentLoaded', () => {{
             const currentUrl = window.location.href;
             new QRCode(document.getElementById("qrcode"), {{
@@ -906,58 +947,130 @@ def generar_html(resultados_totales, hay_alerta):
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             }});
+
+            renderizarSparklines();
         }});
 
         function openQRModal() {{
             document.getElementById('qrModal').style.display = 'flex';
         }}
-
         function closeQRModal() {{
             document.getElementById('qrModal').style.display = 'none';
         }}
+        function closePresionModal() {{
+            document.getElementById('presionModal').style.display = 'none';
+        }}
 
         window.onclick = function(event) {{
-            const modal = document.getElementById('qrModal');
-            if (event.target === modal) {{
-                modal.style.display = 'none';
+            if (event.target === document.getElementById('qrModal')) {{
+                document.getElementById('qrModal').style.display = 'none';
+            }}
+            if (event.target === document.getElementById('presionModal')) {{
+                document.getElementById('presionModal').style.display = 'none';
             }}
         }}
-    </script>
 
-    <!-- Script para gestionar la instalación en Android / iOS -->
-    <script>
-        let deferredPrompt;
-        const installBanner = document.getElementById('install-banner');
-        const btnInstall = document.getElementById('btn-install');
+        // Renderizar mini gráficos de presión (sparklines) en las tarjetas
+        function renderizarSparklines() {{
+            const elements = document.querySelectorAll('.mini-sparkline');
+            elements.forEach(svg => {{
+                const estacion = svg.getAttribute('data-estacion');
+                const registros = historialPresionData[estacion];
+                if (!registros || registros.length < 2) return;
 
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+                // Filtrar últimas 24 horas
+                const ahora = Date.now() / 1000;
+                const hace24h = ahora - (24 * 3600);
+                const datos24h = registros.filter(r => r.t >= hace24h && r.p !== null);
+                if (datos24h.length < 2) return;
 
-        if (!isInStandaloneMode) {{
-            if (isIOS) {{
-                installBanner.style.display = 'flex';
-                btnInstall.innerText = 'Ver pasos';
-                btnInstall.onclick = () => {{
-                    alert("Para instalar en iPhone/iPad:\\n1. Toca el botón 'Compartir' 📤 abajo en Safari.\\n2. Selecciona 'Agregar al est. de inicio' ➕.");
-                }};
-            }} else {{
-                window.addEventListener('beforeinstallprompt', (e) => {{
-                    e.preventDefault();
-                    deferredPrompt = e;
-                    installBanner.style.display = 'flex';
-                }});
+                const presiones = datos24h.map(r => r.p);
+                const minP = Math.min(...presiones);
+                const maxP = Math.max(...presiones);
+                const rangoP = maxP - minP || 1;
 
-                btnInstall.onclick = async () => {{
-                    if (deferredPrompt) {{
-                        deferredPrompt.prompt();
-                        const {{ outcome }} = await deferredPrompt.userChoice;
-                        if (outcome === 'accepted') {{
-                            installBanner.style.display = 'none';
-                        }}
-                        deferredPrompt = null;
-                    }}
-                }};
+                const w = 70;
+                const h = 18;
+                const puntos = datos24h.map((r, i) => {{
+                    const x = (i / (datos24h.length - 1)) * w;
+                    const y = h - ((r.p - minP) / rangoP) * (h - 4) - 2;
+                    return `${{x.toFixed(1)}},${{y.toFixed(1)}}`;
+                }}).join(' ');
+
+                svg.innerHTML = `
+                    <polyline fill="none" stroke="#2563eb" stroke-width="2" points="${{puntos}}" />
+                `;
+            }});
+        }}
+
+        // Abrir modal con gráfico detallado de 24h
+        function abrirModalPresion(estacion) {{
+            const registros = historialPresionData[estacion];
+            document.getElementById('modal-station-title').innerText = "Tendencia: " + estacion;
+            const svgChart = document.getElementById('modal-pressure-chart');
+            
+            if (!registros || registros.length < 2) {{
+                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">No hay suficiente historial registrado aún</text>';
+                document.getElementById('presionModal').style.display = 'flex';
+                return;
             }}
+
+            const ahora = Date.now() / 1000;
+            const hace24h = ahora - (24 * 3600);
+            const datos24h = registros.filter(r => r.t >= hace24h && r.p !== null);
+
+            if (datos24h.length < 2) {{
+                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">Esperando más ciclos de lectura (24h)</text>';
+                document.getElementById('presionModal').style.display = 'flex';
+                return;
+            }}
+
+            const presiones = datos24h.map(r => r.p);
+            let minP = Math.min(...presiones);
+            let maxP = Math.max(...presiones);
+            if (minP === maxP) {{ minP -= 1; maxP += 1; }}
+            const margen = (maxP - minP) * 0.1;
+            minP -= margen;
+            maxP += margen;
+            const rangoP = maxP - minP;
+
+            const width = 460;
+            const height = 180;
+            const offsetX = 35;
+            const offsetY = 15;
+
+            let pathD = "";
+            let puntosHtml = "";
+
+            datos24h.forEach((r, i) => {{
+                const x = offsetX + (i / (datos24h.length - 1)) * (width - offsetX);
+                const y = offsetY + height - ((r.p - minP) / rangoP) * height;
+                if (i === 0) pathD += `M ${{x}} ${{y}}`;
+                else pathD += ` L ${{x}} ${{y}}`;
+                puntosHtml += `<circle cx="${{x}}" cy="${{y}}" r="3" fill="#2563eb"><title>${{r.p.toFixed(1)}} hPa</title></circle>`;
+            }});
+
+            // Líneas de referencia horizontal (min, med, max)
+            const medP = (minP + maxP) / 2;
+            const yMin = offsetY + height;
+            const yMed = offsetY + height / 2;
+            const yMax = offsetY;
+
+            svgChart.innerHTML = `
+                <!-- Ejes y grilla -->
+                <line x1="${{offsetX}}" y1="${{yMin}}" x2="${{width}}" y2="${{yMin}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                <line x1="${{offsetX}}" y1="${{yMed}}" x2="${{width}}" y2="${{yMed}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                <line x1="${{offsetX}}" y1="${{yMax}}" x2="${{width}}" y2="${{yMax}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                
+                <text x="${{offsetX - 5}}" y="${{yMin + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{minP.toFixed(1)}}</text>
+                <text x="${{offsetX - 5}}" y="${{yMed + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{medP.toFixed(1)}}</text>
+                <text x="${{offsetX - 5}}" y="${{yMax + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxP.toFixed(1)}}</text>
+                
+                <path d="${{pathD}}" fill="none" stroke="#2563eb" stroke-width="2.5" />
+                ${{puntosHtml}}
+            `;
+
+            document.getElementById('presionModal').style.display = 'flex';
         }}
     </script>
 
@@ -1020,7 +1133,7 @@ def generar_html(resultados_totales, hay_alerta):
             const btn = document.getElementById('windUnitBtn');
             if (btn) btn.innerHTML = windInKnots ? 'kt' : 'kmh';
 
-            const itemBoxes = document.querySelectorAll('.card-body-content .item-box');
+            const itemBoxes = document.querySelectorAll('.card-body-content .item-box:not(.sparkline-btn)');
             itemBoxes.forEach(box => {{
                 let text = box.innerHTML;
                 if (text.includes('kt') || text.includes('k/hr')) {{
@@ -1050,7 +1163,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con llaves de JavaScript corregidas.")
+    print("✓ index.html actualizado con mini-gráficos de presión (24h) y modales interactivos independientes.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1090,7 +1203,7 @@ def ejecutar_monitoreo():
         if not ok: hubo_fallas = True
         resultados_dict[est_ifop["nombre"]] = {
             "nombre": est_ifop["nombre"], "url": est_ifop["url"], "lat": est_ifop["lat"], "lon": est_ifop["lon"],
-            "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
+            "ok": ok, "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
             "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
         }
 
@@ -1104,7 +1217,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Corregir sintaxis de llaves JS en f-string del generador QR [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Agregar mini-graficos de presion de 24h y modales interactivos [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
