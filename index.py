@@ -274,7 +274,6 @@ def gestionar_historial_lluvia(nombre_estacion, lluvia_str):
     registros = historial[nombre_estacion]
     registros.append({"t": ahora.timestamp(), "pp": val_lluvia})
 
-    # Guardar últimas 25 horas para el gráfico de 24h
     limite_tiempo = ahora.timestamp() - (25 * 3600)
     registros = [r for r in registros if r["t"] >= limite_tiempo]
     historial[nombre_estacion] = registros
@@ -587,7 +586,7 @@ def generar_html(resultados_totales, hay_alerta):
         else:
             viento_contenido = f'<span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
 
-        # Tarjeta optimizada con 3 columnas en la fila inferior: Presión, Mini Sparkline de Presión y Precipitación interactiva
+        # Tarjeta optimizada con 3 columnas en la fila inferior: Presión, Mini Sparkline y Lluvia interactiva para el modal de 24h
         cuerpo_tarjeta = f"""
             <div class="card-body-content">
                 <div class="row-top">
@@ -1013,7 +1012,6 @@ def generar_html(resultados_totales, hay_alerta):
             if (event.target === document.getElementById('lluviaModal')) document.getElementById('lluviaModal').style.display = 'none';
         }}
 
-        // Renderizar mini gráficos de presión (sparklines) en las tarjetas
         function renderizarSparklines() {{
             const elements = document.querySelectorAll('.mini-sparkline');
             elements.forEach(svg => {{
@@ -1043,7 +1041,6 @@ def generar_html(resultados_totales, hay_alerta):
             }});
         }}
 
-        // Abrir modal con gráfico detallado de presión 24h
         function abrirModalPresion(estacion) {{
             const registros = historialPresionData[estacion];
             document.getElementById('modal-station-title').innerText = "Tendencia: " + estacion;
@@ -1111,7 +1108,6 @@ def generar_html(resultados_totales, hay_alerta):
             document.getElementById('presionModal').style.display = 'flex';
         }}
 
-        // Abrir modal con gráfico detallado de precipitación 24h
         function abrirModalLluvia(estacion) {{
             const registros = historialLluviaData[estacion];
             document.getElementById('modal-lluvia-title').innerText = "Precipitación: " + estacion;
@@ -1135,7 +1131,7 @@ def generar_html(resultados_totales, hay_alerta):
 
             const lluvias = datos24h.map(r => r.pp);
             let maxPp = Math.max(...lluvias);
-            if (maxPp <= 0) maxPp = 1.0; // Rango mínimo visual
+            if (maxPp <= 0) maxPp = 1.0;
 
             const width = 460;
             const height = 180;
@@ -1253,7 +1249,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con gráfico de precipitación de 24h interactivo.")
+    print("✓ index.html actualizado.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1307,7 +1303,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_LLUVIA, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Agregar grafico de precipitacion de 24 horas y modal interactivo [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Agregar grafico de precipitacion de 24 horas [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
