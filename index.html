@@ -205,6 +205,45 @@
             letter-spacing: -0.5px;
         }
 
+        /* Estilos del Modal QR */
+        .modal-qr {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: var(--summary-bg);
+            color: var(--text-color);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid var(--summary-border);
+            max-width: 280px;
+            width: 90%;
+            position: relative;
+        }
+        .close-qr {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--sub-color);
+        }
+        .close-qr:hover {
+            color: var(--text-color);
+        }
+
         @media (max-width: 600px) {
             h1 {
                 padding-right: 45px;
@@ -229,10 +268,24 @@
     <div class="floating-controls">
         <button class="icon-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="Cambiar Modo Oscuro/Claro">🌙</button>
         <button class="icon-btn wind-unit-btn" onclick="toggleWindUnit()" id="windUnitBtn" title="Cambiar Unidad de Viento">kt</button>
+        <button class="icon-btn" onclick="openQRModal()" title="Ver Código QR de Acceso">📱</button>
     </div>
+
+    <!-- Modal del Código QR -->
+    <div id="qrModal" class="modal-qr">
+        <div class="modal-content">
+            <span class="close-qr" onclick="closeQRModal()">&times;</span>
+            <h3 style="margin-top: 5px; margin-bottom: 15px; font-size: 16px; color: var(--h1-color);">Acceso Directo</h3>
+            <div id="qrcode-container" style="background: white; padding: 10px; border-radius: 12px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div id="qrcode"></div>
+            </div>
+            <p style="font-size: 12px; margin-top: 12px; margin-bottom: 0px; font-weight: bold; color: var(--sub-color);">¡Escanéeme para abrir el monitor!</p>
+        </div>
+    </div>
+
     <h1>Monitor de Estaciones Automaticas</h1>
     <div class="subtitle-line2">Centro Zonal de Meteorologia Marina de Talcahuano</div>
-    <div class="subtitle">Ultima verificacion: 13-10-2026 10:40:25 (Tolerancia: 12 min)</div>
+    <div class="subtitle">Ultima verificacion: 13-10-2026 10:45:57 (Tolerancia: 12 min)</div>
     <div class="banner-alerta">⚠️ ¡ATENCION: HAY ESTACIONES CON FALLAS, DESACTUALIZADAS O CONGELADAS! ⚠️</div>
     <div class="summary">Estaciones Operativas: 11 de 12</div>
     <div id="map"></div>
@@ -336,7 +389,7 @@
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: 2026-10-13 10:40:22</span>
+                    <span class="time">Reporte: 2026-10-13 10:45:52</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -351,18 +404,18 @@
                 
             <div class="card-body-content">
                 <div class="row-top">
-                    <div class="item-box temp-box">🌡️ 15.7°C</div>
-                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ SE</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">0.5 kt</span></div>
-                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">2.6 kt</span></div>
+                    <div class="item-box temp-box">🌡️ 16.1°C</div>
+                    <div class="item-box"><span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ S/SE</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">1.7 kt</span></div>
+                    <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">5.2 kt</span></div>
                 </div>
                 <div class="row-bottom">
-                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1014.4 hPa ↗</span></div>
+                    <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">⏲️ 1014.5 hPa ↗</span></div>
                     <div class="item-box"><span style="font-size: 0.68em; font-weight: 700;">🌧️ 0.0 mm</span></div>
                 </div>
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: 13-10-2026 10:40:00</span>
+                    <span class="time">Reporte: 13-10-2026 10:45:00</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -388,7 +441,7 @@
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: 2026-10-13 10:40:00</span>
+                    <span class="time">Reporte: 2026-10-13 10:45:00</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -414,7 +467,7 @@
             </div>
         
                 <div class="card-footer-info">
-                    <span class="time">Reporte: 13-10-2026 10:40:00</span>
+                    <span class="time">Reporte: 13-10-2026 10:45:00</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -567,6 +620,37 @@
         <button id="btn-install" style="background: #28a745; color: white; border: none; padding: 8px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px;">Instalar</button>
     </div>
 
+    <!-- Librería QRCode.js para generar el QR dinámicamente con la URL actual -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href;
+            new QRCode(document.getElementById("qrcode"), {
+                text: currentUrl,
+                width: 180,
+                height: 180,
+                colorDark: "#0f2942",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        });
+
+        function openQRModal() {
+            document.getElementById('qrModal').style.display = 'flex';
+        }
+
+        function closeQRModal() {
+            document.getElementById('qrModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('qrModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+
     <!-- Script para gestionar la instalación en Android / iOS -->
     <script>
         let deferredPrompt;
@@ -606,12 +690,10 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Lógica del contador global conectado a Google Sheets (sin alterar por CronJob)
         (function() {
             const scriptURL = "https://script.google.com/macros/s/AKfycbx50xKakQAimpxLblmVOyE7BGHGWxsyw9Bde3VJio-vDiV2iGoHbS85pS07xXeSGLgW/exec";
             let urlFinal = scriptURL;
 
-            // Evitamos que cuente si ya se registró en esta sesión de navegador
             if (!sessionStorage.getItem('meteo_visita_contada')) {
                 urlFinal += "?accion=incrementar";
                 sessionStorage.setItem('meteo_visita_contada', 'true');
@@ -649,19 +731,19 @@
         
         L.circleMarker([-36.607, -73.049], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Faro Isla Quiriquina</b><br>Estado: OPERATIVA<br>Temp: 15.6°C | Viento: 0.9 kt (E/SE) | Racha: 5.2 kt | Pres: 1014.6 hPa ↗ | Lluvia: 0.3 mm<br>Reporte: 2026-10-13 10:40:22<br><a href='https://www.wunderground.com/dashboard/pws/ITALCA20' target='_blank'>Abrir enlace ↗</a>");
+        }).addTo(map).bindPopup("<b>Faro Isla Quiriquina</b><br>Estado: OPERATIVA<br>Temp: 15.6°C | Viento: 0.9 kt (E/SE) | Racha: 5.2 kt | Pres: 1014.6 hPa ↗ | Lluvia: 0.3 mm<br>Reporte: 2026-10-13 10:45:52<br><a href='https://www.wunderground.com/dashboard/pws/ITALCA20' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-36.712, -73.115], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Gobernacion Maritima de Talcahuano</b><br>Estado: OPERATIVA<br>Temp: 15.7°C | Viento: 0.5 kt (SE) | Racha: 2.6 kt | Pres: 1014.4 hPa ↗ | Lluvia: 0.0 mm<br>Reporte: 13-10-2026 10:40:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm' target='_blank'>Abrir enlace ↗</a>");
+        }).addTo(map).bindPopup("<b>Gobernacion Maritima de Talcahuano</b><br>Estado: OPERATIVA<br>Temp: 16.1°C | Viento: 1.7 kt (S/SE) | Racha: 5.2 kt | Pres: 1014.5 hPa ↗ | Lluvia: 0.0 mm<br>Reporte: 13-10-2026 10:45:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-36.745, -73.185], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Faro Punta Hualpen</b><br>Estado: OPERATIVA<br>Temp: 15.0°C | Viento: 8.7 kt (E/SE) | Racha: 8.7 kt | Pres: 1013.2 hPa ↗ | Lluvia: 0.0 mm<br>Reporte: 2026-10-13 10:40:00<br><a href='https://www.wunderground.com/dashboard/pws/IHUALP1' target='_blank'>Abrir enlace ↗</a>");
+        }).addTo(map).bindPopup("<b>Faro Punta Hualpen</b><br>Estado: OPERATIVA<br>Temp: 15.0°C | Viento: 8.7 kt (E/SE) | Racha: 8.7 kt | Pres: 1013.2 hPa ↗ | Lluvia: 0.0 mm<br>Reporte: 2026-10-13 10:45:00<br><a href='https://www.wunderground.com/dashboard/pws/IHUALP1' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-37.02, -73.15], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Capitania de Puerto Coronel</b><br>Estado: OPERATIVA<br>Temp: 15.9°C | Viento: 3.7 kt (W) | Racha: 6.1 kt | Pres: 1013.0 hPa ↗ | Lluvia: 0.0 mm<br>Reporte: 13-10-2026 10:40:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/coronel/index.htm' target='_blank'>Abrir enlace ↗</a>");
+        }).addTo(map).bindPopup("<b>Capitania de Puerto Coronel</b><br>Estado: OPERATIVA<br>Temp: 15.9°C | Viento: 3.7 kt (W) | Racha: 6.1 kt | Pres: 1013.0 hPa ↗ | Lluvia: 0.0 mm<br>Reporte: 13-10-2026 10:45:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/coronel/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
         L.circleMarker([-37.09, -73.15], {
             color: 'green', fillColor: 'green', fillOpacity: 0.8, radius: 9
@@ -681,7 +763,7 @@
         
         L.circleMarker([-39.883, -73.433], {
             color: 'red', fillColor: 'red', fillOpacity: 0.8, radius: 9
-        }).addTo(map).bindPopup("<b>Capitania de Puerto Corral</b><br>Estado: DESACTUALIZADA (6940 min)<br>Temp: 11.2°C | Viento: 0.0 kt (N) | Racha: 0.0 kt | Pres: 1015.2 hPa ➔ | Lluvia: 0.0 mm<br>Reporte: 08-10-2026 15:00:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/corral/index.htm' target='_blank'>Abrir enlace ↗</a>");
+        }).addTo(map).bindPopup("<b>Capitania de Puerto Corral</b><br>Estado: DESACTUALIZADA (6945 min)<br>Temp: 11.2°C | Viento: 0.0 kt (N) | Racha: 0.0 kt | Pres: 1015.2 hPa ➔ | Lluvia: 0.0 mm<br>Reporte: 08-10-2026 15:00:00<br><a href='http://web.directemar.cl/met/jturno/estaciones/corral/index.htm' target='_blank'>Abrir enlace ↗</a>");
         
 
         function toggleDarkMode() {
