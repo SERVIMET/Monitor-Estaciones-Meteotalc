@@ -274,8 +274,6 @@ def gestionar_historial_lluvia(nombre_estacion, lluvia_str):
         historial[nombre_estacion] = {}
 
     est_lluvia = historial[nombre_estacion]
-    
-    # Registramos el valor máximo alcanzado en el día como acumulado diario
     actual_max = est_lluvia.get(fecha_hoy, 0.0)
     if val_lluvia > actual_max:
         est_lluvia[fecha_hoy] = val_lluvia
@@ -588,7 +586,7 @@ def generar_html(resultados_totales, hay_alerta):
         else:
             viento_contenido = f'<span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
 
-        # Tarjeta con recuadro de pluviometría interactivo (limpio y sin textos extra)
+        # Estructura corregida: Presión (con su valor y mini sparkline) y Lluvia (con su valor limpio interactivo) en dos columnas iguales
         cuerpo_tarjeta = f"""
             <div class="card-body-content">
                 <div class="row-top">
@@ -596,13 +594,13 @@ def generar_html(resultados_totales, hay_alerta):
                     <div class="item-box">{viento_contenido}</div>
                     <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r['racha']}</span></div>
                 </div>
-                <div class="row-bottom-3">
+                <div class="row-bottom-2">
                     <div class="item-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalPresion('{r['nombre']}');" title="Ver gráfico de presión 24h">
-                        <span style="font-size: 0.52em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.0;">📈 TENDENCIA 24H</span>
-                        <svg class="mini-sparkline" data-estacion="{r['nombre']}" width="65" height="16" style="overflow:visible;"></svg>
+                        <span style="font-size: 0.52em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.0;">⏲️ {r['pres']}</span>
+                        <svg class="mini-sparkline" data-estacion="{r['nombre']}" width="110" height="16" style="overflow:visible; margin-top:2px;"></svg>
                     </div>
-                    <div class="item-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalLluvia('{r['nombre']}');" title="Ver gráfico mensual de precipitación">
-                        <span style="font-size: 0.62em; font-weight: 700;">🌧️ {r['precipitacion']}</span>
+                    <div class="item-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalLluvia('{r['nombre']}');" title="Ver gráfico mensual de precipitación" style="justify-content: center; height: 100%;">
+                        <span style="font-size: 0.75em; font-weight: 700;">🌧️ {r['precipitacion']}</span>
                     </div>
                 </div>
             </div>
@@ -762,20 +760,20 @@ def generar_html(resultados_totales, hay_alerta):
             gap: 4px;
             margin: 4px 0;
         }}
-        .row-top, .row-bottom-3 {{
+        .row-top, .row-bottom-2 {{
             display: grid;
             gap: 4px;
         }}
         .row-top {{
             grid-template-columns: 1.1fr 1fr 1fr;
         }}
-        .row-bottom-3 {{
-            grid-template-columns: 1.3fr 1fr;
+        .row-bottom-2 {{
+            grid-template-columns: 1fr 1fr;
         }}
         
         .item-box {{
             background: var(--item-bg);
-            padding: 4px 2px;
+            padding: 4px 4px;
             border-radius: 6px;
             border: 1px solid var(--item-border);
             text-align: center;
@@ -1007,7 +1005,7 @@ def generar_html(resultados_totales, hay_alerta):
                 const maxP = Math.max(...presiones);
                 const rangoP = maxP - minP || 1;
 
-                const w = 65;
+                const w = 110;
                 const h = 16;
                 const puntos = datos24h.map((r, i) => {{
                     const x = (i / (datos24h.length - 1)) * w;
@@ -1058,7 +1056,7 @@ def generar_html(resultados_totales, hay_alerta):
                 if (i === 0) pathD += `M ${{x}} ${{y}}`;
                 else pathD += ` L ${{x}} ${{y}}`;
                 puntosHtml += `<circle cx="${{x}}" cy="${{y}}" r="3" fill="#2563eb"><title>${{r.p.toFixed(1)}} hPa</title></circle>`;
-            }};
+            }});
 
             const medP = (minP + maxP) / 2;
             svgChart.innerHTML = `
@@ -1082,7 +1080,7 @@ def generar_html(resultados_totales, hay_alerta):
 
             const hoy = new Date();
             const anioActual = hoy.getFullYear();
-            const mesActual = hoy.getMonth(); // 0 a 11
+            const mesActual = hoy.getMonth();
             const diasEnMes = new Date(anioActual, mesActual + 1, 0).getDate();
 
             let datosMes = [];
@@ -1212,7 +1210,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con pluviometría histórica mensual y modales de barras.")
+    print("✓ index.html corregido: cuadros de presión y lluvia alineados y funcionales.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1263,7 +1261,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_LLUVIA, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Agregar historial diario de lluvia y grafico mensual interactivo [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Corregir diseño de tarjeta y funcionalidad de modales de presion y lluvia [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
