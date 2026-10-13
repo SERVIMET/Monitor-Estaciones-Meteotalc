@@ -586,7 +586,6 @@ def generar_html(resultados_totales, hay_alerta):
         else:
             viento_contenido = f'<span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
 
-        # Tarjeta optimizada con 3 columnas en la fila inferior: Presión, Mini Sparkline y Lluvia interactiva para el modal de 24h
         cuerpo_tarjeta = f"""
             <div class="card-body-content">
                 <div class="row-top">
