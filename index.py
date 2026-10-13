@@ -862,7 +862,6 @@ def generar_html(resultados_totales, hay_alerta):
             <span class="close-qr" onclick="closeQRModal()">&times;</span>
             <h3 style="margin-top: 5px; margin-bottom: 15px; font-size: 16px; color: var(--h1-color);">Acceso Directo</h3>
             <div id="qrcode-container" style="background: white; padding: 10px; border-radius: 12px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <!-- Contenedor donde se dibuja el QR generado por JS -->
                 <div id="qrcode"></div>
             </div>
             <p style="font-size: 12px; margin-top: 12px; margin-bottom: 0px; font-weight: bold; color: var(--sub-color);">¡Escanéeme para abrir el monitor!</p>
@@ -897,34 +896,32 @@ def generar_html(resultados_totales, hay_alerta):
     <!-- Librería QRCode.js para generar el QR dinámicamente con la URL actual -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-        // Generar el QR automáticamente apuntando a la URL actual del navegador
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', () => {{
             const currentUrl = window.location.href;
-            new QRCode(document.getElementById("qrcode"), {
+            new QRCode(document.getElementById("qrcode"), {{
                 text: currentUrl,
                 width: 180,
                 height: 180,
                 colorDark: "#0f2942",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
-            });
-        });
+            }});
+        }});
 
-        function openQRModal() {
+        function openQRModal() {{
             document.getElementById('qrModal').style.display = 'flex';
-        }
+        }}
 
-        function closeQRModal() {
+        function closeQRModal() {{
             document.getElementById('qrModal').style.display = 'none';
-        }
+        }}
 
-        // Cerrar modal al hacer clic fuera del recuadro
-        window.onclick = function(event) {
+        window.onclick = function(event) {{
             const modal = document.getElementById('qrModal');
-            if (event.target === modal) {
+            if (event.target === modal) {{
                 modal.style.display = 'none';
-            }
-        }
+            }}
+        }}
     </script>
 
     <!-- Script para gestionar la instalación en Android / iOS -->
@@ -966,7 +963,6 @@ def generar_html(resultados_totales, hay_alerta):
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Lógica del contador global conectado a Google Sheets (sin alterar por CronJob)
         (function() {{
             const scriptURL = "https://script.google.com/macros/s/AKfycbx50xKakQAimpxLblmVOyE7BGHGWxsyw9Bde3VJio-vDiV2iGoHbS85pS07xXeSGLgW/exec";
             let urlFinal = scriptURL;
@@ -1054,7 +1050,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con el botón flotante y generador dinámico de Código QR.")
+    print("✓ index.html actualizado con llaves de JavaScript corregidas.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1108,7 +1104,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Agregar botón flotante y generador dinámico de Código QR [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Corregir sintaxis de llaves JS en f-string del generador QR [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
