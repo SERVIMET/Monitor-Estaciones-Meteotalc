@@ -1302,7 +1302,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_LLUVIA, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Agregar grafico de precipitacion de 24 horas [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Corrección en la lectura IFOP y grafico de precipitacion 24h [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
