@@ -736,6 +736,7 @@ def generar_html(resultados_totales, hay_alerta):
         .modal-content-large {{ max-width: 550px; width: 95%; }}
         .close-modal {{ position: absolute; top: 10px; right: 15px; font-size: 20px; font-weight: bold; cursor: pointer; color: var(--sub-color); }}
         .close-modal:hover {{ color: var(--text-color); }}
+        .chart-tooltip {{ position: absolute; background: rgba(15, 41, 66, 0.9); color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; pointer-events: none; display: none; z-index: 3000; }}
     </style>
 </head>
 <body class="{alerta_class}">
@@ -760,7 +761,8 @@ def generar_html(resultados_totales, hay_alerta):
             <span class="close-modal" onclick="closePresionModal()">&times;</span>
             <h3 id="modal-station-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Tendencia Barométrica</h3>
             <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Evolución de presión de las últimas 24 horas</p>
-            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border);">
+            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border); position: relative;">
+                <div id="tooltip-presion" class="chart-tooltip"></div>
                 <svg id="modal-pressure-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
             </div>
         </div>
@@ -771,7 +773,8 @@ def generar_html(resultados_totales, hay_alerta):
             <span class="close-modal" onclick="closeTemperaturaModal()">&times;</span>
             <h3 id="modal-temp-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Evolución de Temperatura</h3>
             <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Comportamiento térmico de las últimas 24 horas</p>
-            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border);">
+            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border); position: relative;">
+                <div id="tooltip-temp" class="chart-tooltip"></div>
                 <svg id="modal-temperatura-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
             </div>
         </div>
@@ -782,7 +785,8 @@ def generar_html(resultados_totales, hay_alerta):
             <span class="close-modal" onclick="closeVientoModal()">&times;</span>
             <h3 id="modal-viento-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Intensidad del Viento</h3>
             <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Velocidad del viento de las últimas 24 horas</p>
-            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border);">
+            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border); position: relative;">
+                <div id="tooltip-viento" class="chart-tooltip"></div>
                 <svg id="modal-viento-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
             </div>
         </div>
@@ -844,22 +848,27 @@ def generar_html(resultados_totales, hay_alerta):
                 const rangoP = maxP - minP || 1;
 
                 const w = 70; const h = 18;
-                const puntos = datos24h.map((r, i) => {{
+                let pathD = "";
+                datos24h.forEach((r, i) => {{
                     const x = (i / (datos24h.length - 1)) * w;
                     const y = h - ((r.p - minP) / rangoP) * (h - 4) - 2;
-                    return `${{x.toFixed(1)}}`;
-                }}).join(' ');
+                    if (i === 0) pathD += `M ${{x.toFixed(1)}} ${{y.toFixed(1)}}`;
+                    else pathD += ` L ${{x.toFixed(1)}} ${{y.toFixed(1)}}`;
+                }});
+
+                svg.innerHTML = `<path d="${{pathD}}" fill="none" stroke="var(--wind-color, #1d4ed8)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />`;
             }});
         }}
 
         function formatHora(timestampSec) {{
             const d = new Date(timestampSec * 1000);
-            return d.toLocaleTimeString([], {{ hour: '2-digit', minute: '2-digit' }});
+            return d.toLocaleTimeString([], {{ hour: '2-digit', minute: '2-digit', hour12: false }});
         }}
 
-        function dibujarGraficoLinea(registros, clave, color, unit, idModal, idSvg, titulo, idTitle) {{
+        function dibujarGraficoLinea(registros, clave, color, unit, idModal, idSvg, titulo, idTitle, idTooltip) {{
             document.getElementById(idTitle).innerText = titulo;
             const svgChart = document.getElementById(idSvg);
+            const tooltip = document.getElementById(idTooltip);
             
             if (!registros || registros.length < 2) {{
                 svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">No hay suficiente historial registrado aún</text>';
@@ -889,7 +898,7 @@ def generar_html(resultados_totales, hay_alerta):
             let pathD = ""; let puntosHtml = ""; let etiquetasHora = "";
 
             const totalPuntos = datos24h.length;
-            const pasoEtiqueta = Math.max(1, Math.floor(totalPuntos / 5));
+            let horasMarcadas = new Set();
 
             datos24h.forEach((r, i) => {{
                 const x = offsetX + (i / (totalPuntos - 1)) * (width - offsetX);
@@ -897,10 +906,19 @@ def generar_html(resultados_totales, hay_alerta):
                 if (i === 0) pathD += `M ${{x}} ${{y}}`;
                 else pathD += ` L ${{x}} ${{y}}`;
                 
-                puntosHtml += `<circle cx="${{x}}" cy="${{y}}" r="3.5" fill="${{color}}"><title>${{formatHora(r.t)}} - ${{r[clave].toFixed(1)}} ${{unit}}</title></circle>`;
+                puntosHtml += `<circle cx="${{x}}" cy="${{y}}" r="5" fill="${{color}}" style="cursor: pointer; opacity: 0.8;" 
+                    ontouchstart="mostrarTooltip(event, '${{formatHora(r.t)}}', '${{r[clave].toFixed(1)}} ${{unit}}', '${{idTooltip}}')"
+                    onmouseover="mostrarTooltip(event, '${{formatHora(r.t)}}', '${{r[clave].toFixed(1)}} ${{unit}}', '${{idTooltip}}')"
+                    onmouseout="ocultarTooltip('${{idTooltip}}')"
+                />`;
 
-                if (i % pasoEtiqueta === 0 || i === totalPuntos - 1) {{
-                    etiquetasHora += `<text x="${{x}}" y="${{offsetY + height + 22}}" text-anchor="middle" font-size="9" fill="#64748b">${{formatHora(r.t)}}</text>`;
+                const d = new Date(r.t * 1000);
+                const hNum = d.getHours();
+                if (hNum % 3 === 0 && !horasMarcadas.has(hNum)) {{
+                    horasMarcadas.add(hNum);
+                    const horaExactaStr = String(hNum).padStart(2, '0') + ":00";
+                    etiquetasHora += `<text x="${{x}}" y="${{offsetY + height + 22}}" text-anchor="middle" font-size="9" fill="#64748b">${{horaExactaStr}}</text>`;
+                    etiquetasHora += `<line x1="${{x}}" y1="${{offsetY}}" x2="${{x}}" y2="${{offsetY + height}}" stroke="#e2e8f0" stroke-dasharray="2,2" />`;
                 }}
             }});
 
@@ -916,23 +934,42 @@ def generar_html(resultados_totales, hay_alerta):
                 <text x="${{offsetX - 5}}" y="${{yMed + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{medV.toFixed(1)}}</text>
                 <text x="${{offsetX - 5}}" y="${{yMax + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxV.toFixed(1)}}</text>
                 
+                ${{etiquetasHora}}
                 <path d="${{pathD}}" fill="none" stroke="${{color}}" stroke-width="2.5" />
                 ${{puntosHtml}}
-                ${{etiquetasHora}}
             `;
             document.getElementById(idModal).style.display = 'flex';
         }}
 
+        function mostrarTooltip(evt, hora, valor, tooltipId) {{
+            const tooltip = document.getElementById(tooltipId);
+            tooltip.innerHTML = `<b>${{hora}}</b><br>${{valor}}`;
+            tooltip.style.display = 'block';
+            
+            const rect = evt.target.getBoundingClientRect();
+            const parentRect = tooltip.parentElement.getBoundingClientRect();
+            
+            let left = rect.left - parentRect.left - 25;
+            let top = rect.top - parentRect.top - 45;
+            
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }}
+
+        function ocultarTooltip(tooltipId) {{
+            document.getElementById(tooltipId).style.display = 'none';
+        }}
+
         function abrirModalPresion(estacion) {{
-            dibujarGraficoLinea(historialPresionData[estacion], 'p', '#2563eb', 'hPa', 'presionModal', 'modal-pressure-chart', 'Tendencia: ' + estacion, 'modal-station-title');
+            dibujarGraficoLinea(historialPresionData[estacion], 'p', '#2563eb', 'hPa', 'presionModal', 'modal-pressure-chart', 'Tendencia: ' + estacion, 'modal-station-title', 'tooltip-presion');
         }}
 
         function abrirModalTemperatura(estacion) {{
-            dibujarGraficoLinea(historialTemperaturaData[estacion], 'temp', '#e11d48', '°C', 'temperaturaModal', 'modal-temperatura-chart', 'Temperatura: ' + estacion, 'modal-temp-title');
+            dibujarGraficoLinea(historialTemperaturaData[estacion], 'temp', '#e11d48', '°C', 'temperaturaModal', 'modal-temperatura-chart', 'Temperatura: ' + estacion, 'modal-temp-title', 'tooltip-temp');
         }}
 
         function abrirModalViento(estacion) {{
-            dibujarGraficoLinea(historialVientoData[estacion], 'viento', '#0284c7', 'kt', 'vientoModal', 'modal-viento-chart', 'Viento: ' + estacion, 'modal-viento-title');
+            dibujarGraficoLinea(historialVientoData[estacion], 'viento', '#0284c7', 'kt', 'vientoModal', 'modal-viento-chart', 'Viento: ' + estacion, 'modal-viento-title', 'tooltip-viento');
         }}
     </script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -999,7 +1036,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado manteniendo la lectura actual de precipitaciones.")
+    print("✓ index.html actualizado con formato de hora en 24 horas.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1034,7 +1071,7 @@ def ejecutar_monitoreo():
         ok, estado, ultimo, temp, pres, viento, dir_viento, racha, precipitacion = consultar_ifop(est_ifop)
         if not ok: hubo_fallas = True
         resultados_dict[est_ifop["nombre"]] = {
-            "nombre": est_ifop["nombre"], "url": est_ifop["url"], "lat": est_ifop["lat"], "lon": est_ifop["lon"],
+            "nombre": est_ifop["nombre"], "url": est_ifop["url"], "lat": est["lat"], "lon": est["lon"],
             "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
             "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
         }
@@ -1048,7 +1085,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Mantener dato de pluviometria y remover modal de grafico [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Cambiar formato de hora de graficos y tooltips a 24 horas [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
