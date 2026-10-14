@@ -914,7 +914,8 @@ def generar_html(resultados_totales, hay_alerta):
 
                 const d = new Date(r.t * 1000);
                 const hNum = d.getHours();
-                if (hNum % 3 === 0 && !horasMarcadas.has(hNum)) {{
+                // Marca las etiquetas exactamente cada 2 horas (00:00, 02:00, 04:00...)
+                if (hNum % 2 === 0 && !horasMarcadas.has(hNum)) {{
                     horasMarcadas.add(hNum);
                     const horaExactaStr = String(hNum).padStart(2, '0') + ":00";
                     etiquetasHora += `<text x="${{x}}" y="${{offsetY + height + 22}}" text-anchor="middle" font-size="9" fill="#64748b">${{horaExactaStr}}</text>`;
@@ -1036,7 +1037,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con formato de hora en 24 horas.")
+    print("✓ index.html actualizado con marcas del eje X cada 2 horas exactas.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1071,7 +1072,7 @@ def ejecutar_monitoreo():
         ok, estado, ultimo, temp, pres, viento, dir_viento, racha, precipitacion = consultar_ifop(est_ifop)
         if not ok: hubo_fallas = True
         resultados_dict[est_ifop["nombre"]] = {
-            "nombre": est_ifop["nombre"], "url": est_ifop["url"], "lat": est["lat"], "lon": est["lon"],
+            "nombre": est_ifop["nombre"], "url": est_ifop["url"], "lat": est_ifop["lat"], "lon": est_ifop["lon"],
             "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
             "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
         }
@@ -1085,7 +1086,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Cambiar formato de hora de graficos y tooltips a 24 horas [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Ajustar eje X a cada 2 horas exactas en todos los graficos [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
