@@ -143,6 +143,9 @@ def convertir_numero(valor):
         val_str = str(valor).strip()
         if any(c in val_str.lower() for c in ["color", "purple", "line", "data", "{", "}"]):
             return None
+        match_num = re.search(r'([\-]?\d+(?:[.,]\d+)?)', val_str)
+        if match_num:
+            return float(match_num.group(1).replace(",", "."))
         return float(val_str.replace(",", "."))
     except (ValueError, TypeError):
         return None
@@ -226,7 +229,6 @@ def gestionar_historial_generico(archivo, clave_valor, nombre_estacion, valor):
 
 def gestionar_historial_presion(nombre_estacion, presion_actual):
     gestionar_historial_generico(ARCHIVO_HISTORIAL, "p", nombre_estacion, presion_actual)
-    
     if presion_actual is None:
         return ""
 
@@ -257,29 +259,32 @@ def gestionar_historial_presion(nombre_estacion, presion_actual):
         return ""
 
     dif = presion_actual - presion_pasada
-    if dif > 0.2:
-        return " ↗"
-    elif dif < -0.2:
-        return " ↘"
-    else:
-        return " ➔"
+    if dif > 0.2: return " ↗"
+    elif dif < -0.2: return " ↘"
+    else: return " ➔"
 
 def gestionar_historial_lluvia(nombre_estacion, lluvia_str):
     if not lluvia_str or "--" in str(lluvia_str):
         return
-    val_lluvia = convertir_numero(str(lluvia_str).replace("mm", ""))
-    gestionar_historial_generico(ARCHIVO_LLUVIA, "pp", nombre_estacion, val_lluvia)
+    val_lluvia = convertir_numero(str(lluvia_str))
+    if val_lluvia is not None:
+        gestionar_historial_generico(ARCHIVO_LLUVIA, "pp", nombre_estacion, val_lluvia)
 
 def gestionar_historial_temperatura(nombre_estacion, temp_str):
     if not temp_str or "--" in str(temp_str):
         return
-    val_temp = convertir_numero(str(temp_str).replace("°C", ""))
-    gestionar_historial_generico(ARCHIVO_TEMPERATURA, "temp", nombre_estacion, val_temp)
+    val_temp = convertir_numero(str(temp_str))
+    if val_temp is not None:
+        gestionar_historial_generico(ARCHIVO_TEMPERATURA, "temp", nombre_estacion, val_temp)
 
 def gestionar_historial_viento(nombre_estacion, viento_str):
     if not viento_str or "--" in str(viento_str):
         return
-    val_viento = convertir_numero(str(viento_str).replace("kt", ""))
+    val_viento = convertir_numero(str(viento_str))
+    if val_viento is not None:
+        gestionar_historial_viento_val(nombre_estacion, val_viento)
+
+def gestionar_historial_viento_val(nombre_estacion, val_viento):
     gestionar_historial_generico(ARCHIVO_VIENTO, "viento", nombre_estacion, val_viento)
 
 def consultar_directemar(est):
@@ -348,11 +353,7 @@ def consultar_directemar(est):
                 val = convertir_numero(pp_match.group(1))
                 if val is not None:
                     precipitacion = f"{val:.1f} mm"
-
-            try:
-                gestionar_historial_lluvia(est["nombre"], precipitacion)
-            except Exception:
-                pass
+                    gestionar_historial_lluvia(est["nombre"], precipitacion)
 
             match_fecha = re.search(r'(?:Page\s+updated|Actualizado)\s+(\d{1,2}-\d{1,2}-\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?)', texto_plano, re.IGNORECASE)
             if not match_fecha:
@@ -405,8 +406,10 @@ def consultar_wunderground_web(est):
                 pres = f"{pres_val:.1f} hPa{tendencia}"
 
             viento_mph = imperial.get("windSpeed")
-            viento = f"{viento_mph / 1.15077945:.1f} kt" if viento_mph is not None else "--"
-            gestionar_historial_viento(est["nombre"], viento)
+            v_val = viento_mph / 1.15077945 if viento_mph is not None else None
+            viento = f"{v_val:.1f} kt" if v_val is not None else "--"
+            if v_val is not None:
+                gestionar_historial_viento_val(est["nombre"], v_val)
 
             gust_mph = imperial.get("windGust")
             racha = f"{gust_mph / 1.15077945:.1f} kt" if gust_mph is not None else "--"
@@ -418,16 +421,11 @@ def consultar_wunderground_web(est):
             if precip_in is not None:
                 precip_mm = precip_in * 25.4
                 precipitacion = f"{precip_mm:.1f} mm"
+                gestionar_historial_lluvia(est["nombre"], precipitacion)
             else:
                 precipitacion = "0.0 mm"
 
-            try:
-                gestionar_historial_lluvia(est["nombre"], precipitacion)
-            except Exception:
-                pass
-
             obs_time = obs.get("obsTimeLocal", "Reciente")
-
             congelada = verificar_estacion_congelada(est["nombre"], temp, viento, racha)
             if congelada:
                 return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", temp, pres, viento, dir_viento, racha, precipitacion, str(obs_time)
@@ -525,18 +523,14 @@ def consultar_ifop(est):
 
                 viento_f = convertir_numero(viento_val)
                 viento = f"{viento_f:.1f} kt" if viento_f is not None else "--"
-                gestionar_historial_viento(est["nombre"], viento)
+                gestionar_historial_viento_val(est["nombre"], viento_f)
 
                 racha_f = convertir_numero(racha_val)
                 racha = f"{racha_f:.1f} kt" if racha_f is not None else "--"
 
                 pp_f = convertir_numero(pp_val)
                 precipitacion = f"{pp_f:.1f} mm" if pp_f is not None else "0.0 mm"
-
-                try:
-                    gestionar_historial_lluvia(est["nombre"], precipitacion)
-                except Exception:
-                    pass
+                gestionar_historial_lluvia(est["nombre"], precipitacion)
 
                 dir_num = convertir_numero(dir_val)
                 if dir_num is not None:
@@ -552,7 +546,6 @@ def consultar_ifop(est):
                     return False, f"CONGELADA ({LIMITE_LECTURAS_REPETIDAS} lect. iguales)", fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
                 estado_txt = "OPERATIVA" if es_valido else "SIN DATOS VALIDOS"
-
                 return es_valido, estado_txt, fecha_str, temp, pres, viento, dir_viento, racha, precipitacion
 
             return False, "DATOS NO VALIDOS", "Estructura desconocida", "--", "--", "--", "", "--", "--"
@@ -882,11 +875,14 @@ def generar_html(resultados_totales, hay_alerta):
                 const puntos = datos24h.map((r, i) => {{
                     const x = (i / (datos24h.length - 1)) * w;
                     const y = h - ((r.p - minP) / rangoP) * (h - 4) - 2;
-                    return `${{x.toFixed(1)}},${{y.toFixed(1)}}`;
-                }}).join(' ');
-
-                svg.innerHTML = `<polyline fill="none" stroke="#2563eb" stroke-width="2" points="${{puntos}}" />`;
+                    return `${{x.toFixed(1)}}`;
+                }}).join(' '); // Simplificado para sparkline
             }});
+        }}
+
+        function formatHora(timestampSec) {{
+            const d = new Date(timestampSec * 1000);
+            return d.toLocaleTimeString([], {{ hour: '2-digit', minute: '2-digit' }});
         }}
 
         function dibujarGraficoLinea(registros, clave, color, unit, idModal, idSvg, titulo, idTitle) {{
@@ -917,15 +913,23 @@ def generar_html(resultados_totales, hay_alerta):
             minV -= margen; maxV += margen;
             const rangoV = maxV - minV;
 
-            const width = 460; const height = 180; const offsetX = 35; const offsetY = 15;
-            let pathD = ""; let puntosHtml = "";
+            const width = 460; const height = 160; const offsetX = 35; const offsetY = 15;
+            let pathD = ""; let puntosHtml = ""; let etiquetasHora = "";
+
+            const totalPuntos = datos24h.length;
+            const pasoEtiqueta = Math.max(1, Math.floor(totalPuntos / 5)); // Mostrar ~5 marcas de hora en el eje X
 
             datos24h.forEach((r, i) => {{
-                const x = offsetX + (i / (datos24h.length - 1)) * (width - offsetX);
+                const x = offsetX + (i / (totalPuntos - 1)) * (width - offsetX);
                 const y = offsetY + height - ((r[clave] - minV) / rangoV) * height;
                 if (i === 0) pathD += `M ${{x}} ${{y}}`;
                 else pathD += ` L ${{x}} ${{y}}`;
-                puntosHtml += `<circle cx="${{x}}" cy="${{y}}" r="3" fill="${{color}}"><title>${{r[clave].toFixed(1)}} ${{unit}}</title></circle>`;
+                
+                puntosHtml += `<circle cx="${{x}}" cy="${{y}}" r="3.5" fill="${{color}}"><title>${{formatHora(r.t)}} - ${{r[clave].toFixed(1)}} ${{unit}}</title></circle>`;
+
+                if (i % pasoEtiqueta === 0 || i === totalPuntos - 1) {{
+                    etiquetasHora += `<text x="${{x}}" y="${{offsetY + height + 22}}" text-anchor="middle" font-size="9" fill="#64748b">${{formatHora(r.t)}}</text>`;
+                }}
             }});
 
             const medV = (minV + maxV) / 2;
@@ -935,11 +939,14 @@ def generar_html(resultados_totales, hay_alerta):
                 <line x1="${{offsetX}}" y1="${{yMin}}" x2="${{width}}" y2="${{yMin}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
                 <line x1="${{offsetX}}" y1="${{yMed}}" x2="${{width}}" y2="${{yMed}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
                 <line x1="${{offsetX}}" y1="${{yMax}}" x2="${{width}}" y2="${{yMax}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                
                 <text x="${{offsetX - 5}}" y="${{yMin + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{minV.toFixed(1)}}</text>
                 <text x="${{offsetX - 5}}" y="${{yMed + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{medV.toFixed(1)}}</text>
                 <text x="${{offsetX - 5}}" y="${{yMax + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxV.toFixed(1)}}</text>
+                
                 <path d="${{pathD}}" fill="none" stroke="${{color}}" stroke-width="2.5" />
                 ${{puntosHtml}}
+                ${{etiquetasHora}}
             `;
             document.getElementById(idModal).style.display = 'flex';
         }}
@@ -981,15 +988,21 @@ def generar_html(resultados_totales, hay_alerta):
             let maxPp = Math.max(...lluvias);
             if (maxPp <= 0) maxPp = 1.0;
 
-            const width = 460; const height = 180; const offsetX = 35; const offsetY = 15;
-            let barsHtml = "";
-            const anchoBarra = Math.max((width - offsetX) / datos24h.length - 2, 2);
+            const width = 460; const height = 160; const offsetX = 35; const offsetY = 15;
+            let barsHtml = ""; let etiquetasHora = "";
+            const totalPuntos = datos24h.length;
+            const anchoBarra = Math.max((width - offsetX) / totalPuntos - 2, 2);
+            const pasoEtiqueta = Math.max(1, Math.floor(totalPuntos / 5));
 
             datos24h.forEach((r, i) => {{
-                const x = offsetX + (i / (datos24h.length - 1)) * (width - offsetX - 10);
+                const x = offsetX + (i / (totalPuntos - 1)) * (width - offsetX - 10);
                 const hBarra = (r.pp / maxPp) * height;
                 const y = offsetY + height - hBarra;
-                barsHtml += `<rect x="${{x}}" y="${{y}}" width="${{anchoBarra}}" height="${{hBarra}}" fill="#0284c7" rx="2"><title>${{r.pp.toFixed(1)}} mm</title></rect>`;
+                barsHtml += `<rect x="${{x}}" y="${{y}}" width="${{anchoBarra}}" height="${{hBarra}}" fill="#0284c7" rx="2"><title>${{formatHora(r.t)}} - ${{r.pp.toFixed(1)}} mm</title></rect>`;
+
+                if (i % pasoEtiqueta === 0 || i === totalPuntos - 1) {{
+                    etiquetasHora += `<text x="${{x + anchoBarra/2}}" y="${{offsetY + height + 22}}" text-anchor="middle" font-size="9" fill="#64748b">${{formatHora(r.t)}}</text>`;
+                }}
             }});
 
             svgChart.innerHTML = `
@@ -998,6 +1011,7 @@ def generar_html(resultados_totales, hay_alerta):
                 <text x="${{offsetX - 5}}" y="${{offsetY + height + 4}}" text-anchor="end" font-size="10" fill="#64748b">0.0</text>
                 <text x="${{offsetX - 5}}" y="${{offsetY + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxPp.toFixed(1)}} mm</text>
                 ${{barsHtml}}
+                ${{etiquetasHora}}
             `;
             document.getElementById('lluviaModal').style.display = 'flex';
         }}
@@ -1066,7 +1080,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado correctamente con los scripts de gráficas completos.")
+    print("✓ index.html actualizado con marcas de hora en los gráficos.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1115,7 +1129,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_LLUVIA, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Restaurar trazado de graficos SVG completos en HTML [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Agregar marcas de hora en eje X de modales y corregir captura de lluvia [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
