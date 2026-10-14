@@ -16,6 +16,8 @@ LIMITE_LECTURAS_REPETIDAS = 10
 ZONA_CHILE = ZoneInfo("America/Santiago")
 ARCHIVO_HISTORIAL = "historial_presion.json"
 ARCHIVO_LLUVIA = "historial_lluvia.json"
+ARCHIVO_TEMPERATURA = "historial_temperatura.json"
+ARCHIVO_VIENTO = "historial_viento.json"
 ARCHIVO_CONGELADAS = "historial_congeladas.json"
 
 HEADERS = {
@@ -200,12 +202,14 @@ def verificar_estacion_congelada(nombre_estacion, temp, viento, racha):
 
     return historial[nombre_estacion]["contador"] >= LIMITE_LECTURAS_REPETIDAS
 
-def gestionar_historial_presion(nombre_estacion, presion_actual):
+def gestionar_historial_generico(archivo, clave_valor, nombre_estacion, valor):
+    if valor is None:
+        return
     ahora = obtener_hora_chile()
     historial = {}
-    if os.path.exists(ARCHIVO_HISTORIAL):
+    if os.path.exists(archivo):
         try:
-            with open(ARCHIVO_HISTORIAL, "r", encoding="utf-8") as f:
+            with open(archivo, "r", encoding="utf-8") as f:
                 historial = json.load(f)
         except Exception:
             historial = {}
@@ -214,22 +218,35 @@ def gestionar_historial_presion(nombre_estacion, presion_actual):
         historial[nombre_estacion] = []
 
     registros = historial[nombre_estacion]
-    registros.append({"t": ahora.timestamp(), "p": presion_actual})
+    registros.append({"t": ahora.timestamp(), clave_valor: valor})
 
     limite_tiempo = ahora.timestamp() - (25 * 3600)
     registros = [r for r in registros if r["t"] >= limite_tiempo]
     historial[nombre_estacion] = registros
 
     try:
-        with open(ARCHIVO_HISTORIAL, "w", encoding="utf-8") as f:
+        with open(archivo, "w", encoding="utf-8") as f:
             json.dump(historial, f)
     except Exception:
         pass
 
+def gestionar_historial_presion(nombre_estacion, presion_actual):
+    gestionar_historial_generico(ARCHIVO_HISTORIAL, "p", nombre_estacion, presion_actual)
+    
     if presion_actual is None:
         return ""
 
-    objetivo_t = ahora.timestamp() - (3 * 3600)
+    historial = {}
+    if os.path.exists(ARCHIVO_HISTORIAL):
+        try:
+            with open(ARCHIVO_HISTORIAL, "r", encoding="utf-8") as f:
+                historial = json.load(f)
+        except Exception:
+            return ""
+
+    registros = historial.get(nombre_estacion, [])
+    ahora = obtener_hora_chile().timestamp()
+    objetivo_t = ahora - (3 * 3600)
     candidatos = [r for r in registros if abs(r["t"] - objetivo_t) <= (45 * 60)]
 
     if not candidatos:
@@ -258,33 +275,19 @@ def gestionar_historial_lluvia(nombre_estacion, lluvia_str):
     if not lluvia_str or "--" in str(lluvia_str):
         return
     val_lluvia = convertir_numero(str(lluvia_str).replace("mm", ""))
-    if val_lluvia is None:
+    gestionar_historial_generico(ARCHIVO_LLUVIA, "pp", nombre_estacion, val_lluvia)
+
+def gestionar_historial_temperatura(nombre_estacion, temp_str):
+    if not temp_str or "--" in str(temp_str):
         return
+    val_temp = convertir_numero(str(temp_str).replace("°C", ""))
+    gestionar_historial_generico(ARCHIVO_TEMPERATURA, "temp", nombre_estacion, val_temp)
 
-    ahora = obtener_hora_chile()
-    historial = {}
-    if os.path.exists(ARCHIVO_LLUVIA):
-        try:
-            with open(ARCHIVO_LLUVIA, "r", encoding="utf-8") as f:
-                historial = json.load(f)
-        except Exception:
-            historial = {}
-
-    if nombre_estacion not in historial:
-        historial[nombre_estacion] = []
-
-    registros = historial[nombre_estacion]
-    registros.append({"t": ahora.timestamp(), "pp": val_lluvia})
-
-    limite_tiempo = ahora.timestamp() - (25 * 3600)
-    registros = [r for r in registros if r["t"] >= limite_tiempo]
-    historial[nombre_estacion] = registros
-
-    try:
-        with open(ARCHIVO_LLUVIA, "w", encoding="utf-8") as f:
-            json.dump(historial, f)
-    except Exception:
-        pass
+def gestionar_historial_viento(nombre_estacion, viento_str):
+    if not viento_str or "--" in str(viento_str):
+        return
+    val_viento = convertir_numero(str(viento_str).replace("kt", ""))
+    gestionar_historial_generico(ARCHIVO_VIENTO, "viento", nombre_estacion, val_viento)
 
 def consultar_directemar(est):
     try:
@@ -304,6 +307,7 @@ def consultar_directemar(est):
                 val = convertir_numero(temp_match.group(1))
                 if val is not None:
                     temp = f"{val:.1f}°C"
+                    gestionar_historial_temperatura(est["nombre"], temp)
 
             pres_match = re.search(r'(?:Barometer|Presion)[^\d]*([\-]?\d+(?:[.,]\d+)?)\s*(?:hPa|mb)?', texto_plano, re.IGNORECASE)
             if pres_match:
@@ -337,6 +341,7 @@ def consultar_directemar(est):
                 val = convertir_numero(viento_match.group(1))
                 if val is not None:
                     viento = f"{val:.1f} kt"
+                    gestionar_historial_viento(est["nombre"], viento)
 
             racha_match = re.search(r'(?:Wind\s*Speed\s*\(gust\)|Gust|Racha|Rafaga|Rafaga)[^\d]*(\d+(?:[.,]\d+)?)\s*(?:kts|kt|knots|nudos)?', texto_plano, re.IGNORECASE)
             if racha_match:
@@ -398,6 +403,7 @@ def consultar_wunderground_web(est):
 
             temp_f = imperial.get("temp")
             temp = f"{(temp_f - 32.0) * 5.0 / 9.0:.1f}°C" if temp_f is not None else "--"
+            gestionar_historial_temperatura(est["nombre"], temp)
 
             pres_inHg = imperial.get("pressure")
             pres = "--"
@@ -408,6 +414,7 @@ def consultar_wunderground_web(est):
 
             viento_mph = imperial.get("windSpeed")
             viento = f"{viento_mph / 1.15077945:.1f} kt" if viento_mph is not None else "--"
+            gestionar_historial_viento(est["nombre"], viento)
 
             gust_mph = imperial.get("windGust")
             racha = f"{gust_mph / 1.15077945:.1f} kt" if gust_mph is not None else "--"
@@ -508,6 +515,7 @@ def consultar_ifop(est):
 
                 temp_f = convertir_numero(temp_val)
                 temp = f"{temp_f:.1f}°C" if temp_f is not None else "--"
+                gestionar_historial_temperatura(est["nombre"], temp)
 
                 pres_f = convertir_numero(pres_val)
                 tendencia_ifop = ""
@@ -524,6 +532,7 @@ def consultar_ifop(est):
 
                 viento_f = convertir_numero(viento_val)
                 viento = f"{viento_f:.1f} kt" if viento_f is not None else "--"
+                gestionar_historial_viento(est["nombre"], viento)
 
                 racha_f = convertir_numero(racha_val)
                 racha = f"{racha_f:.1f} kt" if racha_f is not None else "--"
@@ -600,8 +609,12 @@ def generar_html(resultados_totales, hay_alerta):
         cuerpo_tarjeta = f"""
             <div class="card-body-content">
                 <div class="row-top">
-                    <div class="item-box temp-box">🌡️ {r['temp']}</div>
-                    <div class="item-box">{viento_contenido}</div>
+                    <div class="item-box temp-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalTemperatura('{r['nombre']}');" title="Ver gráfico de temperatura 24h">
+                        🌡️ {r['temp']}
+                    </div>
+                    <div class="item-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalViento('{r['nombre']}');" title="Ver gráfico de viento 24h">
+                        {viento_contenido}
+                    </div>
                     <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r['racha']}</span></div>
                 </div>
                 <div class="row-bottom-3">
@@ -966,6 +979,30 @@ def generar_html(resultados_totales, hay_alerta):
         </div>
     </div>
 
+    <!-- Modal del Gráfico de Temperatura 24H -->
+    <div id="temperaturaModal" class="modal-overlay">
+        <div class="modal-content-large">
+            <span class="close-modal" onclick="closeTemperaturaModal()">&times;</span>
+            <h3 id="modal-temp-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Evolución de Temperatura</h3>
+            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Comportamiento térmico de las últimas 24 horas</p>
+            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border);">
+                <svg id="modal-temperatura-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal del Gráfico de Viento 24H -->
+    <div id="vientoModal" class="modal-overlay">
+        <div class="modal-content-large">
+            <span class="close-modal" onclick="closeVientoModal()">&times;</span>
+            <h3 id="modal-viento-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Intensidad del Viento</h3>
+            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Velocidad del viento de las últimas 24 horas</p>
+            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border);">
+                <svg id="modal-viento-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
+            </div>
+        </div>
+    </div>
+
     <h1>Monitor de Estaciones Automaticas</h1>
     <div class="subtitle-line2">Centro Zonal de Meteorologia Marina de Talcahuano</div>
     <div class="subtitle">Ultima verificacion: {hora_actual_chile} (Tolerancia: {TOLERANCIA_MINUTOS} min)</div>
@@ -996,6 +1033,8 @@ def generar_html(resultados_totales, hay_alerta):
     <script>
         const historialPresionData = {json.dumps(dict([(k, v) for k, v in json.load(open(ARCHIVO_HISTORIAL, 'r', encoding='utf-8')).items()]) if os.path.exists(ARCHIVO_HISTORIAL) else {{}})};
         const historialLluviaData = {json.dumps(dict([(k, v) for k, v in json.load(open(ARCHIVO_LLUVIA, 'r', encoding='utf-8')).items()]) if os.path.exists(ARCHIVO_LLUVIA) else {{}})};
+        const historialTemperaturaData = {json.dumps(dict([(k, v) for k, v in json.load(open(ARCHIVO_TEMPERATURA, 'r', encoding='utf-8')).items()]) if os.path.exists(ARCHIVO_TEMPERATURA) else {{}})};
+        const historialVientoData = {json.dumps(dict([(k, v) for k, v in json.load(open(ARCHIVO_VIENTO, 'r', encoding='utf-8')).items()]) if os.path.exists(ARCHIVO_VIENTO) else {{}})};
 
         window.addEventListener('DOMContentLoaded', () => {{
             const currentUrl = window.location.href;
@@ -1015,11 +1054,15 @@ def generar_html(resultados_totales, hay_alerta):
         function closeQRModal() {{ document.getElementById('qrModal').style.display = 'none'; }}
         function closePresionModal() {{ document.getElementById('presionModal').style.display = 'none'; }}
         function closeLluviaModal() {{ document.getElementById('lluviaModal').style.display = 'none'; }}
+        function closeTemperaturaModal() {{ document.getElementById('temperaturaModal').style.display = 'none'; }}
+        function closeVientoModal() {{ document.getElementById('vientoModal').style.display = 'none'; }}
 
         window.onclick = function(event) {{
             if (event.target === document.getElementById('qrModal')) document.getElementById('qrModal').style.display = 'none';
             if (event.target === document.getElementById('presionModal')) document.getElementById('presionModal').style.display = 'none';
             if (event.target === document.getElementById('lluviaModal')) document.getElementById('lluviaModal').style.display = 'none';
+            if (event.target === document.getElementById('temperaturaModal')) document.getElementById('temperaturaModal').style.display = 'none';
+            if (event.target === document.getElementById('vientoModal')) document.getElementById('vientoModal').style.display = 'none';
         }}
 
         function renderizarSparklines() {{
@@ -1168,6 +1211,139 @@ def generar_html(resultados_totales, hay_alerta):
 
             document.getElementById('lluviaModal').style.display = 'flex';
         }}
+
+        function abrirModalTemperatura(estacion) {{
+            const registros = historialTemperaturaData[estacion];
+            document.getElementById('modal-temp-title').innerText = "Temperatura: " + estacion;
+            const svgChart = document.getElementById('modal-temperatura-chart');
+            
+            if (!registros || registros.length < 2) {{
+                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">No hay suficiente historial de temperatura registrado aún</text>';
+                document.getElementById('temperaturaModal').style.display = 'flex';
+                return;
+            }}
+
+            const ahora = Date.now() / 1000;
+            const hace24h = ahora - (24 * 3600);
+            const datos24h = registros.filter(r => r.t >= hace24h && r.temp !== null);
+
+            if (datos24h.length < 2) {{
+                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">Esperando más ciclos de lectura (24h)</text>';
+                document.getElementById('temperaturaModal').style.display = 'flex';
+                return;
+            }}
+
+            const temps = datos24h.map(r => r.temp);
+            let minT = Math.min(...temps);
+            let maxT = Math.max(...temps);
+            if (minT === maxT) {{ minT -= 1; maxT += 1; }}
+            const margen = (maxT - minT) * 0.1;
+            minT -= margen;
+            maxT += margen;
+            const rangoT = maxT - minT;
+
+            const width = 460;
+            const height = 180;
+            const offsetX = 35;
+            const offsetY = 15;
+
+            let pathD = "";
+            let puntosHtml = "";
+
+            datos24h.forEach((r, i) => {{
+                const x = offsetX + (i / (datos24h.length - 1)) * (width - offsetX);
+                const y = offsetY + height - ((r.temp - minT) / rangoT) * height;
+                if (i === 0) pathD += `M ${{x}} ${{y}}`;
+                else pathD += ` L ${{x}} ${{y}}`;
+                puntosHtml += `<circle cx="${{x}}" cy="${{y}}" r="3" fill="#e11d48"><title>${{r.temp.toFixed(1)}} °C</title></circle>`;
+            }});
+
+            const medT = (minT + maxT) / 2;
+            const yMin = offsetY + height;
+            const yMed = offsetY + height / 2;
+            const yMax = offsetY;
+
+            svgChart.innerHTML = `
+                <line x1="${{offsetX}}" y1="${{yMin}}" x2="${{width}}" y2="${{yMin}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                <line x1="${{offsetX}}" y1="${{yMed}}" x2="${{width}}" y2="${{yMed}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                <line x1="${{offsetX}}" y1="${{yMax}}" x2="${{width}}" y2="${{yMax}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                
+                <text x="${{offsetX - 5}}" y="${{yMin + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{minT.toFixed(1)}}</text>
+                <text x="${{offsetX - 5}}" y="${{yMed + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{medT.toFixed(1)}}</text>
+                <text x="${{offsetX - 5}}" y="${{yMax + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxT.toFixed(1)}}</text>
+                
+                <path d="${{pathD}}" fill="none" stroke="#e11d48" stroke-width="2.5" />
+                ${{puntosHtml}}
+            `;
+
+            document.getElementById('temperaturaModal').style.display = 'flex';
+        }}
+
+        function abrirModalViento(estacion) {{
+            const registros = historialVientoData[estacion];
+            document.getElementById('modal-viento-title').innerText = "Viento: " + estacion;
+            const svgChart = document.getElementById('modal-viento-chart');
+            
+            if (!registros || registros.length < 2) {{
+                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">No hay suficiente historial de viento registrado aún</text>';
+                document.getElementById('vientoModal').style.display = 'flex';
+                return;
+            }}
+
+            const ahora = Date.now() / 1000;
+            const hace24h = ahora - (24 * 3600);
+            const datos24h = registros.filter(r => r.t >= hace24h && r.viento !== null);
+
+            if (datos24h.length < 2) {{
+                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">Esperando más ciclos de lectura (24h)</text>';
+                document.getElementById('vientoModal').style.display = 'flex';
+                return;
+            }}
+
+            const vientos = datos24h.map(r => r.viento);
+            let minV = 0;
+            let maxV = Math.max(...vientos);
+            if (maxV <= 0) maxV = 10.0;
+            const margen = maxV * 0.1;
+            maxV += margen;
+            const rangoV = maxV - minV;
+
+            const width = 460;
+            const height = 180;
+            const offsetX = 35;
+            const offsetY = 15;
+
+            let pathD = "";
+            let puntosHtml = "";
+
+            datos24h.forEach((r, i) => {{
+                const x = offsetX + (i / (datos24h.length - 1)) * (width - offsetX);
+                const y = offsetY + height - ((r.viento - minV) / rangoV) * height;
+                if (i === 0) pathD += `M ${{x}} ${{y}}`;
+                else pathD += ` L ${{x}} ${{y}}`;
+                puntosHtml += `<circle cx="${{x}}" cy="${{y}}" r="3" fill="#0284c7"><title>${{r.viento.toFixed(1)}} kt</title></circle>`;
+            }});
+
+            const medV = (minV + maxV) / 2;
+            const yMin = offsetY + height;
+            const yMed = offsetY + height / 2;
+            const yMax = offsetY;
+
+            svgChart.innerHTML = `
+                <line x1="${{offsetX}}" y1="${{yMin}}" x2="${{width}}" y2="${{yMin}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                <line x1="${{offsetX}}" y1="${{yMed}}" x2="${{width}}" y2="${{yMed}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                <line x1="${{offsetX}}" y1="${{yMax}}" x2="${{width}}" y2="${{yMax}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
+                
+                <text x="${{offsetX - 5}}" y="${{yMin + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{minV.toFixed(1)}}</text>
+                <text x="${{offsetX - 5}}" y="${{yMed + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{medV.toFixed(1)}}</text>
+                <text x="${{offsetX - 5}}" y="${{yMax + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxV.toFixed(1)}}</text>
+                
+                <path d="${{pathD}}" fill="none" stroke="#0284c7" stroke-width="2.5" />
+                ${{puntosHtml}}
+            `;
+
+            document.getElementById('vientoModal').style.display = 'flex';
+        }}
     </script>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -1259,7 +1435,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado.")
+    print("✓ index.html actualizado con gráficos de Temperatura y Viento.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1312,8 +1488,8 @@ def ejecutar_monitoreo():
 def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
-        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_LLUVIA, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Activar modal de precipitacion al hacer clic [skip ci]"], capture_output=True, text=True)
+        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_LLUVIA, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Agregar graficos interactivos de temperatura y viento 24h [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0:
             if "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
                 print("Sin cambios nuevos para subir.")
