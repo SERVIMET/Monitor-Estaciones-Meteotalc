@@ -15,7 +15,6 @@ TOLERANCIA_MINUTOS = 12
 LIMITE_LECTURAS_REPETIDAS = 10
 ZONA_CHILE = ZoneInfo("America/Santiago")
 ARCHIVO_HISTORIAL = "historial_presion.json"
-ARCHIVO_LLUVIA = "historial_lluvia.json"
 ARCHIVO_TEMPERATURA = "historial_temperatura.json"
 ARCHIVO_VIENTO = "historial_viento.json"
 ARCHIVO_CONGELADAS = "historial_congeladas.json"
@@ -141,12 +140,12 @@ def convertir_numero(valor):
         return None
     try:
         val_str = str(valor).strip()
-        if any(c in val_str.lower() for c in ["color", "purple", "line", "data", "{", "}"]):
+        if any(c in val_str.lower() for c in ["color", "purple", "line", "data", "{", "}", "none"]):
             return None
-        match_num = re.search(r'([\-]?\d+(?:[.,]\d+)?)', val_str)
-        if match_num:
-            return float(match_num.group(1).replace(",", "."))
-        return float(val_str.replace(",", "."))
+        val_clean = re.sub(r'[^\d.,\-]', '', val_str)
+        if not val_clean:
+            return None
+        return float(val_clean.replace(",", "."))
     except (ValueError, TypeError):
         return None
 
@@ -263,13 +262,6 @@ def gestionar_historial_presion(nombre_estacion, presion_actual):
     elif dif < -0.2: return " ↘"
     else: return " ➔"
 
-def gestionar_historial_lluvia(nombre_estacion, lluvia_str):
-    if not lluvia_str or "--" in str(lluvia_str):
-        return
-    val_lluvia = convertir_numero(str(lluvia_str))
-    if val_lluvia is not None:
-        gestionar_historial_generico(ARCHIVO_LLUVIA, "pp", nombre_estacion, val_lluvia)
-
 def gestionar_historial_temperatura(nombre_estacion, temp_str):
     if not temp_str or "--" in str(temp_str):
         return
@@ -353,7 +345,6 @@ def consultar_directemar(est):
                 val = convertir_numero(pp_match.group(1))
                 if val is not None:
                     precipitacion = f"{val:.1f} mm"
-                    gestionar_historial_lluvia(est["nombre"], precipitacion)
 
             match_fecha = re.search(r'(?:Page\s+updated|Actualizado)\s+(\d{1,2}-\d{1,2}-\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?)', texto_plano, re.IGNORECASE)
             if not match_fecha:
@@ -421,7 +412,6 @@ def consultar_wunderground_web(est):
             if precip_in is not None:
                 precip_mm = precip_in * 25.4
                 precipitacion = f"{precip_mm:.1f} mm"
-                gestionar_historial_lluvia(est["nombre"], precipitacion)
             else:
                 precipitacion = "0.0 mm"
 
@@ -530,7 +520,6 @@ def consultar_ifop(est):
 
                 pp_f = convertir_numero(pp_val)
                 precipitacion = f"{pp_f:.1f} mm" if pp_f is not None else "0.0 mm"
-                gestionar_historial_lluvia(est["nombre"], precipitacion)
 
                 dir_num = convertir_numero(dir_val)
                 if dir_num is not None:
@@ -618,9 +607,7 @@ def generar_html(resultados_totales, hay_alerta):
                         <span style="font-size: 0.52em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.0;">📈 TENDENCIA 24H</span>
                         <svg class="mini-sparkline" data-estacion="{r['nombre']}" width="70" height="18" style="overflow:visible;"></svg>
                     </div>
-                    <div class="item-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalLluvia('{r['nombre']}');" title="Ver gráfico de precipitación 24h">
-                        <span style="font-size: 0.62em; font-weight: 700;">🌧️ {r['precipitacion']}</span>
-                    </div>
+                    <div class="item-box"><span style="font-size: 0.62em; font-weight: 700;">🌧️ {r['precipitacion']}</span></div>
                 </div>
             </div>
         """
@@ -646,7 +633,6 @@ def generar_html(resultados_totales, hay_alerta):
     hora_actual_chile = obtener_hora_chile().strftime("%d-%m-%Y %H:%M:%S")
 
     json_presion_str = json.dumps(cargar_json_historial(ARCHIVO_HISTORIAL))
-    json_lluvia_str = json.dumps(cargar_json_historial(ARCHIVO_LLUVIA))
     json_temp_str = json.dumps(cargar_json_historial(ARCHIVO_TEMPERATURA))
     json_viento_str = json.dumps(cargar_json_historial(ARCHIVO_VIENTO))
 
@@ -780,17 +766,6 @@ def generar_html(resultados_totales, hay_alerta):
         </div>
     </div>
 
-    <div id="lluviaModal" class="modal-overlay">
-        <div class="modal-content-large">
-            <span class="close-modal" onclick="closeLluviaModal()">&times;</span>
-            <h3 id="modal-lluvia-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Precipitación Acumulada</h3>
-            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Evolución de lluvia de las últimas 24 horas</p>
-            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border);">
-                <svg id="modal-lluvia-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
-            </div>
-        </div>
-    </div>
-
     <div id="temperaturaModal" class="modal-overlay">
         <div class="modal-content-large">
             <span class="close-modal" onclick="closeTemperaturaModal()">&times;</span>
@@ -827,7 +802,6 @@ def generar_html(resultados_totales, hay_alerta):
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         const historialPresionData = {json_presion_str};
-        const historialLluviaData = {json_lluvia_str};
         const historialTemperaturaData = {json_temp_str};
         const historialVientoData = {json_viento_str};
 
@@ -842,14 +816,12 @@ def generar_html(resultados_totales, hay_alerta):
         function openQRModal() {{ document.getElementById('qrModal').style.display = 'flex'; }}
         function closeQRModal() {{ document.getElementById('qrModal').style.display = 'none'; }}
         function closePresionModal() {{ document.getElementById('presionModal').style.display = 'none'; }}
-        function closeLluviaModal() {{ document.getElementById('lluviaModal').style.display = 'none'; }}
         function closeTemperaturaModal() {{ document.getElementById('temperaturaModal').style.display = 'none'; }}
         function closeVientoModal() {{ document.getElementById('vientoModal').style.display = 'none'; }}
 
         window.onclick = function(event) {{
             if (event.target === document.getElementById('qrModal')) closeQRModal();
             if (event.target === document.getElementById('presionModal')) closePresionModal();
-            if (event.target === document.getElementById('lluviaModal')) closeLluviaModal();
             if (event.target === document.getElementById('temperaturaModal')) closeTemperaturaModal();
             if (event.target === document.getElementById('vientoModal')) closeVientoModal();
         }}
@@ -876,7 +848,7 @@ def generar_html(resultados_totales, hay_alerta):
                     const x = (i / (datos24h.length - 1)) * w;
                     const y = h - ((r.p - minP) / rangoP) * (h - 4) - 2;
                     return `${{x.toFixed(1)}}`;
-                }}).join(' '); // Simplificado para sparkline
+                }}).join(' ');
             }});
         }}
 
@@ -917,7 +889,7 @@ def generar_html(resultados_totales, hay_alerta):
             let pathD = ""; let puntosHtml = ""; let etiquetasHora = "";
 
             const totalPuntos = datos24h.length;
-            const pasoEtiqueta = Math.max(1, Math.floor(totalPuntos / 5)); // Mostrar ~5 marcas de hora en el eje X
+            const pasoEtiqueta = Math.max(1, Math.floor(totalPuntos / 5));
 
             datos24h.forEach((r, i) => {{
                 const x = offsetX + (i / (totalPuntos - 1)) * (width - offsetX);
@@ -961,59 +933,6 @@ def generar_html(resultados_totales, hay_alerta):
 
         function abrirModalViento(estacion) {{
             dibujarGraficoLinea(historialVientoData[estacion], 'viento', '#0284c7', 'kt', 'vientoModal', 'modal-viento-chart', 'Viento: ' + estacion, 'modal-viento-title');
-        }}
-
-        function abrirModalLluvia(estacion) {{
-            const registros = historialLluviaData[estacion];
-            document.getElementById('modal-lluvia-title').innerText = "Precipitación: " + estacion;
-            const svgChart = document.getElementById('modal-lluvia-chart');
-            
-            if (!registros || registros.length < 2) {{
-                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">No hay suficiente historial de lluvia registrado aún</text>';
-                document.getElementById('lluviaModal').style.display = 'flex';
-                return;
-            }}
-
-            const ahora = Date.now() / 1000;
-            const hace24h = ahora - (24 * 3600);
-            const datos24h = registros.filter(r => r.t >= hace24h && r.pp !== null);
-
-            if (datos24h.length < 2) {{
-                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">Esperando más ciclos de lectura (24h)</text>';
-                document.getElementById('lluviaModal').style.display = 'flex';
-                return;
-            }}
-
-            const lluvias = datos24h.map(r => r.pp);
-            let maxPp = Math.max(...lluvias);
-            if (maxPp <= 0) maxPp = 1.0;
-
-            const width = 460; const height = 160; const offsetX = 35; const offsetY = 15;
-            let barsHtml = ""; let etiquetasHora = "";
-            const totalPuntos = datos24h.length;
-            const anchoBarra = Math.max((width - offsetX) / totalPuntos - 2, 2);
-            const pasoEtiqueta = Math.max(1, Math.floor(totalPuntos / 5));
-
-            datos24h.forEach((r, i) => {{
-                const x = offsetX + (i / (totalPuntos - 1)) * (width - offsetX - 10);
-                const hBarra = (r.pp / maxPp) * height;
-                const y = offsetY + height - hBarra;
-                barsHtml += `<rect x="${{x}}" y="${{y}}" width="${{anchoBarra}}" height="${{hBarra}}" fill="#0284c7" rx="2"><title>${{formatHora(r.t)}} - ${{r.pp.toFixed(1)}} mm</title></rect>`;
-
-                if (i % pasoEtiqueta === 0 || i === totalPuntos - 1) {{
-                    etiquetasHora += `<text x="${{x + anchoBarra/2}}" y="${{offsetY + height + 22}}" text-anchor="middle" font-size="9" fill="#64748b">${{formatHora(r.t)}}</text>`;
-                }}
-            }});
-
-            svgChart.innerHTML = `
-                <line x1="${{offsetX}}" y1="${{offsetY + height}}" x2="${{width}}" y2="${{offsetY + height}}" stroke="#cbd5e1" />
-                <line x1="${{offsetX}}" y1="${{offsetY}}" x2="${{width}}" y2="${{offsetY}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                <text x="${{offsetX - 5}}" y="${{offsetY + height + 4}}" text-anchor="end" font-size="10" fill="#64748b">0.0</text>
-                <text x="${{offsetX - 5}}" y="${{offsetY + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxPp.toFixed(1)}} mm</text>
-                ${{barsHtml}}
-                ${{etiquetasHora}}
-            `;
-            document.getElementById('lluviaModal').style.display = 'flex';
         }}
     </script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -1080,7 +999,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con marcas de hora en los gráficos.")
+    print("✓ index.html actualizado manteniendo la lectura actual de precipitaciones.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1128,8 +1047,8 @@ def ejecutar_monitoreo():
 def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
-        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_LLUVIA, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Agregar marcas de hora en eje X de modales y corregir captura de lluvia [skip ci]"], capture_output=True, text=True)
+        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Mantener dato de pluviometria y remover modal de grafico [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
