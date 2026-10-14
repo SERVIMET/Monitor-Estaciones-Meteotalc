@@ -84,9 +84,6 @@ ESTACIONES_DIRECTEMAR = [
     },
 ]
 
-# ==========================================
-# FAROS WEATHER UNDERGROUND
-# ==========================================
 ESTACIONES_FAROS = [
     {
         "nombre": "Faro Isla Quiriquina",
@@ -104,9 +101,6 @@ ESTACIONES_FAROS = [
     },
 ]
 
-# ==========================================
-# ESTACIONES IFOP / API JSON
-# ==========================================
 ESTACIONES_IFOP = [
     {
         "nombre": "Faro Cabo Carranza",
@@ -263,7 +257,6 @@ def gestionar_historial_presion(nombre_estacion, presion_actual):
         return ""
 
     dif = presion_actual - presion_pasada
-
     if dif > 0.2:
         return " ↗"
     elif dif < -0.2:
@@ -294,7 +287,6 @@ def consultar_directemar(est):
         req = urllib.request.Request(est["url"], headers=HEADERS)
         with urllib.request.urlopen(req, timeout=15, context=ctx) as response:
             html = response.read().decode("utf-8", errors="ignore")
-            
             texto_plano = re.sub(r'<[^>]+>', ' ', html)
             texto_plano = texto_plano.replace('\xa5', ' ').replace('\xa0', ' ').replace('&nbsp;', ' ').replace('&deg;', '°').replace('&#176;', '°')
             texto_plano = re.sub(r'\s+', ' ', texto_plano).strip()
@@ -658,13 +650,11 @@ def generar_html(resultados_totales, hay_alerta):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="30">
     <title>Monitor de Estaciones Automaticas</title>
-    <!-- Vinculación del Manifiesto y PWA -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {{
@@ -689,7 +679,6 @@ def generar_html(resultados_totales, hay_alerta):
             --wind-color: #1d4ed8;
             --footer-border: rgba(255, 255, 255, 0.4);
         }}
-
         body.dark-mode {{
             --bg-color: #121212;
             --text-color: #e0e0e0;
@@ -712,345 +701,117 @@ def generar_html(resultados_totales, hay_alerta):
             --wind-color: #60a5fa;
             --footer-border: rgba(255, 255, 255, 0.1);
         }}
-
         body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); padding: 15px; margin: 0; transition: background-color 0.3s ease, color 0.3s ease; }}
         h1 {{ text-align: center; color: var(--h1-color); margin-bottom: 0; font-size: 22px; line-height: 1.2; font-weight: 700; }}
         .subtitle-line2 {{ text-align: center; color: var(--sub2-color); margin-bottom: 6px; font-size: 16px; font-weight: bold; }}
         .subtitle {{ text-align: center; color: var(--sub-color); margin-bottom: 12px; font-size: 12px; }}
         .summary {{ text-align: center; font-weight: bold; margin-bottom: 15px; color: var(--summary-text); font-size: 14px; background: var(--summary-bg); padding: 6px 16px; border-radius: 20px; max-width: 290px; margin-left: auto; margin-right: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.06); border: 1px solid var(--summary-border); }}
-        
-        @keyframes parpadeoFondo {{ 
-            0% {{ background-color: var(--bg-color); }} 
-            50% {{ background-color: #fca5a5; }} 
-            100% {{ background-color: var(--bg-color); }} 
-        }}
+        @keyframes parpadeoFondo {{ 0% {{ background-color: var(--bg-color); }} 50% {{ background-color: #fca5a5; }} 100% {{ background-color: var(--bg-color); }} }}
         body.alerta-activa {{ animation: parpadeoFondo 1.5s infinite; }}
-        
-        body.dark-mode.alerta-activa {{ 
-            animation: none !important; 
-            background-color: #121212 !important; 
-        }}
-
+        body.dark-mode.alerta-activa {{ animation: none !important; background-color: #121212 !important; }}
         .banner-alerta {{ background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }}
         #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
-        
-        .grid {{ 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); 
-            gap: 15px; 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            align-items: stretch; 
-        }}
-        
+        .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; align-items: stretch; }}
         .card-link {{ text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; }}
-        .card {{ 
-            border-radius: 14px; 
-            padding: 10px 10px; 
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%; 
-            box-sizing: border-box;
-        }}
-        .card.ok {{ 
-            background: var(--card-ok-bg); 
-            border: 1px solid var(--card-ok-border);
-            border-left: 6px solid #16a34a; 
-        }}
-        .card.error {{ 
-            background: var(--card-error-bg); 
-            border: 1px solid var(--card-error-border);
-            border-left: 6px solid #dc2626; 
-        }}
-        .card:hover {{ 
-            transform: translateY(-3px); 
-            box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); 
-        }}
-        .card.error:hover {{
-            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3); 
-        }}
-        
+        .card {{ border-radius: 14px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-sizing: border-box; }}
+        .card.ok {{ background: var(--card-ok-bg); border: 1px solid var(--card-ok-border); border-left: 6px solid #16a34a; }}
+        .card.error {{ background: var(--card-error-bg); border: 1px solid var(--card-error-border); border-left: 6px solid #dc2626; }}
+        .card:hover {{ transform: translateY(-3px); box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); }}
+        .card.error:hover {{ box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3); }}
         .card-header {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }}
         .station-name {{ font-weight: bold; font-size: 13.5px; color: var(--station-name-color); line-height: 1.1; }}
         .status-badge {{ font-size: 11px; display: flex; align-items: center; }}
-        
-        .card-body-content {{
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            margin: 4px 0;
-        }}
-        .row-top, .row-bottom-3 {{
-            display: grid;
-            gap: 4px;
-        }}
-        .row-top {{
-            grid-template-columns: 1.1fr 1fr 1fr;
-        }}
-        .row-bottom-3 {{
-            grid-template-columns: 1fr 1.1fr 1fr;
-        }}
-        
-        .item-box {{
-            background: var(--item-bg);
-            padding: 4px 2px;
-            border-radius: 6px;
-            border: 1px solid var(--item-border);
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            white-space: nowrap;
-            color: var(--item-text);
-        }}
-        .temp-box {{
-            font-size: 0.85em;
-            font-weight: 800;
-            color: var(--item-text);
-        }}
-        .sparkline-btn {{
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }}
-        .sparkline-btn:hover {{
-            background: rgba(29, 78, 216, 0.15);
-            border-color: var(--click-color);
-        }}
-        
+        .card-body-content {{ display: flex; flex-direction: column; gap: 4px; margin: 4px 0; }}
+        .row-top, .row-bottom-3 {{ display: grid; gap: 4px; }}
+        .row-top {{ grid-template-columns: 1.1fr 1fr 1fr; }}
+        .row-bottom-3 {{ grid-template-columns: 1fr 1.1fr 1fr; }}
+        .item-box {{ background: var(--item-bg); padding: 4px 2px; border-radius: 6px; border: 1px solid var(--item-border); text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; white-space: nowrap; color: var(--item-text); }}
+        .temp-box {{ font-size: 0.85em; font-weight: 800; color: var(--item-text); }}
+        .sparkline-btn {{ cursor: pointer; transition: background 0.2s ease; }}
+        .sparkline-btn:hover {{ background: rgba(29, 78, 216, 0.15); border-color: var(--click-color); }}
         .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; }}
         .time {{ font-size: 0.68em; color: var(--time-color); }}
         .click-text {{ font-size: 0.68em; color: var(--click-color); font-weight: bold; font-style: italic; }}
-        
         .footer-dev {{ background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: table; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }}
-        
-        .floating-controls {{
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            z-index: 1000;
-        }}
-
-        .icon-btn {{
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--summary-bg);
-            color: var(--text-color);
-            border: 1px solid var(--summary-border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            transition: all 0.2s ease;
-            padding: 0;
-        }}
-        
-        .icon-btn:hover {{
-            transform: scale(1.1);
-        }}
-
-        .wind-unit-btn {{
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }}
-
-        /* Modales */
-        .modal-overlay {{
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.6);
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(4px);
-        }}
-        .modal-content {{
-            background: var(--summary-bg);
-            color: var(--text-color);
-            padding: 20px;
-            border-radius: 16px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            border: 1px solid var(--summary-border);
-            max-width: 320px;
-            width: 90%;
-            position: relative;
-        }}
-        .modal-content-large {{
-            background: var(--summary-bg);
-            color: var(--text-color);
-            padding: 20px;
-            border-radius: 16px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            border: 1px solid var(--summary-border);
-            max-width: 550px;
-            width: 95%;
-            position: relative;
-        }}
-        .close-modal {{
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            color: var(--sub-color);
-        }}
-        .close-modal:hover {{
-            color: var(--text-color);
-        }}
-
-        @media (max-width: 600px) {{
-            h1 {{
-                padding-right: 45px;
-                font-size: 19px;
-            }}
-            .floating-controls {{
-                top: 8px;
-                right: 8px;
-            }}
-            .icon-btn {{
-                width: 32px;
-                height: 32px;
-                font-size: 12px;
-            }}
-            .wind-unit-btn {{
-                font-size: 10px;
-            }}
-        }}
+        .floating-controls {{ position: fixed; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 1000; }}
+        .icon-btn {{ width: 36px; height: 36px; border-radius: 50%; background: var(--summary-bg); color: var(--text-color); border: 1px solid var(--summary-border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.2s ease; padding: 0; }}
+        .icon-btn:hover {{ transform: scale(1.1); }}
+        .wind-unit-btn {{ font-size: 11px; font-weight: 800; letter-spacing: -0.5px; }}
+        .modal-overlay {{ display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; backdrop-filter: blur(4px); }}
+        .modal-content, .modal-content-large {{ background: var(--summary-bg); color: var(--text-color); padding: 20px; border-radius: 16px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid var(--summary-border); position: relative; }}
+        .modal-content {{ max-width: 320px; width: 90%; }}
+        .modal-content-large {{ max-width: 550px; width: 95%; }}
+        .close-modal {{ position: absolute; top: 10px; right: 15px; font-size: 20px; font-weight: bold; cursor: pointer; color: var(--sub-color); }}
+        .close-modal:hover {{ color: var(--text-color); }}
     </style>
 </head>
 <body class="{alerta_class}">
     <div class="floating-controls">
-        <button class="icon-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="Cambiar Modo Oscuro/Claro">🌙</button>
-        <button class="icon-btn wind-unit-btn" onclick="toggleWindUnit()" id="windUnitBtn" title="Cambiar Unidad de Viento">kt</button>
-        <button class="icon-btn" onclick="openQRModal()" title="Ver Código QR de Acceso">📱</button>
+        <button class="icon-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="Cambiar Modo">🌙</button>
+        <button class="icon-btn wind-unit-btn" onclick="toggleWindUnit()" id="windUnitBtn" title="Unidad de Viento">kt</button>
+        <button class="icon-btn" onclick="openQRModal()" title="Código QR">📱</button>
     </div>
 
-    <!-- Modal del Código QR -->
     <div id="qrModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="closeQRModal()">&times;</span>
-            <h3 style="margin-top: 5px; margin-bottom: 15px; font-size: 16px; color: var(--h1-color);">Acceso Directo</h3>
-            <div style="background: white; padding: 10px; border-radius: 12px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h3>Acceso Directo</h3>
+            <div style="background: white; padding: 10px; border-radius: 12px; display: inline-block;">
                 <div id="qrcode"></div>
             </div>
-            <p style="font-size: 12px; margin-top: 12px; margin-bottom: 0px; font-weight: bold; color: var(--sub-color);">¡Escanéeme para abrir el monitor!</p>
         </div>
     </div>
 
-    <!-- Modal del Gráfico de Presión 24H -->
     <div id="presionModal" class="modal-overlay">
         <div class="modal-content-large">
             <span class="close-modal" onclick="closePresionModal()">&times;</span>
-            <h3 id="modal-station-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Tendencia Barométrica</h3>
-            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Evolución de presión de las últimas 24 horas</p>
-            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border);">
-                <svg id="modal-pressure-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
-            </div>
+            <h3 id="modal-station-title">Tendencia Barométrica</h3>
+            <svg id="modal-pressure-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
         </div>
     </div>
 
-    <!-- Modal del Gráfico de Precipitación 24H -->
     <div id="lluviaModal" class="modal-overlay">
         <div class="modal-content-large">
             <span class="close-modal" onclick="closeLluviaModal()">&times;</span>
-            <h3 id="modal-lluvia-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Precipitación Acumulada</h3>
-            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Evolución de lluvia de las últimas 24 horas</p>
-            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border);">
-                <svg id="modal-lluvia-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
-            </div>
+            <h3 id="modal-lluvia-title">Precipitación Acumulada</h3>
+            <svg id="modal-lluvia-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
         </div>
     </div>
 
-    <!-- Modal del Gráfico de Temperatura 24H -->
     <div id="temperaturaModal" class="modal-overlay">
         <div class="modal-content-large">
             <span class="close-modal" onclick="closeTemperaturaModal()">&times;</span>
-            <h3 id="modal-temp-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Evolución de Temperatura</h3>
-            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Comportamiento térmico de las últimas 24 horas</p>
-            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border);">
-                <svg id="modal-temperatura-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
-            </div>
+            <h3 id="modal-temp-title">Evolución de Temperatura</h3>
+            <svg id="modal-temperatura-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
         </div>
     </div>
 
-    <!-- Modal del Gráfico de Viento 24H -->
     <div id="vientoModal" class="modal-overlay">
         <div class="modal-content-large">
             <span class="close-modal" onclick="closeVientoModal()">&times;</span>
-            <h3 id="modal-viento-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Intensidad del Viento</h3>
-            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Velocidad del viento de las últimas 24 horas</p>
-            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border);">
-                <svg id="modal-viento-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
-            </div>
+            <h3 id="modal-viento-title">Intensidad del Viento</h3>
+            <svg id="modal-viento-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
         </div>
     </div>
 
     <h1>Monitor de Estaciones Automaticas</h1>
     <div class="subtitle-line2">Centro Zonal de Meteorologia Marina de Talcahuano</div>
-    <div class="subtitle">Ultima verificacion: {hora_actual_chile} (Tolerancia: {TOLERANCIA_MINUTOS} min)</div>
+    <div class="subtitle">Ultima verificacion: {hora_actual_chile}</div>
     {alerta_banner}
     <div class="summary">Estaciones Operativas: {operativas} de {total_estaciones}</div>
     <div id="map"></div>
-    <div class="grid">
-        {cards_html}
-    </div>
+    <div class="grid">{cards_html}</div>
     <div style="text-align: center;">
-        <div class="footer-dev">Desarrollado por Sgto 2° (Met.) Luis Diego Achurra Garcés &nbsp;|&nbsp; 👁️ Visitas: <span id="visitor-count" style="font-weight: bold; color: #60a5fa;">150</span></div>
-    </div>
-    
-    <!-- Banner amigable para instalar la App -->
-    <div id="install-banner" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0f2942; color: white; padding: 12px 20px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 9999; align-items: center; gap: 12px; font-family: sans-serif; max-width: 90%; width: 400px; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 24px;">📱</span>
-            <div>
-                <div style="font-weight: bold; font-size: 14px;">Instalar Monitor Meteo</div>
-                <div style="font-size: 11px; opacity: 0.8;">Accede más rápido como una app</div>
-            </div>
-        </div>
-        <button id="btn-install" style="background: #28a745; color: white; border: none; padding: 8px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px;">Instalar</button>
+        <div class="footer-dev">Desarrollado por Sgto 2° (Met.) Luis Diego Achurra Garcés &nbsp;|&nbsp; 👁️ Visitas: <span id="visitor-count">150</span></div>
     </div>
 
-    <!-- Librería QRCode.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-        const historialPresionData = {json.dumps(dict([(k, v) for k, v in json.load(open(ARCHIVO_HISTORIAL, 'r', encoding='utf-8')).items()]) if os.path.exists(ARCHIVO_HISTORIAL) else {{}})};
-        const historialLluviaData = {json.dumps(dict([(k, v) for k, v in json.load(open(ARCHIVO_LLUVIA, 'r', encoding='utf-8')).items()]) if os.path.exists(ARCHIVO_LLUVIA) else {{}})};
-        const historialTemperaturaData = {json.dumps(dict([(k, v) for k, v in json.load(open(ARCHIVO_TEMPERATURA, 'r', encoding='utf-8')).items()]) if os.path.exists(ARCHIVO_TEMPERATURA) else {{}})};
-        const historialVientoData = {json.dumps(dict([(k, v) for k, v in json.load(open(ARCHIVO_VIENTO, 'r', encoding='utf-8')).items()]) if os.path.exists(ARCHIVO_VIENTO) else {{}})};
-
-        window.addEventListener('DOMContentLoaded', () => {{
-            const currentUrl = window.location.href;
-            new QRCode(document.getElementById("qrcode"), {{
-                text: currentUrl,
-                width: 180,
-                height: 180,
-                colorDark: "#0f2942",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            }});
-
-            renderizarSparklines();
-        }});
-
+        const historialPresionData = {{}};
+        const historialLluviaData = {{}};
+        const historialTemperaturaData = {{}};
+        const historialVientoData = {{}};
+        
         function openQRModal() {{ document.getElementById('qrModal').style.display = 'flex'; }}
         function closeQRModal() {{ document.getElementById('qrModal').style.display = 'none'; }}
         function closePresionModal() {{ document.getElementById('presionModal').style.display = 'none'; }}
@@ -1058,293 +819,75 @@ def generar_html(resultados_totales, hay_alerta):
         function closeTemperaturaModal() {{ document.getElementById('temperaturaModal').style.display = 'none'; }}
         function closeVientoModal() {{ document.getElementById('vientoModal').style.display = 'none'; }}
 
-        window.onclick = function(event) {{
-            if (event.target === document.getElementById('qrModal')) document.getElementById('qrModal').style.display = 'none';
-            if (event.target === document.getElementById('presionModal')) document.getElementById('presionModal').style.display = 'none';
-            if (event.target === document.getElementById('lluviaModal')) document.getElementById('lluviaModal').style.display = 'none';
-            if (event.target === document.getElementById('temperaturaModal')) document.getElementById('temperaturaModal').style.display = 'none';
-            if (event.target === document.getElementById('vientoModal')) document.getElementById('vientoModal').style.display = 'none';
-        }}
-
-        function renderizarSparklines() {{
-            const elements = document.querySelectorAll('.mini-sparkline');
-            elements.forEach(svg => {{
-                const estacion = svg.getAttribute('data-estacion');
-                const registros = historialPresionData[estacion];
-                if (!registros || registros.length < 2) return;
-
-                const ahora = Date.now() / 1000;
-                const hace24h = ahora - (24 * 3600);
-                const datos24h = registros.filter(r => r.t >= hace24h && r.p !== null);
-                if (datos24h.length < 2) return;
-
-                const presiones = datos24h.map(r => r.p);
-                const minP = Math.min(...presiones);
-                const maxP = Math.max(...presiones);
-                const rangoP = maxP - minP || 1;
-
-                const w = 70;
-                const h = 18;
-                const puntos = datos24h.map((r, i) => {{
-                    const x = (i / (datos24h.length - 1)) * w;
-                    const y = h - ((r.p - minP) / rangoP) * (h - 4) - 2;
-                    return `${{x.toFixed(1)}},${{y.toFixed(1)}}`;
-                }}).join(' ');
-
-                svg.innerHTML = `<polyline fill="none" stroke="#2563eb" stroke-width="2" points="${{puntos}}" />`;
-            }});
-        }}
-
-        function abrirModalPresion(estacion) {{
-            const registros = historialPresionData[estacion];
-            document.getElementById('modal-station-title').innerText = "Tendencia: " + estacion;
-            const svgChart = document.getElementById('modal-pressure-chart');
-            
-            if (!registros || registros.length < 2) {{
-                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">No hay suficiente historial registrado aún</text>';
-                document.getElementById('presionModal').style.display = 'flex';
-                return;
-            }}
-
-            const ahora = Date.now() / 1000;
-            const hace24h = ahora - (24 * 3600);
-            const datos24h = registros.filter(r => r.t >= hace24h && r.p !== null);
-
-            if (datos24h.length < 2) {{
-                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">Esperando más ciclos de lectura (24h)</text>';
-                document.getElementById('presionModal').style.display = 'flex';
-                return;
-            }}
-
-            const presiones = datos24h.map(r => r.p);
-            let minP = Math.min(...presiones);
-            let maxP = Math.max(...presiones);
-            if (minP === maxP) {{ minP -= 1; maxP += 1; }}
-            const margen = (maxP - minP) * 0.1;
-            minP -= margen;
-            maxP += margen;
-            const rangoP = maxP - minP;
-
-            const width = 460;
-            const height = 180;
-            const offsetX = 35;
-            const offsetY = 15;
-
-            let pathD = "";
-            let puntosHtml = "";
-
-            datos24h.forEach((r, i) => {{
-                const x = offsetX + (i / (datos24h.length - 1)) * (width - offsetX);
-                const y = offsetY + height - ((r.p - minP) / rangoP) * height;
-                if (i === 0) pathD += `M ${{x}} ${{y}}`;
-                else pathD += ` L ${{x}} ${{y}}`;
-                puntosHtml += `<circle cx="${{x}}" cy="${{y}}" r="3" fill="#2563eb"><title>${{r.p.toFixed(1)}} hPa</title></circle>`;
-            }});
-
-            const medP = (minP + maxP) / 2;
-            const yMin = offsetY + height;
-            const yMed = offsetY + height / 2;
-            const yMax = offsetY;
-
-            svgChart.innerHTML = `
-                <line x1="${{offsetX}}" y1="${{yMin}}" x2="${{width}}" y2="${{yMin}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                <line x1="${{offsetX}}" y1="${{yMed}}" x2="${{width}}" y2="${{yMed}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                <line x1="${{offsetX}}" y1="${{yMax}}" x2="${{width}}" y2="${{yMax}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                
-                <text x="${{offsetX - 5}}" y="${{yMin + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{minP.toFixed(1)}}</text>
-                <text x="${{offsetX - 5}}" y="${{yMed + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{medP.toFixed(1)}}</text>
-                <text x="${{offsetX - 5}}" y="${{yMax + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxP.toFixed(1)}}</text>
-                
-                <path d="${{pathD}}" fill="none" stroke="#2563eb" stroke-width="2.5" />
-                ${{puntosHtml}}
-            `;
-
-            document.getElementById('presionModal').style.display = 'flex';
-        }}
-
-        function abrirModalLluvia(estacion) {{
-            const registros = historialLluviaData[estacion];
-            document.getElementById('modal-lluvia-title').innerText = "Precipitación: " + estacion;
-            const svgChart = document.getElementById('modal-lluvia-chart');
-            
-            if (!registros || registros.length < 2) {{
-                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">No hay suficiente historial de lluvia registrado aún</text>';
-                document.getElementById('lluviaModal').style.display = 'flex';
-                return;
-            }}
-
-            const ahora = Date.now() / 1000;
-            const hace24h = ahora - (24 * 3600);
-            const datos24h = registros.filter(r => r.t >= hace24h && r.pp !== null);
-
-            if (datos24h.length < 2) {{
-                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">Esperando más ciclos de lectura (24h)</text>';
-                document.getElementById('lluviaModal').style.display = 'flex';
-                return;
-            }}
-
-            const lluvias = datos24h.map(r => r.pp);
-            let maxPp = Math.max(...lluvias);
-            if (maxPp <= 0) maxPp = 1.0;
-
-            const width = 460;
-            const height = 180;
-            const offsetX = 35;
-            const offsetY = 15;
-
-            let barsHtml = "";
-            const anchoBarra = Math.max((width - offsetX) / datos24h.length - 2, 2);
-
-            datos24h.forEach((r, i) => {{
-                const x = offsetX + (i / (datos24h.length - 1)) * (width - offsetX - 10);
-                const hBarra = (r.pp / maxPp) * height;
-                const y = offsetY + height - hBarra;
-                barsHtml += `<rect x="${{x}}" y="${{y}}" width="${{anchoBarra}}" height="${{hBarra}}" fill="#0284c7" rx="2"><title>${{r.pp.toFixed(1)}} mm</title></rect>`;
-            }});
-
-            svgChart.innerHTML = `
-                <line x1="${{offsetX}}" y1="${{offsetY + height}}" x2="${{width}}" y2="${{offsetY + height}}" stroke="#cbd5e1" />
-                <line x1="${{offsetX}}" y1="${{offsetY}}" x2="${{width}}" y2="${{offsetY}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                <text x="${{offsetX - 5}}" y="${{offsetY + height + 4}}" text-anchor="end" font-size="10" fill="#64748b">0.0</text>
-                <text x="${{offsetX - 5}}" y="${{offsetY + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxPp.toFixed(1)}} mm</text>
-                ${{barsHtml}}
-            `;
-
-            document.getElementById('lluviaModal').style.display = 'flex';
-        }}
-
-        function abrirModalTemperatura(estacion) {{
-            const registros = historialTemperaturaData[estacion];
-            document.getElementById('modal-temp-title').innerText = "Temperatura: " + estacion;
-            const svgChart = document.getElementById('modal-temperatura-chart');
-            
-            if (!registros || registros.length < 2) {{
-                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">No hay suficiente historial de temperatura registrado aún</text>';
-                document.getElementById('temperaturaModal').style.display = 'flex';
-                return;
-            }}
-
-            const ahora = Date.now() / 1000;
-            const hace24h = ahora - (24 * 3600);
-            const datos24h = registros.filter(r => r.t >= hace24h && r.temp !== null);
-
-            if (datos24h.length < 2) {{
-                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">Esperando más ciclos de lectura (24h)</text>';
-                document.getElementById('temperaturaModal').style.display = 'flex';
-                return;
-            }}
-
-            const temps = datos24h.map(r => r.temp);
-            let minT = Math.min(...temps);
-            let maxT = Math.max(...temps);
-            if (minT === maxT) {{ minT -= 1; maxT += 1; }}
-            const margen = (maxT - minT) * 0.1;
-            minT -= margen;
-            maxT += margen;
-            const rangoT = maxT - minT;
-
-            const width = 460;
-            const height = 180;
-            const offsetX = 35;
-            const offsetY = 15;
-
-            let pathD = "";
-            let puntosHtml = "";
-
-            datos24h.forEach((r, i) => {{
-                const x = offsetX + (i / (datos24h.length - 1)) * (width - offsetX);
-                const y = offsetY + height - ((r.temp - minT) / rangoT) * height;
-                if (i === 0) pathD += `M ${{x}} ${{y}}`;
-                else pathD += ` L ${{x}} ${{y}}`;
-                puntosHtml += `<circle cx="${{x}}" cy="${{y}}" r="3" fill="#e11d48"><title>${{r.temp.toFixed(1)}} °C</title></circle>`;
-            }});
-
-            const medT = (minT + maxT) / 2;
-            const yMin = offsetY + height;
-            const yMed = offsetY + height / 2;
-            const yMax = offsetY;
-
-            svgChart.innerHTML = `
-                <line x1="${{offsetX}}" y1="${{yMin}}" x2="${{width}}" y2="${{yMin}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                <line x1="${{offsetX}}" y1="${{yMed}}" x2="${{width}}" y2="${{yMed}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                <line x1="${{offsetX}}" y1="${{yMax}}" x2="${{width}}" y2="${{yMax}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                
-                <text x="${{offsetX - 5}}" y="${{yMin + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{minT.toFixed(1)}}</text>
-                <text x="${{offsetX - 5}}" y="${{yMed + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{medT.toFixed(1)}}</text>
-                <text x="${{offsetX - 5}}" y="${{yMax + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxT.toFixed(1)}}</text>
-                
-                <path d="${{pathD}}" fill="none" stroke="#e11d48" stroke-width="2.5" />
-                ${{puntosHtml}}
-            `;
-
-            document.getElementById('temperaturaModal').style.display = 'flex';
-        }}
-
-        function abrirModalViento(estacion) {{
-            const registros = historialVientoData[estacion];
-            document.getElementById('modal-viento-title').innerText = "Viento: " + estacion;
-            const svgChart = document.getElementById('modal-viento-chart');
-            
-            if (!registros || registros.length < 2) {{
-                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">No hay suficiente historial de viento registrado aún</text>';
-                document.getElementById('vientoModal').style.display = 'flex';
-                return;
-            }}
-
-            const ahora = Date.now() / 1000;
-            const hace24h = ahora - (24 * 3600);
-            const datos24h = registros.filter(r => r.t >= hace24h && r.viento !== null);
-
-            if (datos24h.length < 2) {{
-                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">Esperando más ciclos de lectura (24h)</text>';
-                document.getElementById('vientoModal').style.display = 'flex';
-                return;
-            }}
-
-            const vientos = datos24h.map(r => r.viento);
-            let minV = 0;
-            let maxV = Math.max(...vientos);
-            if (maxV <= 0) maxV = 10.0;
-            const margen = maxV * 0.1;
-            maxV += margen;
-            const rangoV = maxV - minV;
-
-            const width = 460;
-            const height = 180;
-            const offsetX = 35;
-            const offsetY = 15;
-
-            let pathD = "";
-            let puntosHtml = "";
-
-            datos24h.forEach((r, i) => {{
-                const x = offsetX + (i / (datos24h.length - 1)) * (width - offsetX);
-                const y = offsetY + height - ((r.viento - minV) / rangoV) * height;
-                if (i === 0) pathD += `M ${{x}} ${{y}}`;
-                else pathD += ` L ${{x}} ${{y}}`;
-                puntosHtml += `<circle cx="${{x}}" cy="${{y}}" r="3" fill="#0284c7"><title>${{r.viento.toFixed(1)}} kt</title></circle>`;
-            }});
-
-            const medV = (minV + maxV) / 2;
-            const yMin = offsetY + height;
-            const yMed = offsetY + height / 2;
-            const yMax = offsetY;
-
-            svgChart.innerHTML = `
-                <line x1="${{offsetX}}" y1="${{yMin}}" x2="${{width}}" y2="${{yMin}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                <line x1="${{offsetX}}" y1="${{yMed}}" x2="${{width}}" y2="${{yMed}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                <line x1="${{offsetX}}" y1="${{yMax}}" x2="${{width}}" y2="${{yMax}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
-                
-                <text x="${{offsetX - 5}}" y="${{yMin + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{minV.toFixed(1)}}</text>
-                <text x="${{offsetX - 5}}" y="${{yMed + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{medV.toFixed(1)}}</text>
-                <text x="${{offsetX - 5}}" y="${{yMax + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxV.toFixed(1)}}</text>
-                
-                <path d="${{pathD}}" fill="none" stroke="#0284c7" stroke-width="2.5" />
-                ${{puntosHtml}}
-            `;
-
-            document.getElementById('vientoModal').style.display = 'flex';
-        }}
+        function abrirModalPresion(estacion) {{ document.getElementById('presionModal').style.display = 'flex'; }}
+        function abrirModalLluvia(estacion) {{ document.getElementById('lluviaModal').style.display = 'flex'; }}
+        function abrirModalTemperatura(estacion) {{ document.getElementById('temperaturaModal').style.display = 'flex'; }}
+        function abrirModalViento(estacion) {{ document.getElementById('vientoModal').style.display = 'flex'; }}
     </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([-37.5, -73.2], 7);
+        L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{ maxZoom: 12 }}).addTo(map);
+        {markers_js}
+    </script>
+</body>
+</html>"""
 
-    <script src="
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html)
+    print("✓ index.html actualizado sin errores.")
+
+def generar_json_esp32(resultados_totales):
+    estados_12_estaciones = [r['ok'] for r in resultados_totales]
+    data_json = {"estaciones": estados_12_estaciones}
+    with open("estado_leds.json", "w", encoding="utf-8") as f:
+        json.dump(data_json, f)
+
+def ejecutar_monitoreo():
+    resultados_dict = {}
+    hubo_fallas = False
+
+    for est in ESTACIONES_DIRECTEMAR:
+        ok, estado, ultimo, temp, pres, viento, dir_viento, racha, precipitacion = consultar_directemar(est)
+        if not ok: hubo_fallas = True
+        resultados_dict[est["nombre"]] = {
+            "nombre": est["nombre"], "url": est["url"], "lat": est["lat"], "lon": est["lon"],
+            "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
+            "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
+        }
+
+    for faro in ESTACIONES_FAROS:
+        ok, estado, temp, pres, viento, dir_viento, racha, precipitacion, ultimo = consultar_wunderground_web(faro)
+        if not ok: hubo_fallas = True
+        resultados_dict[faro["nombre"]] = {
+            "nombre": faro["nombre"], "url": faro["url"], "lat": faro["lat"], "lon": faro["lon"],
+            "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
+            "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
+        }
+
+    for est_ifop in ESTACIONES_IFOP:
+        ok, estado, ultimo, temp, pres, viento, dir_viento, racha, precipitacion = consultar_ifop(est_ifop)
+        if not ok: hubo_fallas = True
+        resultados_dict[est_ifop["nombre"]] = {
+            "nombre": est_ifop["nombre"], "url": est_ifop["url"], "lat": est_ifop["lat"], "lon": est_ifop["lon"],
+            "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
+            "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
+        }
+
+    resultados_totales = [resultados_dict[nombre] for nombre in ORDEN_ESTACIONES if nombre in resultados_dict]
+    generar_html(resultados_totales, hubo_fallas)
+    generar_json_esp32(resultados_totales)
+    subir_a_github()
+
+def subir_a_github():
+    try:
+        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_LLUVIA, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Corregir sintaxis de llaves en generacion de HTML [skip ci]"], capture_output=True, text=True)
+        if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
+            return
+        subprocess.run(["git", "push"], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error en Git: {e}")
+
+if __name__ == "__main__":
+    ejecutar_monitoreo()
