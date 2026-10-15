@@ -593,17 +593,17 @@ def generar_html(resultados_totales, hay_alerta):
         cuerpo_tarjeta = f"""
             <div class="card-body-content">
                 <div class="row-top">
-                    <div class="item-box temp-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalTemperatura('{r['nombre']}');" title="Ver gráfico de temperatura 24h">
+                    <div class="item-box temp-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalComparativa('{r['nombre']}', 'temperatura');" title="Ver gráficos comparativos 24h">
                         🌡️ {r['temp']}
                     </div>
-                    <div class="item-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalViento('{r['nombre']}');" title="Ver gráfico de viento 24h">
+                    <div class="item-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalComparativa('{r['nombre']}', 'viento');" title="Ver gráficos comparativos 24h">
                         {viento_contenido}
                     </div>
                     <div class="item-box"><span style="font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.1;">💨 RACHA</span><span style="font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r['racha']}</span></div>
                 </div>
                 <div class="row-bottom-3">
                     <div class="item-box"><span style="font-size: 0.62em; font-weight: 700;">⏲️ {r['pres']}</span></div>
-                    <div class="item-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalPresion('{r['nombre']}');" title="Ver gráfico de presión 24h">
+                    <div class="item-box sparkline-btn" onclick="event.preventDefault(); event.stopPropagation(); abrirModalComparativa('{r['nombre']}', 'presion');" title="Ver gráficos comparativos 24h">
                         <span style="font-size: 0.52em; color: var(--wind-color, #1d4ed8); font-weight: 800; display: block; line-height: 1.0;">📈 TENDENCIA 24H</span>
                         <svg class="mini-sparkline" data-estacion="{r['nombre']}" width="70" height="18" style="overflow:visible;"></svg>
                     </div>
@@ -731,11 +731,12 @@ def generar_html(resultados_totales, hay_alerta):
         .icon-btn:hover {{ transform: scale(1.1); }}
         .wind-unit-btn {{ font-size: 11px; font-weight: 800; letter-spacing: -0.5px; }}
         .modal-overlay {{ display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; backdrop-filter: blur(4px); }}
-        .modal-content, .modal-content-large {{ background: var(--summary-bg); color: var(--text-color); padding: 20px; border-radius: 16px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid var(--summary-border); position: relative; }}
+        .modal-content, .modal-content-comparativa {{ background: var(--summary-bg); color: var(--text-color); padding: 20px; border-radius: 16px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid var(--summary-border); position: relative; }}
         .modal-content {{ max-width: 320px; width: 90%; }}
-        .modal-content-large {{ max-width: 550px; width: 95%; }}
+        .modal-content-comparativa {{ max-width: 580px; width: 95%; max-height: 90vh; overflow-y: auto; }}
         .close-modal {{ position: absolute; top: 10px; right: 15px; font-size: 20px; font-weight: bold; cursor: pointer; color: var(--sub-color); }}
         .close-modal:hover {{ color: var(--text-color); }}
+        .chart-container-box {{ background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border); position: relative; margin-bottom: 15px; }}
         .chart-tooltip {{ position: absolute; background: rgba(15, 41, 66, 0.9); color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; pointer-events: none; display: none; z-index: 3000; }}
     </style>
 </head>
@@ -756,38 +757,32 @@ def generar_html(resultados_totales, hay_alerta):
         </div>
     </div>
 
-    <div id="presionModal" class="modal-overlay">
-        <div class="modal-content-large">
-            <span class="close-modal" onclick="closePresionModal()">&times;</span>
-            <h3 id="modal-station-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Tendencia Barométrica</h3>
-            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Evolución de presión de las últimas 24 horas</p>
-            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border); position: relative;">
-                <div id="tooltip-presion" class="chart-tooltip"></div>
-                <svg id="modal-pressure-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
-            </div>
-        </div>
-    </div>
-
-    <div id="temperaturaModal" class="modal-overlay">
-        <div class="modal-content-large">
-            <span class="close-modal" onclick="closeTemperaturaModal()">&times;</span>
-            <h3 id="modal-temp-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Evolución de Temperatura</h3>
-            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Comportamiento térmico de las últimas 24 horas</p>
-            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border); position: relative;">
-                <div id="tooltip-temp" class="chart-tooltip"></div>
-                <svg id="modal-temperatura-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
-            </div>
-        </div>
-    </div>
-
-    <div id="vientoModal" class="modal-overlay">
-        <div class="modal-content-large">
-            <span class="close-modal" onclick="closeVientoModal()">&times;</span>
-            <h3 id="modal-viento-title" style="margin-top: 5px; margin-bottom: 5px; font-size: 17px; color: var(--h1-color);">Intensidad del Viento</h3>
-            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Velocidad del viento de las últimas 24 horas</p>
-            <div style="background: var(--item-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--item-border); position: relative;">
-                <div id="tooltip-viento" class="chart-tooltip"></div>
-                <svg id="modal-viento-chart" width="100%" height="220" viewBox="0 0 500 220" style="overflow:visible;"></svg>
+    <!-- MODAL COMPARATIVO MULTIVARIABLE -->
+    <div id="comparativaModal" class="modal-overlay">
+        <div class="modal-content-comparativa">
+            <span class="close-modal" onclick="closeComparativaModal()">&times;</span>
+            <h3 id="modal-comparativa-title" style="margin-top: 5px; margin-bottom: 3px; font-size: 17px; color: var(--h1-color);">Panel Comparativo 24h</h3>
+            <p style="font-size: 12px; color: var(--sub-color); margin-bottom: 15px;">Comportamiento de las variables de la estación</p>
+            
+            <div id="lista-graficos-comparativos">
+                <!-- Contenedor 1 -->
+                <div id="box-var-1" class="chart-container-box">
+                    <div id="tooltip-var-1" class="chart-tooltip"></div>
+                    <h4 id="title-var-1" style="margin: 0 0 5px 0; font-size: 13px; color: var(--sub2-color);"></h4>
+                    <svg id="svg-var-1" width="100%" height="180" viewBox="0 0 500 180" style="overflow:visible;"></svg>
+                </div>
+                <!-- Contenedor 2 -->
+                <div id="box-var-2" class="chart-container-box">
+                    <div id="tooltip-var-2" class="chart-tooltip"></div>
+                    <h4 id="title-var-2" style="margin: 0 0 5px 0; font-size: 13px; color: var(--sub2-color);"></h4>
+                    <svg id="svg-var-2" width="100%" height="180" viewBox="0 0 500 180" style="overflow:visible;"></svg>
+                </div>
+                <!-- Contenedor 3 -->
+                <div id="box-var-3" class="chart-container-box">
+                    <div id="tooltip-var-3" class="chart-tooltip"></div>
+                    <h4 id="title-var-3" style="margin: 0 0 5px 0; font-size: 13px; color: var(--sub2-color);"></h4>
+                    <svg id="svg-var-3" width="100%" height="180" viewBox="0 0 500 180" style="overflow:visible;"></svg>
+                </div>
             </div>
         </div>
     </div>
@@ -819,15 +814,11 @@ def generar_html(resultados_totales, hay_alerta):
 
         function openQRModal() {{ document.getElementById('qrModal').style.display = 'flex'; }}
         function closeQRModal() {{ document.getElementById('qrModal').style.display = 'none'; }}
-        function closePresionModal() {{ document.getElementById('presionModal').style.display = 'none'; }}
-        function closeTemperaturaModal() {{ document.getElementById('temperaturaModal').style.display = 'none'; }}
-        function closeVientoModal() {{ document.getElementById('vientoModal').style.display = 'none'; }}
+        function closeComparativaModal() {{ document.getElementById('comparativaModal').style.display = 'none'; }}
 
         window.onclick = function(event) {{
             if (event.target === document.getElementById('qrModal')) closeQRModal();
-            if (event.target === document.getElementById('presionModal')) closePresionModal();
-            if (event.target === document.getElementById('temperaturaModal')) closeTemperaturaModal();
-            if (event.target === document.getElementById('vientoModal')) closeVientoModal();
+            if (event.target === document.getElementById('comparativaModal')) closeComparativaModal();
         }}
 
         function renderizarSparklines() {{
@@ -865,14 +856,12 @@ def generar_html(resultados_totales, hay_alerta):
             return d.toLocaleTimeString([], {{ hour: '2-digit', minute: '2-digit', hour12: false }});
         }}
 
-        function dibujarGraficoLinea(registros, clave, color, unit, idModal, idSvg, titulo, idTitle, idTooltip) {{
-            document.getElementById(idTitle).innerText = titulo;
-            const svgChart = document.getElementById(idSvg);
-            const tooltip = document.getElementById(idTooltip);
+        function renderizarUnGraficoEnBox(registros, clave, color, unit, svgId, titleId, tooltipId, tituloGrafico) {{
+            document.getElementById(titleId).innerText = tituloGrafico;
+            const svgChart = document.getElementById(svgId);
             
             if (!registros || registros.length < 2) {{
-                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">No hay suficiente historial registrado aún</text>';
-                document.getElementById(idModal).style.display = 'flex';
+                svgChart.innerHTML = '<text x="250" y="90" text-anchor="middle" fill="#64748b" font-size="13">No hay suficiente historial registrado aún</text>';
                 return;
             }}
 
@@ -881,8 +870,7 @@ def generar_html(resultados_totales, hay_alerta):
             const datos24h = registros.filter(r => r.t >= hace24h && r[clave] !== null);
 
             if (datos24h.length < 2) {{
-                svgChart.innerHTML = '<text x="250" y="110" text-anchor="middle" fill="#64748b" font-size="14">Esperando más ciclos de lectura (24h)</text>';
-                document.getElementById(idModal).style.display = 'flex';
+                svgChart.innerHTML = '<text x="250" y="90" text-anchor="middle" fill="#64748b" font-size="13">Esperando más ciclos de lectura (24h)</text>';
                 return;
             }}
 
@@ -894,7 +882,7 @@ def generar_html(resultados_totales, hay_alerta):
             minV -= margen; maxV += margen;
             const rangoV = maxV - minV;
 
-            const width = 460; const height = 160; const offsetX = 35; const offsetY = 15;
+            const width = 460; const height = 130; const offsetX = 35; const offsetY = 15;
             let pathD = ""; let puntosHtml = ""; let etiquetasHora = "";
 
             const totalPuntos = datos24h.length;
@@ -906,10 +894,10 @@ def generar_html(resultados_totales, hay_alerta):
                 if (i === 0) pathD += `M ${{x}} ${{y}}`;
                 else pathD += ` L ${{x}} ${{y}}`;
                 
-                puntosHtml += `<circle cx="${{x}}" cy="${{y}}" r="5" fill="${{color}}" style="cursor: pointer; opacity: 0.8;" 
-                    ontouchstart="mostrarTooltip(event, '${{formatHora(r.t)}}', '${{r[clave].toFixed(1)}} ${{unit}}', '${{idTooltip}}')"
-                    onmouseover="mostrarTooltip(event, '${{formatHora(r.t)}}', '${{r[clave].toFixed(1)}} ${{unit}}', '${{idTooltip}}')"
-                    onmouseout="ocultarTooltip('${{idTooltip}}')"
+                puntosHtml += `<circle cx="${{x}}" cy="${{y}}" r="4.5" fill="${{color}}" style="cursor: pointer; opacity: 0.8;" 
+                    ontouchstart="mostrarTooltip(event, '${{formatHora(r.t)}}', '${{r[clave].toFixed(1)}} ${{unit}}', '${{tooltipId}}')"
+                    onmouseover="mostrarTooltip(event, '${{formatHora(r.t)}}', '${{r[clave].toFixed(1)}} ${{unit}}', '${{tooltipId}}')"
+                    onmouseout="ocultarTooltip('${{tooltipId}}')"
                 />`;
 
                 const d = new Date(r.t * 1000);
@@ -917,7 +905,7 @@ def generar_html(resultados_totales, hay_alerta):
                 if (hNum % 2 === 0 && !horasMarcadas.has(hNum)) {{
                     horasMarcadas.add(hNum);
                     const horaExactaStr = String(hNum).padStart(2, '0') + ":00";
-                    etiquetasHora += `<text x="${{x}}" y="${{offsetY + height + 22}}" text-anchor="middle" font-size="9" fill="#64748b">${{horaExactaStr}}</text>`;
+                    etiquetasHora += `<text x="${{x}}" y="${{offsetY + height + 20}}" text-anchor="middle" font-size="9" fill="#64748b">${{horaExactaStr}}</text>`;
                     etiquetasHora += `<line x1="${{x}}" y1="${{offsetY}}" x2="${{x}}" y2="${{offsetY + height}}" stroke="#e2e8f0" stroke-dasharray="2,2" />`;
                 }}
             }});
@@ -930,15 +918,67 @@ def generar_html(resultados_totales, hay_alerta):
                 <line x1="${{offsetX}}" y1="${{yMed}}" x2="${{width}}" y2="${{yMed}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
                 <line x1="${{offsetX}}" y1="${{yMax}}" x2="${{width}}" y2="${{yMax}}" stroke="#cbd5e1" stroke-dasharray="3,3" />
                 
-                <text x="${{offsetX - 5}}" y="${{yMin + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{minV.toFixed(1)}}</text>
-                <text x="${{offsetX - 5}}" y="${{yMed + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{medV.toFixed(1)}}</text>
-                <text x="${{offsetX - 5}}" y="${{yMax + 4}}" text-anchor="end" font-size="10" fill="#64748b">${{maxV.toFixed(1)}}</text>
+                <text x="${{offsetX - 5}}" y="${{yMin + 4}}" text-anchor="end" font-size="9" fill="#64748b">${{minV.toFixed(1)}}</text>
+                <text x="${{offsetX - 5}}" y="${{yMed + 4}}" text-anchor="end" font-size="9" fill="#64748b">${{medV.toFixed(1)}}</text>
+                <text x="${{offsetX - 5}}" y="${{yMax + 4}}" text-anchor="end" font-size="9" fill="#64748b">${{maxV.toFixed(1)}}</text>
                 
                 ${{etiquetasHora}}
-                <path d="${{pathD}}" fill="none" stroke="${{color}}" stroke-width="2.5" />
+                <path d="${{pathD}}" fill="none" stroke="${{color}}" stroke-width="2.2" />
                 ${{puntosHtml}}
             `;
-            document.getElementById(idModal).style.display = 'flex';
+        }}
+
+        function abrirModalComparativa(estacion, variableSeleccionada) {{
+            document.getElementById('modal-comparativa-title').innerText = 'Estación: ' + estacion;
+            
+            // Definir las configuraciones base de las 3 variables
+            let configs = [
+                {{
+                    id: 'temperatura',
+                    titulo: 'Temperatura (°C)',
+                    registros: historialTemperaturaData[estacion],
+                    clave: 'temp',
+                    color: '#e11d48',
+                    unit: '°C'
+                }},
+                {{
+                    id: 'viento',
+                    titulo: 'Intensidad del Viento (kt)',
+                    registros: historialVientoData[estacion],
+                    clave: 'viento',
+                    color: '#0284c7',
+                    unit: 'kt'
+                }},
+                {{
+                    id: 'presion',
+                    titulo: 'Tendencia Barométrica (hPa)',
+                    registros: historialPresionData[estacion],
+                    clave: 'p',
+                    color: '#2563eb',
+                    unit: 'hPa'
+                }}
+            ];
+
+            // Reordenar para que la variable seleccionada quede primera en la lista
+            configs.sort((a, b) => (a.id === variableSeleccionada ? -1 : b.id === variableSeleccionada ? 1 : 0));
+
+            // Renderizar en los 3 contenedores fijos en pantalla
+            for (let i = 0; i < 3; i++) {{
+                let cfg = configs[i];
+                let boxIndex = i + 1;
+                renderizarUnGraficoEnBox(
+                    cfg.registros, 
+                    cfg.clave, 
+                    cfg.color, 
+                    cfg.unit, 
+                    'svg-var-' + boxIndex, 
+                    'title-var-' + boxIndex, 
+                    'tooltip-var-' + boxIndex, 
+                    cfg.titulo
+                );
+            }}
+
+            document.getElementById('comparativaModal').style.display = 'flex';
         }}
 
         function mostrarTooltip(evt, hora, valor, tooltipId) {{
@@ -958,18 +998,6 @@ def generar_html(resultados_totales, hay_alerta):
 
         function ocultarTooltip(tooltipId) {{
             document.getElementById(tooltipId).style.display = 'none';
-        }}
-
-        function abrirModalPresion(estacion) {{
-            dibujarGraficoLinea(historialPresionData[estacion], 'p', '#2563eb', 'hPa', 'presionModal', 'modal-pressure-chart', 'Tendencia: ' + estacion, 'modal-station-title', 'tooltip-presion');
-        }}
-
-        function abrirModalTemperatura(estacion) {{
-            dibujarGraficoLinea(historialTemperaturaData[estacion], 'temp', '#e11d48', '°C', 'temperaturaModal', 'modal-temperatura-chart', 'Temperatura: ' + estacion, 'modal-temp-title', 'tooltip-temp');
-        }}
-
-        function abrirModalViento(estacion) {{
-            dibujarGraficoLinea(historialVientoData[estacion], 'viento', '#0284c7', 'kt', 'vientoModal', 'modal-viento-chart', 'Viento: ' + estacion, 'modal-viento-title', 'tooltip-viento');
         }}
     </script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -1036,7 +1064,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con conversión correcta para el viento sostenido.")
+    print("✓ index.html actualizado con panel comparativo dinámico por variable.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1085,7 +1113,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Corregir conversion de unidades en viento sostenido [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Implementar panel modal comparativo multivariable ordenado dinamicamente [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
