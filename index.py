@@ -586,9 +586,9 @@ def generar_html(resultados_totales, hay_alerta):
         footer_texto = f"Reporte: {r['ultimo']}"
 
         if r['dir_viento']:
-            viento_contenido = f'<span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ {r["dir_viento"]}</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
+            viento_contenido = f'<span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ {r["dir_viento"]}</span><span class="viento-sostenido-val" style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
         else:
-            viento_contenido = f'<span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
+            viento_contenido = f'<span style="display: block; font-size: 0.58em; color: transparent; font-weight: 800; line-height: 1.1; user-select: none;">-</span><span class="viento-sostenido-val" style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
 
         cuerpo_tarjeta = f"""
             <div class="card-body-content">
@@ -914,7 +914,6 @@ def generar_html(resultados_totales, hay_alerta):
 
                 const d = new Date(r.t * 1000);
                 const hNum = d.getHours();
-                // Marca las etiquetas exactamente cada 2 horas (00:00, 02:00, 04:00...)
                 if (hNum % 2 === 0 && !horasMarcadas.has(hNum)) {{
                     horasMarcadas.add(hNum);
                     const horaExactaStr = String(hNum).padStart(2, '0') + ":00";
@@ -1007,7 +1006,7 @@ def generar_html(resultados_totales, hay_alerta):
             const btn = document.getElementById('windUnitBtn');
             if (btn) btn.innerHTML = windInKnots ? 'kt' : 'kmh';
 
-            const itemBoxes = document.querySelectorAll('.card-body-content .item-box:not(.sparkline-btn)');
+            const itemBoxes = document.querySelectorAll('.card-body-content .item-box:not(.sparkline-btn), .viento-sostenido-val');
             itemBoxes.forEach(box => {{
                 let text = box.innerHTML;
                 if (text.includes('kt') || text.includes('k/hr')) {{
@@ -1037,7 +1036,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con marcas del eje X cada 2 horas exactas.")
+    print("✓ index.html actualizado con conversión correcta para el viento sostenido.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1086,7 +1085,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Ajustar eje X a cada 2 horas exactas en todos los graficos [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Corregir conversion de unidades en viento sostenido [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
