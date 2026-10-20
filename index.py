@@ -8,6 +8,15 @@ import subprocess
 import time
 import urllib.request
 
+# Librerías para generación de PDF
+try:
+    from reportlab.lib.pagesizes import letter, landscape
+    from reportlab.lib import colors
+    from reportlab.pdfgen import canvas
+    REPORTLAB_DISPONIBLE = True
+except ImportError:
+    REPORTLAB_DISPONIBLE = False
+
 # ==========================================
 # CONFIGURACIÓN GENERAL
 # ==========================================
@@ -18,6 +27,9 @@ ARCHIVO_HISTORIAL = "historial_presion.json"
 ARCHIVO_TEMPERATURA = "historial_temperatura.json"
 ARCHIVO_VIENTO = "historial_viento.json"
 ARCHIVO_CONGELADAS = "historial_congeladas.json"
+PDF_PAPELETA_TALCAHUANO = "papeleta_talcahuano_semanal.pdf"
+
+DIAS_SEMANA_ES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -198,7 +210,7 @@ def verificar_estacion_congelada(nombre_estacion, temp, viento, racha):
 
     return historial[nombre_estacion]["contador"] >= LIMITE_LECTURAS_REPETIDAS
 
-def gestionar_historial_generico(archivo, clave_valor, nombre_estacion, valor):
+def gestionar_historial_generico(archivo, clave_valor, nombre_estacion, valor, horas_retencion=25):
     if valor is None:
         return
     ahora = obtener_hora_chile()
@@ -216,7 +228,7 @@ def gestionar_historial_generico(archivo, clave_valor, nombre_estacion, valor):
     registros = historial[nombre_estacion]
     registros.append({"t": ahora.timestamp(), clave_valor: valor})
 
-    limite_tiempo = ahora.timestamp() - (25 * 3600)
+    limite_tiempo = ahora.timestamp() - (horas_retencion * 3600)
     registros = [r for r in registros if r["t"] >= limite_tiempo]
     historial[nombre_estacion] = registros
 
@@ -227,7 +239,8 @@ def gestionar_historial_generico(archivo, clave_valor, nombre_estacion, valor):
         pass
 
 def gestionar_historial_presion(nombre_estacion, presion_actual):
-    gestionar_historial_generico(ARCHIVO_HISTORIAL, "p", nombre_estacion, presion_actual)
+    # Guardamos 168 horas (7 días) de presión para la papeleta de Talcahuano
+    gestionar_historial_generico(ARCHIVO_HISTORIAL, "p", nombre_estacion, presion_actual, horas_retencion=168)
     if presion_actual is None:
         return ""
 
@@ -267,7 +280,7 @@ def gestionar_historial_temperatura(nombre_estacion, temp_str):
         return
     val_temp = convertir_numero(str(temp_str))
     if val_temp is not None:
-        gestionar_historial_generico(ARCHIVO_TEMPERATURA, "temp", nombre_estacion, val_temp)
+        gestionar_historial_generico(ARCHIVO_TEMPERATURA, "temp", nombre_estacion, val_temp, horas_retencion=25)
 
 def gestionar_historial_viento(nombre_estacion, viento_str):
     if not viento_str or "--" in str(viento_str):
@@ -277,7 +290,139 @@ def gestionar_historial_viento(nombre_estacion, viento_str):
         gestionar_historial_viento_val(nombre_estacion, val_viento)
 
 def gestionar_historial_viento_val(nombre_estacion, val_viento):
-    gestionar_historial_generico(ARCHIVO_VIENTO, "viento", nombre_estacion, val_viento)
+    gestionar_historial_generico(ARCHIVO_VIENTO, "viento", nombre_estacion, val_viento, horas_retencion=25)
+
+# ==========================================
+# GENERADOR DE PAPELETA MICROBARÓGRAFO (PDF)
+# ==========================================
+def generar_papeleta_pdf_talcahuano():
+    if not REPORTLAB_DISPONIBLE:
+        print("⚠️ ReportLab no está instalado. No se pudo generar la papeleta en PDF.")
+        return
+
+    historial = cargar_json_historial(ARCHIVO_HISTORIAL)
+    nombre_est = "Gobernacion Maritima de Talcahuano"
+    registros = historial.get(nombre_est, [])
+
+    ahora = obtener_hora_chile()
+    hace_7d = ahora - timedelta(days=7)
+    timestamp_inicio = hace_7d.timestamp()
+
+    datos_semana = [r for r in registros if r["t"] >= timestamp_inicio and r.get("p") is not None]
+
+    c = canvas.Canvas(PDF_PAPELETA_TALCAHUANO, pagesize=landscape(letter))
+    width, height = landscape(letter)
+
+    c.setFont("Helvetica-Bold", 14)
+    c.setFillColor(colors.HexColor("#0f2942"))
+    c.drawCentredString(width / 2.0, height - 35, "Centro Zonal de Meteorología Marina de Talcahuano")
+    
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColor(colors.HexColor("#1e40af"))
+    c.drawCentredString(width / 2.0, height - 52, "PAPELETA DE REGISTRO BAROMÉTRICO SEMANAL — GOBERMAR TALCAHUANO")
+
+    c.setFont("Helvetica", 9)
+    c.setFillColor(colors.HexColor("#475569"))
+    f_inicio_str = hace_7d.strftime("%d-%m-%Y")
+    f_fin_str = ahora.strftime("%d-%m-%Y %H:%M")
+    c.drawCentredString(width / 2.0, height - 66, f"Período: {f_inicio_str} al {f_fin_str} hrs")
+
+    margin_x = 55
+    margin_top = 85
+    margin_bottom = 45
+    chart_w = width - (margin_x * 2)
+    chart_h = height - margin_top - margin_bottom
+
+    if datos_semana:
+        presiones = [r["p"] for r in datos_semana]
+        p_min = int(min(presiones)) - 2
+        p_max = int(max(presiones)) + 2
+    else:
+        p_min, p_max = 1000, 1025
+
+    if p_max - p_min < 10:
+        p_max = p_min + 10
+
+    c.setFillColor(colors.HexColor("#fefce8"))
+    c.rect(margin_x, margin_bottom, chart_w, chart_h, fill=True, stroke=True)
+
+    rango_p = p_max - p_min
+    c.setFont("Helvetica", 8)
+    c.setFillColor(colors.HexColor("#334155"))
+
+    for p in range(p_min, p_max + 1):
+        y = margin_bottom + ((p - p_min) / rango_p) * chart_h
+        c.setStrokeColor(colors.HexColor("#94a3b8") if p % 5 == 0 else colors.HexColor("#cbd5e1"))
+        c.setLineWidth(0.8 if p % 5 == 0 else 0.4)
+        c.line(margin_x, y, margin_x + chart_w, y)
+
+        c.drawString(margin_x - 28, y - 3, f"{p} hPa")
+        c.drawString(margin_x + chart_w + 5, y - 3, f"{p}")
+
+    total_dias = 7
+    ancho_dia = chart_w / total_dias
+
+    for d_idx in range(total_dias):
+        dt_dia = hace_7d + timedelta(days=d_idx)
+        x_dia = margin_x + (d_idx * ancho_dia)
+
+        c.setStrokeColor(colors.HexColor("#64748b"))
+        c.setLineWidth(0.8)
+        c.line(x_dia, margin_bottom, x_dia, margin_bottom + chart_h)
+
+        nombre_dia = DIAS_SEMANA_ES[dt_dia.weekday()]
+        etiqueta_dia = f"{nombre_dia} {dt_dia.strftime('%d/%m')}"
+        
+        c.setFont("Helvetica-Bold", 9)
+        c.setFillColor(colors.HexColor("#0f172a"))
+        c.drawCentredString(x_dia + (ancho_dia / 2.0), margin_bottom + chart_h + 6, etiqueta_dia)
+
+        c.setFont("Helvetica", 6.5)
+        c.setFillColor(colors.HexColor("#64748b"))
+        for h_sec in range(0, 24, 2):
+            x_sub = x_dia + (h_sec / 24.0) * ancho_dia
+            c.setStrokeColor(colors.HexColor("#e2e8f0"))
+            c.setLineWidth(0.3)
+            c.line(x_sub, margin_bottom, x_sub, margin_bottom + chart_h)
+            
+            if h_sec > 0:
+                c.drawCentredString(x_sub, margin_bottom - 10, f"{h_sec:02d}h")
+
+    c.setStrokeColor(colors.HexColor("#64748b"))
+    c.setLineWidth(0.8)
+    c.line(margin_x + chart_w, margin_bottom, margin_x + chart_w, margin_bottom + chart_h)
+
+    if len(datos_semana) >= 2:
+        c.setStrokeColor(colors.HexColor("#1e3a8a"))
+        c.setLineWidth(1.5)
+        path = c.beginPath()
+
+        total_segundos_semana = 7 * 86400
+        primer_punto = True
+
+        for r in datos_semana:
+            t_rel = r["t"] - timestamp_inicio
+            if t_rel < 0 or t_rel > total_segundos_semana:
+                continue
+
+            x = margin_x + (t_rel / total_segundos_semana) * chart_w
+            y = margin_bottom + ((r["p"] - p_min) / rango_p) * chart_h
+
+            if primer_punto:
+                path.moveTo(x, y)
+                primer_punto = False
+            else:
+                path.lineTo(x, y)
+
+        c.drawPath(path, fill=False, stroke=True)
+
+    c.setFont("Helvetica-Oblique", 8)
+    c.setFillColor(colors.HexColor("#64748b"))
+    c.drawString(margin_x, 15, "Documento de registro automático generado por el Sistema de Monitoreo Met. Talcahuano.")
+    c.drawRightString(width - margin_x, 15, f"Generado el: {ahora.strftime('%d-%m-%Y %H:%M:%S')}")
+
+    c.save()
+    print("✓ Papeleta barométrica semanal con marcas de 2h generada exitosamente.")
 
 def consultar_directemar(est):
     try:
@@ -585,6 +730,16 @@ def generar_html(resultados_totales, hay_alerta):
 
         footer_texto = f"Reporte: {r['ultimo']}"
 
+        boton_pdf_papeleta = ""
+        if r['nombre'] == "Gobernacion Maritima de Talcahuano":
+            boton_pdf_papeleta = f"""
+            <div style="margin-top: 5px; text-align: center;">
+                <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" style="display: inline-block; background: #0f2942; color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; text-decoration: none; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+                    📄 Descargar Papeleta Semanal (PDF)
+                </a>
+            </div>
+            """
+
         if r['dir_viento']:
             viento_contenido = f'<span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ {r["dir_viento"]}</span><span class="viento-sostenido-val" style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
         else:
@@ -609,6 +764,7 @@ def generar_html(resultados_totales, hay_alerta):
                     </div>
                     <div class="item-box"><span style="font-size: 0.62em; font-weight: 700;">🌧️ {r['precipitacion']}</span></div>
                 </div>
+                {boton_pdf_papeleta}
             </div>
         """
 
@@ -931,7 +1087,6 @@ def generar_html(resultados_totales, hay_alerta):
         function abrirModalComparativa(estacion, variableSeleccionada) {{
             document.getElementById('modal-comparativa-title').innerText = 'Estación: ' + estacion;
             
-            // Definir las configuraciones base de las 3 variables
             let configs = [
                 {{
                     id: 'temperatura',
@@ -959,10 +1114,8 @@ def generar_html(resultados_totales, hay_alerta):
                 }}
             ];
 
-            // Reordenar para que la variable seleccionada quede primera en la lista
             configs.sort((a, b) => (a.id === variableSeleccionada ? -1 : b.id === variableSeleccionada ? 1 : 0));
 
-            // Renderizar en los 3 contenedores fijos en pantalla
             for (let i = 0; i < 3; i++) {{
                 let cfg = configs[i];
                 let boxIndex = i + 1;
@@ -1064,7 +1217,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con panel comparativo dinámico por variable.")
+    print("✓ index.html actualizado con enlace de descarga para la papeleta PDF.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1107,13 +1260,14 @@ def ejecutar_monitoreo():
     resultados_totales = [resultados_dict[nombre] for nombre in ORDEN_ESTACIONES if nombre in resultados_dict]
     generar_html(resultados_totales, hubo_fallas)
     generar_json_esp32(resultados_totales)
+    generar_papeleta_pdf_talcahuano()
     subir_a_github()
 
 def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
-        subprocess.run(["git", "add", "index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Implementar panel modal comparativo multivariable ordenado dinamicamente [skip ci]"], capture_output=True, text=True)
+        subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Agregar papeleta semanal PDF estilo microbarografo para Talcahuano [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
