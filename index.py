@@ -239,7 +239,6 @@ def gestionar_historial_generico(archivo, clave_valor, nombre_estacion, valor, h
         pass
 
 def gestionar_historial_presion(nombre_estacion, presion_actual):
-    # Guardamos 168 horas (7 días) de presión para la papeleta de Talcahuano
     gestionar_historial_generico(ARCHIVO_HISTORIAL, "p", nombre_estacion, presion_actual, horas_retencion=168)
     if presion_actual is None:
         return ""
@@ -730,14 +729,13 @@ def generar_html(resultados_totales, hay_alerta):
 
         footer_texto = f"Reporte: {r['ultimo']}"
 
+        # Botón minimizado sólo con el ícono 📥 de descarga rápida centrado abajo
         boton_pdf_papeleta = ""
         if r['nombre'] == "Gobernacion Maritima de Talcahuano":
             boton_pdf_papeleta = f"""
-            <div style="margin-top: 5px; text-align: center;">
-                <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" style="display: inline-block; background: #0f2942; color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; text-decoration: none; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
-                    📄 Descargar Papeleta Semanal (PDF)
-                </a>
-            </div>
+            <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="pdf-icon-btn" title="Descargar Papeleta Semanal (PDF)">
+                📥
+            </a>
             """
 
         if r['dir_viento']:
@@ -764,7 +762,6 @@ def generar_html(resultados_totales, hay_alerta):
                     </div>
                     <div class="item-box"><span style="font-size: 0.62em; font-weight: 700;">🌧️ {r['precipitacion']}</span></div>
                 </div>
-                {boton_pdf_papeleta}
             </div>
         """
 
@@ -780,6 +777,7 @@ def generar_html(resultados_totales, hay_alerta):
                     <span class="time">{footer_texto}</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
+                {boton_pdf_papeleta}
             </div>
         </a>
         """
@@ -862,7 +860,7 @@ def generar_html(resultados_totales, hay_alerta):
         #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
         .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; align-items: stretch; }}
         .card-link {{ text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; }}
-        .card {{ border-radius: 14px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-sizing: border-box; }}
+        .card {{ border-radius: 14px; padding: 10px; padding-bottom: 30px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-sizing: border-box; }}
         .card.ok {{ background: var(--card-ok-bg); border: 1px solid var(--card-ok-border); border-left: 6px solid #16a34a; }}
         .card.error {{ background: var(--card-error-bg); border: 1px solid var(--card-error-border); border-left: 6px solid #dc2626; }}
         .card:hover {{ transform: translateY(-3px); box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); }}
@@ -881,6 +879,12 @@ def generar_html(resultados_totales, hay_alerta):
         .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; }}
         .time {{ font-size: 0.68em; color: var(--time-color); }}
         .click-text {{ font-size: 0.68em; color: var(--click-color); font-weight: bold; font-style: italic; }}
+        
+        /* Botón de ícono flotante de descarga */
+        .pdf-icon-btn {{ position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); background: #0f2942; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: transform 0.2s ease, background 0.2s ease; z-index: 10; }}
+        .pdf-icon-btn:hover {{ transform: translateX(-50%) scale(1.15); background: #1e40af; }}
+        body.dark-mode .pdf-icon-btn {{ background: #1e3a8a; border: 1px solid #3b82f6; }}
+
         .footer-dev {{ background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: table; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }}
         .floating-controls {{ position: fixed; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 1000; }}
         .icon-btn {{ width: 36px; height: 36px; border-radius: 50%; background: var(--summary-bg); color: var(--text-color); border: 1px solid var(--summary-border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.2s ease; padding: 0; }}
@@ -1217,7 +1221,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con enlace de descarga para la papeleta PDF.")
+    print("✓ index.html actualizado con ícono de descarga para la papeleta PDF.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
