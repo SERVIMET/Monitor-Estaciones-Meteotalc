@@ -747,16 +747,16 @@ def generar_html(resultados_totales, hay_alerta):
 
         pdf_archivo = MAPA_PDFS.get(r['nombre'], "papeleta_talcahuano_semanal.pdf")
         
-        # Título con ancho estrictamente controlado y truncado por CSS para garantizar simetría absoluta
+        # Luz de estado arriba junto al nombre de la estación; botón PDF abajo en su propia línea limpia
         card_header_html = f"""
-        <div class="card-header-container">
-            <div class="station-title-row" title="{r['nombre']}">{r['nombre']}</div>
-            <div class="station-sub-bar">
-                <a href="{pdf_archivo}" download target="_blank" class="pdf-report-btn" onclick="event.stopPropagation();" title="Descargar Papeleta Semanal PDF">
-                    📄 Papeleta Semanal PDF
-                </a>
-                <div class="status-badge">{icono}{etiqueta_estado}</div>
-            </div>
+        <div class="card-header">
+            <span class="station-name-text" title="{r['nombre']}">{r['nombre']}</span>
+            <span class="status-badge">{icono}{etiqueta_estado}</span>
+        </div>
+        <div class="station-sub-bar">
+            <a href="{pdf_archivo}" download target="_blank" class="pdf-report-btn" onclick="event.stopPropagation();" title="Descargar Papeleta Semanal PDF">
+                📄 Descargar Papeleta Semanal PDF
+            </a>
         </div>
         """
 
@@ -877,42 +877,38 @@ def generar_html(resultados_totales, hay_alerta):
         .banner-alerta {{ background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }}
         #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
         
-        /* Grilla estricta de 3 columnas fijas idénticas con ancho bloqueado */
-        .grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; align-items: stretch; width: 100%; box-sizing: border-box; }}
-        @media (max-width: 900px) {{
-            .grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-        }}
-        @media (max-width: 600px) {{
-            .grid {{ grid-template-columns: 1fr; }}
-        }}
-
-        .card-link {{ text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0; }}
-        .card {{ border-radius: 14px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; height: 100%; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0; }}
+        /* GRILLA BLINDADA CON ANCHO FIJO IDÉNTICO PARA TODAS LAS TARJETAS */
+        .grid {{ display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-width: 1200px; margin: 0 auto; box-sizing: border-box; }}
+        
+        .card-link {{ text-decoration: none; color: inherit; display: flex; width: 360px; max-width: 100%; box-sizing: border-box; }}
+        .card {{ border-radius: 14px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; width: 100%; box-sizing: border-box; }}
         .card.ok {{ background: var(--card-ok-bg); border: 1px solid var(--card-ok-border); border-left: 6px solid #16a34a; }}
         .card.error {{ background: var(--card-error-bg); border: 1px solid var(--card-error-border); border-left: 6px solid #dc2626; }}
         .card:hover {{ transform: translateY(-3px); box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); }}
         .card.error:hover {{ box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3); }}
         
-        /* Blindaje total para que los títulos largos no ensanchen la tarjeta */
-        .card-header-container {{ display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0; }}
-        .station-title-row {{ font-weight: bold; font-size: 13px; color: var(--station-name-color); line-height: 1.2; text-align: left; width: 100%; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; min-width: 0; }}
-        .station-sub-bar {{ display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.5); padding: 3px 6px; border-radius: 6px; border: 1px solid var(--item-border); width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0; }}
-        body.dark-mode .station-sub-bar {{ background: rgba(30, 41, 59, 0.5); }}
-        
-        .pdf-report-btn {{ font-size: 11px; font-weight: 600; color: var(--click-color); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: opacity 0.2s ease; white-space: nowrap; }}
-        .pdf-report-btn:hover {{ opacity: 0.8; text-decoration: underline; }}
+        /* Encabezado superior con nombre y luz de estado */
+        .card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; min-height: 24px; width: 100%; box-sizing: border-box; }}
+        .station-name-text {{ font-weight: bold; font-size: 13px; color: var(--station-name-color); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; margin-right: 6px; }}
         .status-badge {{ font-size: 11px; display: flex; align-items: center; white-space: nowrap; flex-shrink: 0; }}
         
-        .card-body-content {{ display: flex; flex-direction: column; gap: 4px; margin: 4px 0; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0; }}
+        /* Sub-barra inferior con botón de PDF centrado */
+        .station-sub-bar {{ display: flex; justify-content: center; align-items: center; background: rgba(255, 255, 255, 0.5); padding: 5px 8px; border-radius: 6px; border: 1px solid var(--item-border); margin-bottom: 6px; width: 100%; box-sizing: border-box; }}
+        body.dark-mode .station-sub-bar {{ background: rgba(30, 41, 59, 0.5); }}
+        
+        .pdf-report-btn {{ font-size: 11.5px; font-weight: 700; color: var(--click-color); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: opacity 0.2s ease; }}
+        .pdf-report-btn:hover {{ opacity: 0.8; text-decoration: underline; }}
+        
+        .card-body-content {{ display: flex; flex-direction: column; gap: 4px; margin: 4px 0; width: 100%; box-sizing: border-box; }}
         .row-top, .row-bottom-3 {{ display: grid; gap: 4px; width: 100%; box-sizing: border-box; }}
         .row-top {{ grid-template-columns: 1.1fr 1fr 1fr; }}
         .row-bottom-3 {{ grid-template-columns: 1fr 1.1fr 1fr; }}
-        .item-box {{ background: var(--item-bg); padding: 4px 2px; border-radius: 6px; border: 1px solid var(--item-border); text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; white-space: nowrap; color: var(--item-text); overflow: hidden; box-sizing: border-box; min-width: 0; }}
+        .item-box {{ background: var(--item-bg); padding: 4px 2px; border-radius: 6px; border: 1px solid var(--item-border); text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; white-space: nowrap; color: var(--item-text); overflow: hidden; box-sizing: border-box; }}
         .temp-box {{ font-size: 0.85em; font-weight: 800; color: var(--item-text); }}
         .sparkline-btn {{ cursor: pointer; transition: background 0.2s ease; }}
         .sparkline-btn:hover {{ background: rgba(29, 78, 216, 0.15); border-color: var(--click-color); }}
         
-        .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; width: 100%; box-sizing: border-box; min-width: 0; }}
+        .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; width: 100%; box-sizing: border-box; }}
         .time {{ font-size: 0.63em; color: var(--time-color); white-space: nowrap; }}
         .click-text {{ font-size: 0.65em; color: var(--click-color); font-weight: bold; font-style: italic; white-space: nowrap; }}
 
@@ -1252,7 +1248,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con blindaje estricto de anchos en tarjetas.")
+    print("✓ index.html actualizado con diseño de luz arriba y botón PDF limpio.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1310,7 +1306,7 @@ def subir_a_github():
                 archivos_a_subir.append(pdf)
 
         subprocess.run(["git", "add"] + archivos_a_subir, check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Blindaje definitivo de anchos y truncado en grilla de estaciones [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Restaurar luz de estado arriba y botón PDF inferior con anchos fijos [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
