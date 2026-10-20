@@ -239,7 +239,6 @@ def gestionar_historial_generico(archivo, clave_valor, nombre_estacion, valor, h
         pass
 
 def gestionar_historial_presion(nombre_estacion, presion_actual):
-    # Retención de 336 horas (14 días / 2 semanas completas) para la papeleta semanal
     gestionar_historial_generico(ARCHIVO_HISTORIAL, "p", nombre_estacion, presion_actual, horas_retencion=336)
     if presion_actual is None:
         return ""
@@ -734,13 +733,14 @@ def generar_html(resultados_totales, hay_alerta):
             else:
                 etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
 
-        # Botón flotante exclusivo dentro de la tarjeta de Talcahuano (posicionado absolutamente en la esquina superior derecha)
-        talcahuano_pdf_badge = ""
+        # Icono PDF compacto exclusivamente para el pie de página de Talcahuano (sin texto, solo icono)
+        footer_right_content = '<span class="click-text">Ver ↗</span>'
         if r['nombre'] == "Gobernacion Maritima de Talcahuano":
-            talcahuano_pdf_badge = f"""
-            <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="card-pdf-badge" title="Descargar Papeleta Semanal PDF" onclick="event.stopPropagation();">
-                📄 PDF
-            </a>
+            footer_right_content = f"""
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="pdf-footer-icon-btn" title="Descargar Papeleta Semanal PDF" onclick="event.stopPropagation();">📄</a>
+                <span class="click-text">Ver ↗</span>
+            </div>
             """
 
         if r['dir_viento']:
@@ -773,7 +773,6 @@ def generar_html(resultados_totales, hay_alerta):
         cards_html += f"""
         <a href="{r['url']}" target="_blank" class="card-link">
             <div class="card {clase}">
-                {talcahuano_pdf_badge}
                 <div class="card-header">
                     <span class="station-name">{r['nombre']}</span>
                     <span class="status-badge">{icono}{etiqueta_estado}</span>
@@ -781,7 +780,7 @@ def generar_html(resultados_totales, hay_alerta):
                 {cuerpo_tarjeta}
                 <div class="card-footer-info">
                     <span class="time">Reporte: {r['ultimo']}</span>
-                    <span class="click-text">Ver ↗</span>
+                    {footer_right_content}
                 </div>
             </div>
         </a>
@@ -870,27 +869,7 @@ def generar_html(resultados_totales, hay_alerta):
         .card.error {{ background: var(--card-error-bg); border: 1px solid var(--card-error-border); border-left: 6px solid #dc2626; }}
         .card:hover {{ transform: translateY(-3px); box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); }}
         .card.error:hover {{ box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3); }}
-        
-        /* Botón PDF flotante estrictamente dentro de la tarjeta de Talcahuano */
-        .card-pdf-badge {{
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: #0f2942;
-            color: white;
-            padding: 2px 7px;
-            border-radius: 12px;
-            font-size: 9.5px;
-            font-weight: bold;
-            text-decoration: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-            z-index: 10;
-            transition: background 0.2s ease, transform 0.2s ease;
-        }}
-        .card-pdf-badge:hover {{ background: #1e40af; transform: scale(1.05); }}
-        body.dark-mode .card-pdf-badge {{ background: #1e3a8a; border: 1px solid #3b82f6; }}
-
-        .card-header {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; padding-right: 50px; }}
+        .card-header {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }}
         .station-name {{ font-weight: bold; font-size: 13.5px; color: var(--station-name-color); line-height: 1.1; }}
         .status-badge {{ font-size: 11px; display: flex; align-items: center; white-space: nowrap; }}
         .card-body-content {{ display: flex; flex-direction: column; gap: 4px; margin: 4px 0; }}
@@ -905,6 +884,25 @@ def generar_html(resultados_totales, hay_alerta):
         .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; width: 100%; box-sizing: border-box; }}
         .time {{ font-size: 0.63em; color: var(--time-color); white-space: nowrap; }}
         .click-text {{ font-size: 0.65em; color: var(--click-color); font-weight: bold; font-style: italic; white-space: nowrap; }}
+        
+        /* Botón icono PDF compacto en el pie de página (solo icono, sin texto para evitar saltos de línea) */
+        .pdf-footer-icon-btn {{
+            background: #0f2942;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            text-decoration: none;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+            transition: background 0.2s ease, transform 0.2s ease;
+            white-space: nowrap;
+        }}
+        .pdf-footer-icon-btn:hover {{ background: #1e40af; transform: scale(1.1); }}
+        body.dark-mode .pdf-footer-icon-btn {{ background: #1e3a8a; border: 1px solid #3b82f6; }}
 
         .footer-dev {{ background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: table; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }}
         .floating-controls {{ position: fixed; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 1000; }}
@@ -1242,7 +1240,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con el botón PDF flotante dentro de la tarjeta de Talcahuano.")
+    print("✓ index.html actualizado con el icono PDF compacto en el pie de página.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1292,7 +1290,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Integrar boton PDF dentro de la esquina superior de la tarjeta de Talcahuano [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Dejar icono PDF compacto en el pie de pagina para preservar simetria [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
