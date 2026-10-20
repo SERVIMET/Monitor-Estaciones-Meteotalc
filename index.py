@@ -322,7 +322,7 @@ def generar_papeleta_pdf_talcahuano():
     
     c.setFont("Helvetica-Bold", 11)
     c.setFillColor(colors.HexColor("#1e40af"))
-    c.drawCentredString(width / 2.0, height - 52, "PAPELETA DE REGISTRO BAROMÉTRICO SEMANAL — MARITGOBTALC")
+    c.drawCentredString(width / 2.0, height - 52, "PAPELETA DE REGISTRO BAROMÉTRICO SEMANAL — GOBERNACIÓN MARÍTIMA DE TALCAHUANO")
 
     c.setFont("Helvetica", 9)
     c.setFillColor(colors.HexColor("#475569"))
@@ -733,11 +733,11 @@ def generar_html(resultados_totales, hay_alerta):
             else:
                 etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
 
-        # Cambiar el nombre a Maritgobtalc con el botón/icono PDF integrado en una sola línea compacta
+        # Mantener el nombre original en todas las estaciones
         if r['nombre'] == "Gobernacion Maritima de Talcahuano":
             station_title_html = f"""
             <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="station-pdf-link" title="Descargar Papeleta Semanal PDF" onclick="event.stopPropagation();">
-                Maritgobtalc <span class="pdf-icon-inline">📄</span>
+                Gobernacion Maritima de Talcahuano <span class="pdf-icon-inline">📄</span>
             </a>
             """
         else:
@@ -869,9 +869,11 @@ def generar_html(resultados_totales, hay_alerta):
         .card.error {{ background: var(--card-error-bg); border: 1px solid var(--card-error-border); border-left: 6px solid #dc2626; }}
         .card:hover {{ transform: translateY(-3px); box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); }}
         .card.error:hover {{ box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3); }}
-        .card-header {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }}
-        .station-name {{ font-weight: bold; font-size: 13.5px; color: var(--station-name-color); line-height: 1.1; }}
+        
+        .card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; min-height: 24px; }}
+        .station-name {{ font-weight: bold; font-size: 13.5px; color: var(--station-name-color); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
         .status-badge {{ font-size: 11px; display: flex; align-items: center; white-space: nowrap; }}
+        
         .card-body-content {{ display: flex; flex-direction: column; gap: 4px; margin: 4px 0; }}
         .row-top, .row-bottom-3 {{ display: grid; gap: 4px; }}
         .row-top {{ grid-template-columns: 1.1fr 1fr 1fr; }}
@@ -885,7 +887,7 @@ def generar_html(resultados_totales, hay_alerta):
         .time {{ font-size: 0.63em; color: var(--time-color); white-space: nowrap; }}
         .click-text {{ font-size: 0.65em; color: var(--click-color); font-weight: bold; font-style: italic; white-space: nowrap; }}
         
-        /* Enlace/botón PDF integrado en el nombre compacto de la estación */
+        /* Enlace/botón PDF integrado en el nombre de la estación */
         .station-pdf-link {{
             color: var(--station-name-color);
             text-decoration: none;
@@ -1242,7 +1244,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con la estación renombrada a Maritgobtalc y botón PDF integrado.")
+    print("✓ index.html actualizado restaurando nombres originales en todas las tarjetas.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1292,7 +1294,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Renombrar estacion a Maritgobtalc con boton PDF integrado [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Restaurar nombres originales de estaciones [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
