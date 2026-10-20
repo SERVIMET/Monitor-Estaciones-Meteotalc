@@ -866,9 +866,9 @@ def generar_html(resultados_totales, hay_alerta):
         body.dark-mode.alerta-activa {{ animation: none !important; background-color: #121212 !important; }}
         .banner-alerta {{ background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }}
         #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
-        .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; align-items: stretch; }}
-        .card-link {{ text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; }}
-        .card {{ border-radius: 14px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-sizing: border-box; }}
+        .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; align-items: start; }}
+        .card-link {{ text-decoration: none; color: inherit; display: flex; flex-direction: column; }}
+        .card {{ border-radius: 14px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; height: 165px; box-sizing: border-box; }}
         .card.ok {{ background: var(--card-ok-bg); border: 1px solid var(--card-ok-border); border-left: 6px solid #16a34a; }}
         .card.error {{ background: var(--card-error-bg); border: 1px solid var(--card-error-border); border-left: 6px solid #dc2626; }}
         .card:hover {{ transform: translateY(-3px); box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); }}
@@ -1292,7 +1292,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Alinear tarjetas PC y boton PDF a continuacion de hora de reporte [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Fijar altura de tarjetas y alinear grid para eliminar espacio intermedio [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
