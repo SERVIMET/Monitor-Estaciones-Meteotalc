@@ -228,7 +228,6 @@ def gestionar_historial_generico(archivo, clave_valor, nombre_estacion, valor, h
     registros = historial[nombre_estacion]
     registros.append({"t": ahora.timestamp(), clave_valor: valor})
 
-    # Guardar hasta 14 días (336 horas) para asegurar cobertura de la semana actual y anterior
     limite_tiempo = ahora.timestamp() - (horas_retencion * 3600)
     registros = [r for r in registros if r["t"] >= limite_tiempo]
     historial[nombre_estacion] = registros
@@ -306,20 +305,19 @@ def generar_papeleta_pdf_talcahuano():
 
     ahora = obtener_hora_chile()
     
-    # Calcular el Lunes 00:00:00 de la semana actual
+    # Lunes 00:00:00 de la semana actual
     inicio_semana = (ahora - timedelta(days=ahora.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
     fin_semana = inicio_semana + timedelta(days=7)
     
     timestamp_inicio = inicio_semana.timestamp()
     timestamp_fin = fin_semana.timestamp()
 
-    # Filtrar datos pertenecientes a la semana en curso (Lunes a Domingo)
     datos_semana = [r for r in registros if timestamp_inicio <= r["t"] <= timestamp_fin and r.get("p") is not None]
 
     c = canvas.Canvas(PDF_PAPELETA_TALCAHUANO, pagesize=landscape(letter))
     width, height = landscape(letter)
 
-    # Encabezado institucional con MARITGOBTALC
+    # Encabezado institucional
     c.setFont("Helvetica-Bold", 14)
     c.setFillColor(colors.HexColor("#0f2942"))
     c.drawCentredString(width / 2.0, height - 35, "Centro Zonal de Meteorología Marina de Talcahuano")
@@ -334,9 +332,9 @@ def generar_papeleta_pdf_talcahuano():
     f_fin_str = (fin_semana - timedelta(seconds=1)).strftime("%d-%m-%Y")
     c.drawCentredString(width / 2.0, height - 66, f"Semana del {f_inicio_str} al {f_fin_str}")
 
-    margin_x = 55
+    margin_x = 42  # Mayor área disponible para el gráfico
     margin_top = 85
-    margin_bottom = 45
+    margin_bottom = 48
     chart_w = width - (margin_x * 2)
     chart_h = height - margin_top - margin_bottom
 
@@ -357,17 +355,17 @@ def generar_papeleta_pdf_talcahuano():
     c.setFont("Helvetica", 8)
     c.setFillColor(colors.HexColor("#334155"))
 
-    # Eje Y - Marcas de presión
+    # Eje Y - Presión
     for p in range(p_min, p_max + 1):
         y = margin_bottom + ((p - p_min) / rango_p) * chart_h
         c.setStrokeColor(colors.HexColor("#94a3b8") if p % 5 == 0 else colors.HexColor("#cbd5e1"))
         c.setLineWidth(0.8 if p % 5 == 0 else 0.4)
         c.line(margin_x, y, margin_x + chart_w, y)
 
-        c.drawString(margin_x - 28, y - 3, f"{p} hPa")
-        c.drawString(margin_x + chart_w + 5, y - 3, f"{p}")
+        c.drawString(margin_x - 26, y - 3, f"{p}")
+        c.drawString(margin_x + chart_w + 4, y - 3, f"{p}")
 
-    # Eje X - Días ordenados LUNES -> DOMINGO de izquierda a derecha
+    # Eje X - Días (Lunes -> Domingo)
     total_dias = 7
     ancho_dia = chart_w / total_dias
 
@@ -386,22 +384,28 @@ def generar_papeleta_pdf_talcahuano():
         c.setFillColor(colors.HexColor("#0f172a"))
         c.drawCentredString(x_dia + (ancho_dia / 2.0), margin_bottom + chart_h + 6, etiqueta_dia)
 
-        c.setFont("Helvetica", 6.5)
-        c.setFillColor(colors.HexColor("#64748b"))
+        # Muestra CADA 2 HORAS (02, 04, 06, 08, 10, 12, 14, 16, 18, 20, 22)
+        # Se aplica intercalado de altura (y_offset) para que NO queden amontonados ni pegados
         for h_sec in range(0, 24, 2):
             x_sub = x_dia + (h_sec / 24.0) * ancho_dia
-            c.setStrokeColor(colors.HexColor("#e2e8f0"))
-            c.setLineWidth(0.3)
+            
+            c.setStrokeColor(colors.HexColor("#cbd5e1") if h_sec % 6 == 0 else colors.HexColor("#e2e8f0"))
+            c.setLineWidth(0.5 if h_sec % 6 == 0 else 0.3)
             c.line(x_sub, margin_bottom, x_sub, margin_bottom + chart_h)
             
             if h_sec > 0:
-                c.drawCentredString(x_sub, margin_bottom - 10, f"{h_sec:02d}h")
+                c.setFont("Helvetica", 5.5)
+                c.setFillColor(colors.HexColor("#475569"))
+                # Intercalamos la posición vertical entre horas pares alternas
+                y_offset = -7 if (h_sec % 4 == 2) else -13
+                c.drawCentredString(x_sub, margin_bottom + y_offset, f"{h_sec:02d}")
 
+    # Borde derecho
     c.setStrokeColor(colors.HexColor("#64748b"))
     c.setLineWidth(0.8)
     c.line(margin_x + chart_w, margin_bottom, margin_x + chart_w, margin_bottom + chart_h)
 
-    # Trazar curva de presión
+    # Curva de presión barométrica
     if len(datos_semana) >= 2:
         c.setStrokeColor(colors.HexColor("#1e3a8a"))
         c.setLineWidth(1.5)
@@ -432,7 +436,7 @@ def generar_papeleta_pdf_talcahuano():
     c.drawRightString(width - margin_x, 15, f"Generado el: {ahora.strftime('%d-%m-%Y %H:%M:%S')}")
 
     c.save()
-    print("✓ Papeleta barométrica semanal MARITGOBTALC generada exitosamente.")
+    print("✓ Papeleta barométrica semanal con marcas cada 2h ordenadas generada exitosamente.")
 
 def consultar_directemar(est):
     try:
@@ -1280,7 +1284,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Agregar papeleta semanal PDF estilo microbarografo para MARITGOBTALC [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Ajustar horas cada 2h ordenadas sin amontonar en PDF [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
