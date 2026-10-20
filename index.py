@@ -740,7 +740,7 @@ def generar_html(resultados_totales, hay_alerta):
             else:
                 etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
 
-        # Botón PDF ultra compacto ubicado a continuación exacta de la hora
+        # Botón PDF ultra compacto integrado a continuación de la hora
         boton_pdf_inline = ""
         if r['nombre'] == "Gobernacion Maritima de Talcahuano":
             boton_pdf_inline = f""" <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="pdf-inline-btn" title="Descargar Papeleta Semanal (PDF)">📥 PDF</a>"""
@@ -885,7 +885,7 @@ def generar_html(resultados_totales, hay_alerta):
         .sparkline-btn {{ cursor: pointer; transition: background 0.2s ease; }}
         .sparkline-btn:hover {{ background: rgba(29, 78, 216, 0.15); border-color: var(--click-color); }}
         .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; }}
-        .time {{ font-size: 0.68em; color: var(--time-color); display: flex; align-items: center; gap: 2px; white-space: nowrap; }}
+        .time {{ font-size: 0.58em; color: var(--time-color); display: flex; align-items: center; gap: 2px; white-space: nowrap; }}
         .click-text {{ font-size: 0.68em; color: var(--click-color); font-weight: bold; font-style: italic; white-space: nowrap; }}
         
         .pdf-inline-btn {{
@@ -895,7 +895,7 @@ def generar_html(resultados_totales, hay_alerta):
             color: white;
             padding: 1px 4px;
             border-radius: 3px;
-            font-size: 0.8em;
+            font-size: 0.9em;
             font-weight: bold;
             text-decoration: none;
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
@@ -1242,7 +1242,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con botón PDF ultracompacto.")
+    print("✓ index.html actualizado exitosamente.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1292,7 +1292,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Boton PDF compacto a continuacion de hora de reporte [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Ajustar tamanio de fuente de hora en pie para evitar desbordes [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
