@@ -733,11 +733,11 @@ def generar_html(resultados_totales, hay_alerta):
             else:
                 etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
 
-        # El nombre de la estación Talcahuano ahora incluye el botón/icono PDF integrado
+        # Cambiar el nombre a Maritgobtalc con el botón/icono PDF integrado en una sola línea compacta
         if r['nombre'] == "Gobernacion Maritima de Talcahuano":
             station_title_html = f"""
             <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="station-pdf-link" title="Descargar Papeleta Semanal PDF" onclick="event.stopPropagation();">
-                {r['nombre']} <span class="pdf-icon-inline">📄</span>
+                Maritgobtalc <span class="pdf-icon-inline">📄</span>
             </a>
             """
         else:
@@ -885,7 +885,7 @@ def generar_html(resultados_totales, hay_alerta):
         .time {{ font-size: 0.63em; color: var(--time-color); white-space: nowrap; }}
         .click-text {{ font-size: 0.65em; color: var(--click-color); font-weight: bold; font-style: italic; white-space: nowrap; }}
         
-        /* Enlace/botón PDF integrado en el nombre de la estación */
+        /* Enlace/botón PDF integrado en el nombre compacto de la estación */
         .station-pdf-link {{
             color: var(--station-name-color);
             text-decoration: none;
@@ -1242,7 +1242,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con el botón PDF integrado en el nombre de la estación Talcahuano.")
+    print("✓ index.html actualizado con la estación renombrada a Maritgobtalc y botón PDF integrado.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1292,7 +1292,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Mover icono PDF al nombre de la estacion de Talcahuano [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Renombrar estacion a Maritgobtalc con boton PDF integrado [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
