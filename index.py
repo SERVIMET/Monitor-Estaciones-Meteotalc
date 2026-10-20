@@ -384,8 +384,7 @@ def generar_papeleta_pdf_talcahuano():
         c.setFillColor(colors.HexColor("#0f172a"))
         c.drawCentredString(x_dia + (ancho_dia / 2.0), margin_bottom + chart_h + 6, etiqueta_dia)
 
-        # Muestra CADA 2 HORAS (02, 04, 06, 08, 10, 12, 14, 16, 18, 20, 22)
-        # Se aplica intercalado de altura (y_offset) para que NO queden amontonados ni pegados
+        # CADA 2 HORAS (02, 04, 06, 08, 10, 12, 14, 16, 18, 20, 22) intercaladas
         for h_sec in range(0, 24, 2):
             x_sub = x_dia + (h_sec / 24.0) * ancho_dia
             
@@ -741,16 +740,12 @@ def generar_html(resultados_totales, hay_alerta):
             else:
                 etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
 
-        footer_texto = f"Reporte: {r['ultimo']}"
-
-        # Botón PDF integrado limpiamente en el pie al lado de la hora de reporte
-        boton_pdf_papeleta = ""
+        # Botón PDF exactamente a continuación de la hora del reporte
+        boton_pdf_inline = ""
         if r['nombre'] == "Gobernacion Maritima de Talcahuano":
-            boton_pdf_papeleta = f"""
-            <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="pdf-footer-btn" title="Descargar Papeleta Semanal (PDF)">
-                📥 PDF
-            </a>
-            """
+            boton_pdf_inline = f""" <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="pdf-inline-btn" title="Descargar Papeleta Semanal (PDF)">📥 PDF</a>"""
+
+        footer_texto = f"Reporte: {r['ultimo']}{boton_pdf_inline}"
 
         if r['dir_viento']:
             viento_contenido = f'<span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ {r["dir_viento"]}</span><span class="viento-sostenido-val" style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
@@ -789,10 +784,7 @@ def generar_html(resultados_totales, hay_alerta):
                 {cuerpo_tarjeta}
                 <div class="card-footer-info">
                     <span class="time">{footer_texto}</span>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        {boton_pdf_papeleta}
-                        <span class="click-text">Ver ↗</span>
-                    </div>
+                    <span class="click-text">Ver ↗</span>
                 </div>
             </div>
         </a>
@@ -893,25 +885,26 @@ def generar_html(resultados_totales, hay_alerta):
         .sparkline-btn {{ cursor: pointer; transition: background 0.2s ease; }}
         .sparkline-btn:hover {{ background: rgba(29, 78, 216, 0.15); border-color: var(--click-color); }}
         .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; }}
-        .time {{ font-size: 0.68em; color: var(--time-color); }}
-        .click-text {{ font-size: 0.68em; color: var(--click-color); font-weight: bold; font-style: italic; }}
+        .time {{ font-size: 0.68em; color: var(--time-color); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }}
+        .click-text {{ font-size: 0.68em; color: var(--click-color); font-weight: bold; font-style: italic; white-space: nowrap; }}
         
-        .pdf-footer-btn {{
+        .pdf-inline-btn {{
             display: inline-flex;
             align-items: center;
-            gap: 2px;
             background: #0f2942;
             color: white;
-            padding: 1px 6px;
-            border-radius: 6px;
-            font-size: 0.62em;
+            padding: 0px 5px;
+            border-radius: 4px;
+            font-size: 0.9em;
             font-weight: bold;
             text-decoration: none;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
             transition: background 0.2s ease, transform 0.2s ease;
+            margin-left: 2px;
+            line-height: 1.2;
         }}
-        .pdf-footer-btn:hover {{ background: #1e40af; transform: scale(1.05); }}
-        body.dark-mode .pdf-footer-btn {{ background: #1e3a8a; border: 1px solid #3b82f6; }}
+        .pdf-inline-btn:hover {{ background: #1e40af; transform: scale(1.05); }}
+        body.dark-mode .pdf-inline-btn {{ background: #1e3a8a; border: 1px solid #3b82f6; }}
 
         .footer-dev {{ background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: table; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }}
         .floating-controls {{ position: fixed; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 1000; }}
@@ -1249,7 +1242,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con ícono de descarga para la papeleta PDF.")
+    print("✓ index.html actualizado exitosamente.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1299,7 +1292,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Ajustar horas 2h en PDF y ubicar boton PDF en pie [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Alinear tarjetas PC y boton PDF a continuacion de hora de reporte [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
