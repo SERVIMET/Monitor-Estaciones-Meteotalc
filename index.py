@@ -27,7 +27,6 @@ ARCHIVO_HISTORIAL = "historial_presion.json"
 ARCHIVO_TEMPERATURA = "historial_temperatura.json"
 ARCHIVO_VIENTO = "historial_viento.json"
 ARCHIVO_CONGELADAS = "historial_congeladas.json"
-PDF_PAPELETA_TALCAHUANO = "papeleta_talcahuano_semanal.pdf"
 
 DIAS_SEMANA_ES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 
@@ -50,48 +49,56 @@ ESTACIONES_DIRECTEMAR = [
         "url": "http://web.directemar.cl/met/jturno/estaciones/constitucion/index.htm",
         "lat": -35.3241667,
         "lon": -72.40805555,
+        "pdf": "papeleta_constitucion_semanal.pdf"
     },
     {
         "nombre": "Capitania de Puerto Lirquen",
         "url": "http://web.directemar.cl/met/jturno/estaciones/lirquen/index.htm",
         "lat": -36.7027778,
         "lon": -72.9775,
+        "pdf": "papeleta_lirquen_semanal.pdf"
     },
     {
         "nombre": "Gobernacion Maritima de Talcahuano",
         "url": "http://web.directemar.cl/met/jturno/estaciones/talcahuano/index.htm",
         "lat": -36.712,
         "lon": -73.115,
+        "pdf": "papeleta_talcahuano_semanal.pdf"
     },
     {
         "nombre": "Capitania de Puerto Coronel",
         "url": "http://web.directemar.cl/met/jturno/estaciones/coronel/index.htm",
         "lat": -37.020,
         "lon": -73.150,
+        "pdf": "papeleta_coronel_semanal.pdf"
     },
     {
         "nombre": "Capitania de Puerto Lota",
         "url": "http://web.directemar.cl/met/jturno/estaciones/lota/index.htm",
         "lat": -37.090,
         "lon": -73.150,
+        "pdf": "papeleta_lota_semanal.pdf"
     },
     {
         "nombre": "Capitania de Puerto Lebu",
         "url": "http://web.directemar.cl/met/jturno/estaciones/lebu/index.htm",
         "lat": -37.606,
         "lon": -73.650,
+        "pdf": "papeleta_lebu_semanal.pdf"
     },
     {
         "nombre": "Capitania de Puerto Carahue",
         "url": "http://web.directemar.cl/met/jturno/estaciones/carahue/index.htm",
         "lat": -38.788,
         "lon": -73.397,
+        "pdf": "papeleta_carahue_semanal.pdf"
     },
     {
         "nombre": "Capitania de Puerto Corral",
         "url": "http://web.directemar.cl/met/jturno/estaciones/corral/index.htm",
         "lat": -39.883,
         "lon": -73.433,
+        "pdf": "papeleta_corral_semanal.pdf"
     },
 ]
 
@@ -102,6 +109,7 @@ ESTACIONES_FAROS = [
         "url": "https://www.wunderground.com/dashboard/pws/ITALCA20",
         "lat": -36.607,
         "lon": -73.049,
+        "pdf": "papeleta_quiriquina_semanal.pdf"
     },
     {
         "nombre": "Faro Punta Hualpen",
@@ -109,6 +117,7 @@ ESTACIONES_FAROS = [
         "url": "https://www.wunderground.com/dashboard/pws/IHUALP1",
         "lat": -36.745,
         "lon": -73.185,
+        "pdf": "papeleta_hualpen_semanal.pdf"
     },
 ]
 
@@ -119,6 +128,7 @@ ESTACIONES_IFOP = [
         "api_url": "https://giscc.ifop.cl/siom-enoscc//get_est_met/22",
         "lat": -35.5608333,
         "lon": -72.6177777,
+        "pdf": "papeleta_carranza_semanal.pdf"
     },
     {
         "nombre": "Faro Isla Mocha",
@@ -126,6 +136,7 @@ ESTACIONES_IFOP = [
         "api_url": "https://giscc.ifop.cl/siom-enoscc//get_est_met/34",
         "lat": -38.3849472,
         "lon": -73.8688523,
+        "pdf": "papeleta_mocha_semanal.pdf"
     },
 ]
 
@@ -143,6 +154,12 @@ ORDEN_ESTACIONES = [
     "Capitania de Puerto Carahue",
     "Capitania de Puerto Corral",
 ]
+
+# Diccionario rápido para mapear nombre a archivo PDF
+MAPA_PDFS = {}
+for grupo in [ESTACIONES_DIRECTEMAR, ESTACIONES_FAROS, ESTACIONES_IFOP]:
+    for e in grupo:
+        MAPA_PDFS[e["nombre"]] = e["pdf"]
 
 def obtener_hora_chile():
     return datetime.now(ZONA_CHILE)
@@ -292,19 +309,16 @@ def gestionar_historial_viento_val(nombre_estacion, val_viento):
     gestionar_historial_generico(ARCHIVO_VIENTO, "viento", nombre_estacion, val_viento, horas_retencion=25)
 
 # ==========================================
-# GENERADOR DE PAPELETA MICROBARÓGRAFO (PDF)
+# GENERADOR DE PAPELETAS MICROBARÓGRAFOS (PDF)
 # ==========================================
-def generar_papeleta_pdf_talcahuano():
+def generar_papeleta_pdf_estacion(nombre_est, archivo_pdf):
     if not REPORTLAB_DISPONIBLE:
-        print("⚠️ ReportLab no está instalado. No se pudo generar la papeleta en PDF.")
         return
 
     historial = cargar_json_historial(ARCHIVO_HISTORIAL)
-    nombre_est = "Gobernacion Maritima de Talcahuano"
     registros = historial.get(nombre_est, [])
 
     ahora = obtener_hora_chile()
-    
     inicio_semana = (ahora - timedelta(days=ahora.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
     fin_semana = inicio_semana + timedelta(days=7)
     
@@ -313,7 +327,7 @@ def generar_papeleta_pdf_talcahuano():
 
     datos_semana = [r for r in registros if timestamp_inicio <= r["t"] <= timestamp_fin and r.get("p") is not None]
 
-    c = canvas.Canvas(PDF_PAPELETA_TALCAHUANO, pagesize=landscape(letter))
+    c = canvas.Canvas(archivo_pdf, pagesize=landscape(letter))
     width, height = landscape(letter)
 
     c.setFont("Helvetica-Bold", 14)
@@ -322,7 +336,7 @@ def generar_papeleta_pdf_talcahuano():
     
     c.setFont("Helvetica-Bold", 11)
     c.setFillColor(colors.HexColor("#1e40af"))
-    c.drawCentredString(width / 2.0, height - 52, "PAPELETA DE REGISTRO BAROMÉTRICO SEMANAL — GOBERNACIÓN MARÍTIMA DE TALCAHUANO")
+    c.drawCentredString(width / 2.0, height - 52, f"PAPELETA DE REGISTRO BAROMÉTRICO SEMANAL — {nombre_est.upper()}")
 
     c.setFont("Helvetica", 9)
     c.setFillColor(colors.HexColor("#475569"))
@@ -423,11 +437,10 @@ def generar_papeleta_pdf_talcahuano():
 
     c.setFont("Helvetica-Oblique", 8)
     c.setFillColor(colors.HexColor("#64748b"))
-    c.drawString(margin_x, 15, "Documento de registro automático generado por el Sistema de Monitoreo Met. Talcahuano.")
+    c.drawString(margin_x, 15, f"Documento de registro automático generado para {nombre_est}.")
     c.drawRightString(width - margin_x, 15, f"Generado el: {ahora.strftime('%d-%m-%Y %H:%M:%S')}")
 
     c.save()
-    print("✓ Papeleta barométrica semanal generada exitosamente.")
 
 def consultar_directemar(est):
     try:
@@ -733,15 +746,13 @@ def generar_html(resultados_totales, hay_alerta):
             else:
                 etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
 
-        # Mantener el nombre original en todas las estaciones
-        if r['nombre'] == "Gobernacion Maritima de Talcahuano":
-            station_title_html = f"""
-            <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="station-pdf-link" title="Descargar Papeleta Semanal PDF" onclick="event.stopPropagation();">
-                Gobernacion Maritima de Talcahuano <span class="pdf-icon-inline">📄</span>
-            </a>
-            """
-        else:
-            station_title_html = f"""<span>{r['nombre']}</span>"""
+        # Asignar a cada estación su respectivo PDF con el icono alineado a la izquierda junto al nombre
+        pdf_archivo = MAPA_PDFS.get(r['nombre'], "papeleta_talcahuano_semanal.pdf")
+        station_title_html = f"""
+        <a href="{pdf_archivo}" download target="_blank" class="station-pdf-link" title="Descargar Papeleta Semanal PDF" onclick="event.stopPropagation();">
+            <span>{r['nombre']}</span> <span class="pdf-icon-inline">📄</span>
+        </a>
+        """
 
         if r['dir_viento']:
             viento_contenido = f'<span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ {r["dir_viento"]}</span><span class="viento-sostenido-val" style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
@@ -871,7 +882,7 @@ def generar_html(resultados_totales, hay_alerta):
         .card.error:hover {{ box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3); }}
         
         .card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; min-height: 24px; }}
-        .station-name {{ font-weight: bold; font-size: 13.5px; color: var(--station-name-color); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+        .station-name {{ font-weight: bold; font-size: 13px; color: var(--station-name-color); line-height: 1.1; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }}
         .status-badge {{ font-size: 11px; display: flex; align-items: center; white-space: nowrap; }}
         
         .card-body-content {{ display: flex; flex-direction: column; gap: 4px; margin: 4px 0; }}
@@ -887,7 +898,7 @@ def generar_html(resultados_totales, hay_alerta):
         .time {{ font-size: 0.63em; color: var(--time-color); white-space: nowrap; }}
         .click-text {{ font-size: 0.65em; color: var(--click-color); font-weight: bold; font-style: italic; white-space: nowrap; }}
         
-        /* Enlace/botón PDF integrado en el nombre de la estación */
+        /* Enlace/botón PDF alineado a la izquierda junto al nombre */
         .station-pdf-link {{
             color: var(--station-name-color);
             text-decoration: none;
@@ -895,6 +906,7 @@ def generar_html(resultados_totales, hay_alerta):
             align-items: center;
             gap: 4px;
             transition: color 0.2s ease;
+            text-align: left;
         }}
         .station-pdf-link:hover {{
             color: var(--click-color);
@@ -1244,7 +1256,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado restaurando nombres originales en todas las tarjetas.")
+    print("✓ index.html actualizado con botones PDF en todas las estaciones.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1284,17 +1296,26 @@ def ejecutar_monitoreo():
             "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
         }
 
+    # Generar papeletas PDF individuales para cada estación
+    for nombre_est, archivo_pdf in MAPA_PDFS.items():
+        generar_papeleta_pdf_estacion(nombre_est, archivo_pdf)
+    print("✓ Papeletas barométricas semanales generadas para todas las estaciones.")
+
     resultados_totales = [resultados_dict[nombre] for nombre in ORDEN_ESTACIONES if nombre in resultados_dict]
     generar_html(resultados_totales, hubo_fallas)
     generar_json_esp32(resultados_totales)
-    generar_papeleta_pdf_talcahuano()
     subir_a_github()
 
 def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
-        subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Restaurar nombres originales de estaciones [skip ci]"], capture_output=True, text=True)
+        archivos_a_subir = ["index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS]
+        for pdf in MAPA_PDFS.values():
+            if os.path.exists(pdf):
+                archivos_a_subir.append(pdf)
+
+        subprocess.run(["git", "add"] + archivos_a_subir, check=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Agregar papeletas PDF semanales a todas las estaciones [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
