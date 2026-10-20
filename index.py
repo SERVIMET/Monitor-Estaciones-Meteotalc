@@ -733,11 +733,15 @@ def generar_html(resultados_totales, hay_alerta):
             else:
                 etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
 
-        # Integrar el icono PDF directamente junto a la fecha/hora del reporte para Talcahuano
+        # El nombre de la estación Talcahuano ahora incluye el botón/icono PDF integrado
         if r['nombre'] == "Gobernacion Maritima de Talcahuano":
-            tiempo_html = f"""<span class="time">Reporte: {r['ultimo']} <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="pdf-time-icon" title="Descargar Papeleta Semanal PDF" onclick="event.stopPropagation();">📄</a></span>"""
+            station_title_html = f"""
+            <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="station-pdf-link" title="Descargar Papeleta Semanal PDF" onclick="event.stopPropagation();">
+                {r['nombre']} <span class="pdf-icon-inline">📄</span>
+            </a>
+            """
         else:
-            tiempo_html = f"""<span class="time">Reporte: {r['ultimo']}</span>"""
+            station_title_html = f"""<span>{r['nombre']}</span>"""
 
         if r['dir_viento']:
             viento_contenido = f'<span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ {r["dir_viento"]}</span><span class="viento-sostenido-val" style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
@@ -770,12 +774,12 @@ def generar_html(resultados_totales, hay_alerta):
         <a href="{r['url']}" target="_blank" class="card-link">
             <div class="card {clase}">
                 <div class="card-header">
-                    <span class="station-name">{r['nombre']}</span>
+                    <span class="station-name">{station_title_html}</span>
                     <span class="status-badge">{icono}{etiqueta_estado}</span>
                 </div>
                 {cuerpo_tarjeta}
                 <div class="card-footer-info">
-                    {tiempo_html}
+                    <span class="time">Reporte: {r['ultimo']}</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -878,18 +882,29 @@ def generar_html(resultados_totales, hay_alerta):
         .sparkline-btn:hover {{ background: rgba(29, 78, 216, 0.15); border-color: var(--click-color); }}
         
         .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; width: 100%; box-sizing: border-box; }}
-        .time {{ font-size: 0.63em; color: var(--time-color); white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }}
+        .time {{ font-size: 0.63em; color: var(--time-color); white-space: nowrap; }}
         .click-text {{ font-size: 0.65em; color: var(--click-color); font-weight: bold; font-style: italic; white-space: nowrap; }}
         
-        /* Icono PDF integrado junto a la fecha/hora */
-        .pdf-time-icon {{
+        /* Enlace/botón PDF integrado en el nombre de la estación */
+        .station-pdf-link {{
+            color: var(--station-name-color);
             text-decoration: none;
-            font-size: 10px;
-            margin-left: 2px;
-            transition: transform 0.2s ease;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s ease;
         }}
-        .pdf-time-icon:hover {{ transform: scale(1.25); }}
+        .station-pdf-link:hover {{
+            color: var(--click-color);
+            text-decoration: underline;
+        }}
+        .pdf-icon-inline {{
+            font-size: 11px;
+            transition: transform 0.2s ease;
+        }}
+        .pdf-icon-inline:hover {{
+            transform: scale(1.25);
+        }}
 
         .footer-dev {{ background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: table; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }}
         .floating-controls {{ position: fixed; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 1000; }}
@@ -1227,7 +1242,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con el icono PDF junto a la fecha de reporte.")
+    print("✓ index.html actualizado con el botón PDF integrado en el nombre de la estación Talcahuano.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1277,7 +1292,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Integrar icono PDF junto a la fecha de reporte de Talcahuano [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Mover icono PDF al nombre de la estacion de Talcahuano [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
