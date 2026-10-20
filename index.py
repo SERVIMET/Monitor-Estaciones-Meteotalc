@@ -740,12 +740,12 @@ def generar_html(resultados_totales, hay_alerta):
             else:
                 etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
 
-        # Botón PDF ultra compacto integrado a continuación de la hora
-        boton_pdf_inline = ""
+        # Botón PDF reubicado en la cabecera (header) para dejar el pie limpio e idéntico al resto
+        header_pdf_btn = ""
         if r['nombre'] == "Gobernacion Maritima de Talcahuano":
-            boton_pdf_inline = f""" <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="pdf-inline-btn" title="Descargar Papeleta Semanal (PDF)">📥 PDF</a>"""
+            header_pdf_btn = f""" <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="pdf-header-btn" title="Descargar Papeleta Semanal (PDF)">📄 PDF</a>"""
 
-        footer_texto = f"Reporte: {r['ultimo']}{boton_pdf_inline}"
+        footer_texto = f"Reporte: {r['ultimo']}"
 
         if r['dir_viento']:
             viento_contenido = f'<span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ {r["dir_viento"]}</span><span class="viento-sostenido-val" style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
@@ -779,7 +779,7 @@ def generar_html(resultados_totales, hay_alerta):
             <div class="card {clase}">
                 <div class="card-header">
                     <span class="station-name">{r['nombre']}</span>
-                    <span class="status-badge">{icono}{etiqueta_estado}</span>
+                    <span class="status-badge">{header_pdf_btn}{icono}{etiqueta_estado}</span>
                 </div>
                 {cuerpo_tarjeta}
                 <div class="card-footer-info">
@@ -875,7 +875,7 @@ def generar_html(resultados_totales, hay_alerta):
         .card.error:hover {{ box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3); }}
         .card-header {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }}
         .station-name {{ font-weight: bold; font-size: 13.5px; color: var(--station-name-color); line-height: 1.1; }}
-        .status-badge {{ font-size: 11px; display: flex; align-items: center; }}
+        .status-badge {{ font-size: 11px; display: flex; align-items: center; gap: 4px; }}
         .card-body-content {{ display: flex; flex-direction: column; gap: 4px; margin: 4px 0; }}
         .row-top, .row-bottom-3 {{ display: grid; gap: 4px; }}
         .row-top {{ grid-template-columns: 1.1fr 1fr 1fr; }}
@@ -885,26 +885,25 @@ def generar_html(resultados_totales, hay_alerta):
         .sparkline-btn {{ cursor: pointer; transition: background 0.2s ease; }}
         .sparkline-btn:hover {{ background: rgba(29, 78, 216, 0.15); border-color: var(--click-color); }}
         .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; }}
-        .time {{ font-size: 0.58em; color: var(--time-color); display: flex; align-items: center; gap: 2px; white-space: nowrap; }}
+        .time {{ font-size: 0.65em; color: var(--time-color); white-space: nowrap; }}
         .click-text {{ font-size: 0.68em; color: var(--click-color); font-weight: bold; font-style: italic; white-space: nowrap; }}
         
-        .pdf-inline-btn {{
+        .pdf-header-btn {{
             display: inline-flex;
             align-items: center;
             background: #0f2942;
             color: white;
-            padding: 1px 4px;
-            border-radius: 3px;
-            font-size: 0.9em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
             font-weight: bold;
             text-decoration: none;
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
             transition: background 0.2s ease, transform 0.2s ease;
-            margin-left: 2px;
             line-height: 1;
         }}
-        .pdf-inline-btn:hover {{ background: #1e40af; transform: scale(1.05); }}
-        body.dark-mode .pdf-inline-btn {{ background: #1e3a8a; border: 1px solid #3b82f6; }}
+        .pdf-header-btn:hover {{ background: #1e40af; transform: scale(1.05); }}
+        body.dark-mode .pdf-header-btn {{ background: #1e3a8a; border: 1px solid #3b82f6; }}
 
         .footer-dev {{ background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: table; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }}
         .floating-controls {{ position: fixed; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 1000; }}
@@ -1242,7 +1241,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado exitosamente.")
+    print("✓ index.html actualizado con botón PDF en la cabecera.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1292,7 +1291,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Ajustar tamanio de fuente de hora en pie para evitar desbordes [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Mover boton PDF a la cabecera para alinear tarjetas perfectamente [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
@@ -1302,4 +1301,4 @@ def subir_a_github():
         print(f"Error en Git: {e}")
 
 if __name__ == "__main__":
-    ejecutar_monitoreo() 
+    ejecutar_monitoreo()
