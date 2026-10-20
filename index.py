@@ -332,7 +332,7 @@ def generar_papeleta_pdf_talcahuano():
     f_fin_str = (fin_semana - timedelta(seconds=1)).strftime("%d-%m-%Y")
     c.drawCentredString(width / 2.0, height - 66, f"Semana del {f_inicio_str} al {f_fin_str}")
 
-    margin_x = 42  # Mayor área disponible para el gráfico
+    margin_x = 42
     margin_top = 85
     margin_bottom = 48
     chart_w = width - (margin_x * 2)
@@ -396,7 +396,6 @@ def generar_papeleta_pdf_talcahuano():
             if h_sec > 0:
                 c.setFont("Helvetica", 5.5)
                 c.setFillColor(colors.HexColor("#475569"))
-                # Intercalamos la posición vertical entre horas pares alternas
                 y_offset = -7 if (h_sec % 4 == 2) else -13
                 c.drawCentredString(x_sub, margin_bottom + y_offset, f"{h_sec:02d}")
 
@@ -744,11 +743,12 @@ def generar_html(resultados_totales, hay_alerta):
 
         footer_texto = f"Reporte: {r['ultimo']}"
 
+        # Botón PDF integrado limpiamente en el pie al lado de la hora de reporte
         boton_pdf_papeleta = ""
         if r['nombre'] == "Gobernacion Maritima de Talcahuano":
             boton_pdf_papeleta = f"""
-            <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="pdf-icon-btn" title="Descargar Papeleta Semanal (PDF)">
-                📥
+            <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="pdf-footer-btn" title="Descargar Papeleta Semanal (PDF)">
+                📥 PDF
             </a>
             """
 
@@ -789,9 +789,11 @@ def generar_html(resultados_totales, hay_alerta):
                 {cuerpo_tarjeta}
                 <div class="card-footer-info">
                     <span class="time">{footer_texto}</span>
-                    <span class="click-text">Ver ↗</span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        {boton_pdf_papeleta}
+                        <span class="click-text">Ver ↗</span>
+                    </div>
                 </div>
-                {boton_pdf_papeleta}
             </div>
         </a>
         """
@@ -874,7 +876,7 @@ def generar_html(resultados_totales, hay_alerta):
         #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
         .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; align-items: stretch; }}
         .card-link {{ text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; }}
-        .card {{ border-radius: 14px; padding: 10px; padding-bottom: 30px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-sizing: border-box; }}
+        .card {{ border-radius: 14px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-sizing: border-box; }}
         .card.ok {{ background: var(--card-ok-bg); border: 1px solid var(--card-ok-border); border-left: 6px solid #16a34a; }}
         .card.error {{ background: var(--card-error-bg); border: 1px solid var(--card-error-border); border-left: 6px solid #dc2626; }}
         .card:hover {{ transform: translateY(-3px); box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); }}
@@ -894,9 +896,22 @@ def generar_html(resultados_totales, hay_alerta):
         .time {{ font-size: 0.68em; color: var(--time-color); }}
         .click-text {{ font-size: 0.68em; color: var(--click-color); font-weight: bold; font-style: italic; }}
         
-        .pdf-icon-btn {{ position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); background: #0f2942; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: transform 0.2s ease, background 0.2s ease; z-index: 10; }}
-        .pdf-icon-btn:hover {{ transform: translateX(-50%) scale(1.15); background: #1e40af; }}
-        body.dark-mode .pdf-icon-btn {{ background: #1e3a8a; border: 1px solid #3b82f6; }}
+        .pdf-footer-btn {{
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            background: #0f2942;
+            color: white;
+            padding: 1px 6px;
+            border-radius: 6px;
+            font-size: 0.62em;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            transition: background 0.2s ease, transform 0.2s ease;
+        }}
+        .pdf-footer-btn:hover {{ background: #1e40af; transform: scale(1.05); }}
+        body.dark-mode .pdf-footer-btn {{ background: #1e3a8a; border: 1px solid #3b82f6; }}
 
         .footer-dev {{ background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: table; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }}
         .floating-controls {{ position: fixed; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 1000; }}
@@ -1284,7 +1299,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Ajustar horas cada 2h ordenadas sin amontonar en PDF [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Ajustar horas 2h en PDF y ubicar boton PDF en pie [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
