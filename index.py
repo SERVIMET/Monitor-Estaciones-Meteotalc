@@ -747,8 +747,8 @@ def generar_html(resultados_totales, hay_alerta):
 
         pdf_archivo = MAPA_PDFS.get(r['nombre'], "papeleta_talcahuano_semanal.pdf")
         
-        # Título y enlace del PDF separados correctamente para evitar que el texto empuje la estructura
-        station_title_html = f"""<span class="station-name-text">{r['nombre']}</span>"""
+        # Estructura limpia con restricciones estrictas de ancho para forzar el recorte en una sola línea
+        station_title_html = f"""<span class="station-name-text" title="{r['nombre']}">{r['nombre']}</span>"""
         pdf_link_html = f"""
         <a href="{pdf_archivo}" download target="_blank" class="station-pdf-link" title="Descargar Papeleta Semanal PDF" onclick="event.stopPropagation();">
             <span class="pdf-icon-inline">📄</span>
@@ -787,7 +787,7 @@ def generar_html(resultados_totales, hay_alerta):
             <div class="card {clase}">
                 <div class="card-header">
                     {station_title_html}
-                    <div style="display: flex; align-items: center; gap: 6px;">
+                    <div class="header-right-group">
                         {pdf_link_html}
                         <span class="status-badge">{icono}{etiqueta_estado}</span>
                     </div>
@@ -877,16 +877,26 @@ def generar_html(resultados_totales, hay_alerta):
         body.dark-mode.alerta-activa {{ animation: none !important; background-color: #121212 !important; }}
         .banner-alerta {{ background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }}
         #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
-        .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; align-items: stretch; }}
-        .card-link {{ text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; }}
-        .card {{ border-radius: 14px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-sizing: border-box; }}
+        
+        /* Grilla estricta con ancho idéntico por columna para evitar desalineación */
+        .grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; align-items: stretch; }}
+        @media (max-width: 900px) {{
+            .grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+        }}
+        @media (max-width: 600px) {{
+            .grid {{ grid-template-columns: 1fr; }}
+        }}
+
+        .card-link {{ text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; width: 100%; box-sizing: border-box; }}
+        .card {{ border-radius: 14px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; height: 100%; width: 100%; box-sizing: border-box; }}
         .card.ok {{ background: var(--card-ok-bg); border: 1px solid var(--card-ok-border); border-left: 6px solid #16a34a; }}
         .card.error {{ background: var(--card-error-bg); border: 1px solid var(--card-error-border); border-left: 6px solid #dc2626; }}
         .card:hover {{ transform: translateY(-3px); box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); }}
         .card.error:hover {{ box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3); }}
         
-        .card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; min-height: 24px; }}
-        .station-name-text {{ font-weight: bold; font-size: 13px; color: var(--station-name-color); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+        .card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; min-height: 24px; width: 100%; box-sizing: border-box; overflow: hidden; }}
+        .station-name-text {{ font-weight: bold; font-size: 12.5px; color: var(--station-name-color); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; margin-right: 6px; }}
+        .header-right-group {{ display: flex; align-items: center; gap: 6px; flex-shrink: 0; }}
         .status-badge {{ font-size: 11px; display: flex; align-items: center; white-space: nowrap; }}
         
         .card-body-content {{ display: flex; flex-direction: column; gap: 4px; margin: 4px 0; }}
@@ -1243,7 +1253,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado correctamente.")
+    print("✓ index.html actualizado con grilla rígida y nombres acotados.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1301,7 +1311,7 @@ def subir_a_github():
                 archivos_a_subir.append(pdf)
 
         subprocess.run(["git", "add"] + archivos_a_subir, check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Alinear iconos PDF y nombres en tarjetas [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Fijar columnas de grilla y corregir desborde de títulos [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
@@ -1311,4 +1321,4 @@ def subir_a_github():
         print(f"Error en Git: {e}")
 
 if __name__ == "__main__":
-    ejecutar_monitoreo() 
+    ejecutar_monitoreo()
