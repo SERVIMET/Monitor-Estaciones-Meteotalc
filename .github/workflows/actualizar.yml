@@ -24,8 +24,10 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Instalar dependencias de zona horaria y pytz
-        run: pip install tzdata pytz
+      - name: Instalar dependencias (ReportLab, tzdata y pytz)
+        run: |
+          python -m pip install --upgrade pip
+          pip install reportlab tzdata pytz
 
       - name: Ejecutar script de monitoreo
         run: python index.py
@@ -34,5 +36,5 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "action@github.com"
-          git add index.html historial_presion.json
-          git diff --staged --quiet || (git commit -m "Actualización automática de estaciones y historial [skip ci]" && git push)
+          git add index.html estado_leds.json papeleta_talcahuano_semanal.pdf historial_presion.json historial_temperatura.json historial_viento.json historial_congeladas.json
+          git diff --staged --quiet || (git commit -m "Actualización automática de estaciones, historiales y papeleta semanal [skip ci]" && git push)
