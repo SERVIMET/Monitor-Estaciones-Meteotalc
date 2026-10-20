@@ -155,7 +155,6 @@ ORDEN_ESTACIONES = [
     "Capitania de Puerto Corral",
 ]
 
-# Diccionario rápido para mapear nombre a archivo PDF
 MAPA_PDFS = {}
 for grupo in [ESTACIONES_DIRECTEMAR, ESTACIONES_FAROS, ESTACIONES_IFOP]:
     for e in grupo:
@@ -746,11 +745,13 @@ def generar_html(resultados_totales, hay_alerta):
             else:
                 etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
 
-        # Asignar a cada estación su respectivo PDF con el icono alineado a la izquierda junto al nombre
         pdf_archivo = MAPA_PDFS.get(r['nombre'], "papeleta_talcahuano_semanal.pdf")
-        station_title_html = f"""
+        
+        # Título y enlace del PDF separados correctamente para evitar que el texto empuje la estructura
+        station_title_html = f"""<span class="station-name-text">{r['nombre']}</span>"""
+        pdf_link_html = f"""
         <a href="{pdf_archivo}" download target="_blank" class="station-pdf-link" title="Descargar Papeleta Semanal PDF" onclick="event.stopPropagation();">
-            <span>{r['nombre']}</span> <span class="pdf-icon-inline">📄</span>
+            <span class="pdf-icon-inline">📄</span>
         </a>
         """
 
@@ -785,8 +786,11 @@ def generar_html(resultados_totales, hay_alerta):
         <a href="{r['url']}" target="_blank" class="card-link">
             <div class="card {clase}">
                 <div class="card-header">
-                    <span class="station-name">{station_title_html}</span>
-                    <span class="status-badge">{icono}{etiqueta_estado}</span>
+                    {station_title_html}
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        {pdf_link_html}
+                        <span class="status-badge">{icono}{etiqueta_estado}</span>
+                    </div>
                 </div>
                 {cuerpo_tarjeta}
                 <div class="card-footer-info">
@@ -882,7 +886,7 @@ def generar_html(resultados_totales, hay_alerta):
         .card.error:hover {{ box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3); }}
         
         .card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; min-height: 24px; }}
-        .station-name {{ font-weight: bold; font-size: 13px; color: var(--station-name-color); line-height: 1.1; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }}
+        .station-name-text {{ font-weight: bold; font-size: 13px; color: var(--station-name-color); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
         .status-badge {{ font-size: 11px; display: flex; align-items: center; white-space: nowrap; }}
         
         .card-body-content {{ display: flex; flex-direction: column; gap: 4px; margin: 4px 0; }}
@@ -898,27 +902,10 @@ def generar_html(resultados_totales, hay_alerta):
         .time {{ font-size: 0.63em; color: var(--time-color); white-space: nowrap; }}
         .click-text {{ font-size: 0.65em; color: var(--click-color); font-weight: bold; font-style: italic; white-space: nowrap; }}
         
-        /* Enlace/botón PDF alineado a la izquierda junto al nombre */
-        .station-pdf-link {{
-            color: var(--station-name-color);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: color 0.2s ease;
-            text-align: left;
-        }}
-        .station-pdf-link:hover {{
-            color: var(--click-color);
-            text-decoration: underline;
-        }}
-        .pdf-icon-inline {{
-            font-size: 11px;
-            transition: transform 0.2s ease;
-        }}
-        .pdf-icon-inline:hover {{
-            transform: scale(1.25);
-        }}
+        .station-pdf-link {{ color: var(--station-name-color); text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease; }}
+        .station-pdf-link:hover {{ color: var(--click-color); }}
+        .pdf-icon-inline {{ font-size: 12px; transition: transform 0.2s ease; }}
+        .pdf-icon-inline:hover {{ transform: scale(1.25); }}
 
         .footer-dev {{ background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: table; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }}
         .floating-controls {{ position: fixed; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 1000; }}
@@ -1256,7 +1243,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con botones PDF en todas las estaciones.")
+    print("✓ index.html actualizado correctamente.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1296,7 +1283,6 @@ def ejecutar_monitoreo():
             "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
         }
 
-    # Generar papeletas PDF individuales para cada estación
     for nombre_est, archivo_pdf in MAPA_PDFS.items():
         generar_papeleta_pdf_estacion(nombre_est, archivo_pdf)
     print("✓ Papeletas barométricas semanales generadas para todas las estaciones.")
@@ -1315,7 +1301,7 @@ def subir_a_github():
                 archivos_a_subir.append(pdf)
 
         subprocess.run(["git", "add"] + archivos_a_subir, check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Agregar papeletas PDF semanales a todas las estaciones [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Alinear iconos PDF y nombres en tarjetas [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
