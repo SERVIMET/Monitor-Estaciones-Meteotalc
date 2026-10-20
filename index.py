@@ -733,7 +733,7 @@ def generar_html(resultados_totales, hay_alerta):
             else:
                 etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
 
-        # Botón PDF comprimido, exactamente en la misma línea a continuación de la hora para Talcahuano
+        # Botón PDF integrado dentro del mismo bloque de la hora para Talcahuano
         pdf_inline_btn = ""
         if r['nombre'] == "Gobernacion Maritima de Talcahuano":
             pdf_inline_btn = f""" <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="pdf-inline-btn" title="Descargar Papeleta Semanal PDF">📄 PDF</a>"""
@@ -776,7 +776,7 @@ def generar_html(resultados_totales, hay_alerta):
                 </div>
                 {cuerpo_tarjeta}
                 <div class="card-footer-info">
-                    <span class="time">{footer_texto}</span>
+                    <span class="time-group">{footer_texto}</span>
                     <span class="click-text">Ver ↗</span>
                 </div>
             </div>
@@ -877,9 +877,11 @@ def generar_html(resultados_totales, hay_alerta):
         .temp-box {{ font-size: 0.85em; font-weight: 800; color: var(--item-text); }}
         .sparkline-btn {{ cursor: pointer; transition: background 0.2s ease; }}
         .sparkline-btn:hover {{ background: rgba(29, 78, 216, 0.15); border-color: var(--click-color); }}
+        
+        /* Solución definitiva para que la hora y el botón PDF se queden juntos a la izquierda sin espacios extra */
         .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; width: 100%; box-sizing: border-box; }}
-        .time {{ font-size: 0.63em; color: var(--time-color); white-space: nowrap; display: inline-flex; align-items: center; }}
-        .click-text {{ font-size: 0.65em; color: var(--click-color); font-weight: bold; font-style: italic; white-space: nowrap; }}
+        .time-group {{ font-size: 0.63em; color: var(--time-color); display: inline-flex; align-items: center; white-space: nowrap; }}
+        .click-text {{ font-size: 0.65em; color: var(--click-color); font-weight: bold; font-style: italic; white-space: nowrap; margin-left: auto; }}
         
         .pdf-inline-btn {{
             display: inline-flex;
@@ -1236,7 +1238,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con botón PDF compacto en línea.")
+    print("✓ index.html actualizado con el pie de tarjeta alineado correctamente para escritorio y móvil.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1286,7 +1288,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Agregar boton PDF compacto al lado de la hora en Talcahuano [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Alinear correctamente pie de tarjeta y boton PDF en escritorio [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
