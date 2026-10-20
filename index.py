@@ -733,15 +733,11 @@ def generar_html(resultados_totales, hay_alerta):
             else:
                 etiqueta_estado = '<span style="font-size: 10px; font-weight: bold; color: #dc2626; margin-left: 4px;">(offline)</span>'
 
-        # Icono PDF compacto exclusivamente para el pie de página de Talcahuano (sin texto, solo icono)
-        footer_right_content = '<span class="click-text">Ver ↗</span>'
+        # Integrar el icono PDF directamente junto a la fecha/hora del reporte para Talcahuano
         if r['nombre'] == "Gobernacion Maritima de Talcahuano":
-            footer_right_content = f"""
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="pdf-footer-icon-btn" title="Descargar Papeleta Semanal PDF" onclick="event.stopPropagation();">📄</a>
-                <span class="click-text">Ver ↗</span>
-            </div>
-            """
+            tiempo_html = f"""<span class="time">Reporte: {r['ultimo']} <a href="{PDF_PAPELETA_TALCAHUANO}" download target="_blank" class="pdf-time-icon" title="Descargar Papeleta Semanal PDF" onclick="event.stopPropagation();">📄</a></span>"""
+        else:
+            tiempo_html = f"""<span class="time">Reporte: {r['ultimo']}</span>"""
 
         if r['dir_viento']:
             viento_contenido = f'<span style="display: block; font-size: 0.58em; color: var(--wind-color, #1d4ed8); font-weight: 800; line-height: 1.1;">🌬️ {r["dir_viento"]}</span><span class="viento-sostenido-val" style="display: block; font-size: 0.72em; font-weight: 700; line-height: 1.1;">{r["viento"]}</span>'
@@ -779,8 +775,8 @@ def generar_html(resultados_totales, hay_alerta):
                 </div>
                 {cuerpo_tarjeta}
                 <div class="card-footer-info">
-                    <span class="time">Reporte: {r['ultimo']}</span>
-                    {footer_right_content}
+                    {tiempo_html}
+                    <span class="click-text">Ver ↗</span>
                 </div>
             </div>
         </a>
@@ -882,27 +878,18 @@ def generar_html(resultados_totales, hay_alerta):
         .sparkline-btn:hover {{ background: rgba(29, 78, 216, 0.15); border-color: var(--click-color); }}
         
         .card-footer-info {{ display: flex; justify-content: space-between; align-items: center; margin-top: 2px; border-top: 1px solid var(--footer-border); padding-top: 3px; width: 100%; box-sizing: border-box; }}
-        .time {{ font-size: 0.63em; color: var(--time-color); white-space: nowrap; }}
+        .time {{ font-size: 0.63em; color: var(--time-color); white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }}
         .click-text {{ font-size: 0.65em; color: var(--click-color); font-weight: bold; font-style: italic; white-space: nowrap; }}
         
-        /* Botón icono PDF compacto en el pie de página (solo icono, sin texto para evitar saltos de línea) */
-        .pdf-footer-icon-btn {{
-            background: #0f2942;
-            color: white;
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
+        /* Icono PDF integrado junto a la fecha/hora */
+        .pdf-time-icon {{
             text-decoration: none;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-            transition: background 0.2s ease, transform 0.2s ease;
-            white-space: nowrap;
+            font-size: 10px;
+            margin-left: 2px;
+            transition: transform 0.2s ease;
+            display: inline-block;
         }}
-        .pdf-footer-icon-btn:hover {{ background: #1e40af; transform: scale(1.1); }}
-        body.dark-mode .pdf-footer-icon-btn {{ background: #1e3a8a; border: 1px solid #3b82f6; }}
+        .pdf-time-icon:hover {{ transform: scale(1.25); }}
 
         .footer-dev {{ background: linear-gradient(135deg, #0f2942, #1e3a8a); color: #f8fafc; text-align: center; font-weight: 600; padding: 10px 24px; border-radius: 30px; margin: 30px auto 15px auto; display: table; font-size: 13px; box-shadow: 0 4px 12px rgba(15, 41, 66, 0.2); border: 1px solid rgba(255,255,255,0.15); }}
         .floating-controls {{ position: fixed; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 1000; }}
@@ -1240,7 +1227,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con el icono PDF compacto en el pie de página.")
+    print("✓ index.html actualizado con el icono PDF junto a la fecha de reporte.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1290,7 +1277,7 @@ def subir_a_github():
     try:
         print("Sincronizando cambios con GitHub...")
         subprocess.run(["git", "add", "index.html", "estado_leds.json", PDF_PAPELETA_TALCAHUANO, ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS], check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Dejar icono PDF compacto en el pie de pagina para preservar simetria [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Integrar icono PDF junto a la fecha de reporte de Talcahuano [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
