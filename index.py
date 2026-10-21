@@ -747,7 +747,6 @@ def generar_html(resultados_totales, hay_alerta):
 
         pdf_archivo = MAPA_PDFS.get(r['nombre'], "papeleta_talcahuano_semanal.pdf")
         
-        # Estructura definitiva: Título y luz arriba, y el botón PDF en su propia línea independiente abajo
         card_header_html = f"""
         <div class="card-header-top">
             <span class="station-name-text" title="{r['nombre']}">{r['nombre']}</span>
@@ -877,11 +876,8 @@ def generar_html(resultados_totales, hay_alerta):
         .banner-alerta {{ background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }}
         #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
         
-        /* GRILLA ESTRICTA DE 3 COLUMNAS CON ALINEACIÓN STRETCH PARA NIVELAR FILAS */
+        /* GRILLA BLINDADA A 3 COLUMNAS FIJAS (PUNTO DE QUIBRE BAJADO A 600px PARA EVITAR EL ESCALONAMIENTO) */
         .grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; align-items: stretch; width: 100%; box-sizing: border-box; }}
-        @media (max-width: 900px) {{
-            .grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-        }}
         @media (max-width: 600px) {{
             .grid {{ grid-template-columns: 1fr; }}
         }}
@@ -898,7 +894,7 @@ def generar_html(resultados_totales, hay_alerta):
         .station-name-text {{ font-weight: bold; font-size: 13px; color: var(--station-name-color); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; margin-right: 6px; }}
         .status-badge {{ font-size: 11px; display: flex; align-items: center; white-space: nowrap; flex-shrink: 0; }}
         
-        /* Cabecera inferior exclusiva para el botón PDF en su propia línea */
+        /* Cabecera inferior exclusiva para el botón PDF en su propia línea independiente */
         .card-header-bottom {{ margin-bottom: 6px; width: 100%; box-sizing: border-box; }}
         .pdf-pill-btn {{ font-size: 11px; font-weight: 700; color: var(--click-color); text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; background: rgba(255, 255, 255, 0.7); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--item-border); width: 100%; box-sizing: border-box; transition: opacity 0.2s ease; }}
         body.dark-mode .pdf-pill-btn {{ background: rgba(30, 41, 59, 0.7); }}
@@ -1253,7 +1249,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con alineación stretch y botón PDF en línea independiente.")
+    print("✓ index.html actualizado con grilla fija de 3 columnas para PC.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1311,7 +1307,7 @@ def subir_a_github():
                 archivos_a_subir.append(pdf)
 
         subprocess.run(["git", "add"] + archivos_a_subir, check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Alineacion estricta stretch y boton PDF en linea independiente [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Fijar grilla a 3 columnas para evitar escalonamientos en PC [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
