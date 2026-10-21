@@ -1300,26 +1300,55 @@ def ejecutar_monitoreo():
         generar_papeleta_pdf_estacion(nombre_est, archivo_pdf)
     print("✓ Papeletas barométricas semanales generadas para todas las estaciones.")
 
+    # ==========================================
+    # RESPALDO AUTOMÁTICO DOMINGOS A LAS 23:55
+    # ==========================================
+    ahora = obtener_hora_chile()
+    archivos_respaldo_nuevos = []
+    if ahora.weekday() == 6 and ahora.hour == 23 and ahora.minute >= 55:
+        dir_respaldos = "respaldos_papeletas"
+        os.makedirs(dir_respaldos, exist_ok=True)
+        
+        inicio_semana = (ahora - timedelta(days=ahora.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+        fin_semana = inicio_semana + timedelta(days=7)
+        f_fin_str = (fin_semana - timedelta(seconds=1)).strftime("%d-%m-%Y")
+        
+        for nombre_est, archivo_pdf in MAPA_PDFS.items():
+            if os.path.exists(archivo_pdf):
+                nombre_base = archivo_pdf.replace("_semanal.pdf", "")
+                archivo_historico = os.path.join(dir_respaldos, f"{nombre_base}_{f_fin_str}.pdf")
+                if not os.path.exists(archivo_historico):
+                    with open(archivo_pdf, "rb") as f_src, open(archivo_historico, "wb") as f_dst:
+                        f_dst.write(f_src.read())
+                    archivos_respaldo_nuevos.append(archivo_historico)
+        if archivos_respaldo_nuevos:
+            print(f"✓ Respaldo automático semanal completado: {len(archivos_respaldo_nuevos)} papeletas archivadas.")
+
     resultados_totales = [resultados_dict[nombre] for nombre in ORDEN_ESTACIONES if nombre in resultados_dict]
     generar_html(resultados_totales, hubo_fallas)
     generar_json_esp32(resultados_totales)
-    subir_a_github()
+    subir_a_github(archivos_respaldo_nuevos)
 
-def subir_a_github():
+def subir_a_github(archivos_extra=[]):
     try:
         print("Sincronizando cambios con GitHub...")
         archivos_a_subir = ["index.html", "estado_leds.json", ARCHIVO_HISTORIAL, ARCHIVO_TEMPERATURA, ARCHIVO_VIENTO, ARCHIVO_CONGELADAS]
         for pdf in MAPA_PDFS.values():
             if os.path.exists(pdf):
                 archivos_a_subir.append(pdf)
+                
+        # Agregar los respaldos históricos nuevos si los hay
+        for ar in archivos_extra:
+            if ar not in archivos_a_subir:
+                archivos_a_subir.append(ar)
 
         subprocess.run(["git", "add"] + archivos_a_subir, check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Restaurar grilla simetrica de 3 columnas [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Actualizar monitor y respaldo automatico semanal [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
         subprocess.run(["git", "push"], check=True)
-        print("✓ Sincronización completada con éxito.")
+        print("✓ Sincronización y respaldo en la nube completados con éxito.")
     except subprocess.CalledProcessError as e:
         print(f"Error en Git: {e}")
 
