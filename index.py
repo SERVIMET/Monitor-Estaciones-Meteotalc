@@ -878,9 +878,12 @@ def generar_html(resultados_totales, hay_alerta):
         .banner-alerta {{ background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }}
         #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
         
-        /* GRILLA BLINDADA DE 2 COLUMNAS EXACTAS CON CONTENEDOR CELDA */
-        .grid {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; max-width: 1000px; margin: 0 auto; align-items: stretch; width: 100%; box-sizing: border-box; }}
-        @media (max-width: 768px) {{
+        /* GRILLA BLINDADA DE 3 COLUMNAS EXACTAS CON CONTENEDOR CELDA */
+        .grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; max-width: 1200px; margin: 0 auto; align-items: stretch; width: 100%; box-sizing: border-box; }}
+        @media (max-width: 1024px) {{
+            .grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+        }}
+        @media (max-width: 650px) {{
             .grid {{ grid-template-columns: 1fr; }}
         }}
 
@@ -1253,7 +1256,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con celdas envolventes estrictas de 2 columnas.")
+    print("✓ index.html actualizado con diseño estricto de 3 columnas protegido por celdas.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1311,7 +1314,7 @@ def subir_a_github():
                 archivos_a_subir.append(pdf)
 
         subprocess.run(["git", "add"] + archivos_a_subir, check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Arreglar alineacion de tarjetas con celdas contenedor [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Restaurar grilla simetrica de 3 columnas [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
@@ -1321,4 +1324,4 @@ def subir_a_github():
         print(f"Error en Git: {e}")
 
 if __name__ == "__main__":
-    ejecutar_monitoreo() 
+    ejecutar_monitoreo()
