@@ -876,12 +876,13 @@ def generar_html(resultados_totales, hay_alerta):
         .banner-alerta {{ background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }}
         #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
         
-        /* GRILLA OPTIMIZADA PARA FORZAR 3 COLUMNAS EXACTAS EN PC */
-        .grid {{ display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; max-width: 1200px; margin: 0 auto; box-sizing: border-box; }}
+        /* GRILLA FLEXBOX BLINDADA PARA PC Y CELULAR */
+        .grid {{ display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; max-width: 1200px; margin: 0 auto; box-sizing: border-box; }}
         
-        .card-link {{ text-decoration: none; color: inherit; display: flex; flex-direction: column; width: calc(33.333% - 9px); min-width: 280px; box-sizing: border-box; margin-bottom: 4px; }}
+        /* ENLACE CON DISPLAY BLOCK Y ANCHO FIJO DE 32% PARA OBLIGAR LAS 3 COLUMNAS EN PC */
+        .card-link {{ text-decoration: none; color: inherit; display: block; width: 32%; min-width: 280px; box-sizing: border-box; margin-bottom: 4px; }}
         @media (max-width: 900px) {{
-            .card-link {{ width: calc(50% - 6px); }}
+            .card-link {{ width: 48%; }}
         }}
         @media (max-width: 600px) {{
             .card-link {{ width: 100%; }}
@@ -1253,7 +1254,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con anchos de tarjeta optimizados para 3 columnas en PC.")
+    print("✓ index.html actualizado con display block en card-link para forzar 3 columnas en PC.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1311,7 +1312,7 @@ def subir_a_github():
                 archivos_a_subir.append(pdf)
 
         subprocess.run(["git", "add"] + archivos_a_subir, check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Optimizar ancho flex para forzar 3 columnas en PC [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Corregir display block en card-link para alinear 3 columnas en PC [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
