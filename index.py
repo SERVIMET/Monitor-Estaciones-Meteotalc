@@ -747,16 +747,16 @@ def generar_html(resultados_totales, hay_alerta):
 
         pdf_archivo = MAPA_PDFS.get(r['nombre'], "papeleta_talcahuano_semanal.pdf")
         
-        # Botón compacto ultralimpio con icono de descarga y PDF (sin textos largos molestos)
+        # Estructura definitiva: Título y luz arriba, y el botón PDF en su propia línea independiente abajo
         card_header_html = f"""
-        <div class="card-header">
+        <div class="card-header-top">
             <span class="station-name-text" title="{r['nombre']}">{r['nombre']}</span>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <a href="{pdf_archivo}" download target="_blank" class="pdf-icon-btn" onclick="event.stopPropagation();" title="Descargar Papeleta Semanal PDF">
-                    📥 PDF
-                </a>
-                <span class="status-badge">{icono}{etiqueta_estado}</span>
-            </div>
+            <span class="status-badge">{icono}{etiqueta_estado}</span>
+        </div>
+        <div class="card-header-bottom">
+            <a href="{pdf_archivo}" download target="_blank" class="pdf-pill-btn" onclick="event.stopPropagation();" title="Descargar Papeleta Semanal PDF">
+                📥 Descargar Papeleta Semanal PDF
+            </a>
         </div>
         """
 
@@ -877,7 +877,7 @@ def generar_html(resultados_totales, hay_alerta):
         .banner-alerta {{ background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }}
         #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
         
-        /* GRILLA ESTRICTA DE 3 COLUMNAS IDÉNTICAS */
+        /* GRILLA ESTRICTA DE 3 COLUMNAS CON ALINEACIÓN STRETCH PARA NIVELAR FILAS */
         .grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; align-items: stretch; width: 100%; box-sizing: border-box; }}
         @media (max-width: 900px) {{
             .grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
@@ -893,15 +893,16 @@ def generar_html(resultados_totales, hay_alerta):
         .card:hover {{ transform: translateY(-3px); box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); }}
         .card.error:hover {{ box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3); }}
         
-        /* Encabezado limpio con nombre, botón PDF ultracompacto y luz de estado */
-        .card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; min-height: 24px; width: 100%; min-width: 0; box-sizing: border-box; }}
+        /* Cabecera superior: Nombre y Luz de estado */
+        .card-header-top {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; min-height: 22px; width: 100%; min-width: 0; box-sizing: border-box; }}
         .station-name-text {{ font-weight: bold; font-size: 13px; color: var(--station-name-color); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; margin-right: 6px; }}
-        
-        .pdf-icon-btn {{ font-size: 11px; font-weight: 700; color: var(--click-color); text-decoration: none; display: inline-flex; align-items: center; gap: 3px; background: rgba(255, 255, 255, 0.7); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--item-border); white-space: nowrap; transition: opacity 0.2s ease; }}
-        body.dark-mode .pdf-icon-btn {{ background: rgba(30, 41, 59, 0.7); }}
-        .pdf-icon-btn:hover {{ opacity: 0.8; text-decoration: underline; }}
-
         .status-badge {{ font-size: 11px; display: flex; align-items: center; white-space: nowrap; flex-shrink: 0; }}
+        
+        /* Cabecera inferior exclusiva para el botón PDF en su propia línea */
+        .card-header-bottom {{ margin-bottom: 6px; width: 100%; box-sizing: border-box; }}
+        .pdf-pill-btn {{ font-size: 11px; font-weight: 700; color: var(--click-color); text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; background: rgba(255, 255, 255, 0.7); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--item-border); width: 100%; box-sizing: border-box; transition: opacity 0.2s ease; }}
+        body.dark-mode .pdf-pill-btn {{ background: rgba(30, 41, 59, 0.7); }}
+        .pdf-pill-btn:hover {{ opacity: 0.8; text-decoration: underline; }}
         
         .card-body-content {{ display: flex; flex-direction: column; gap: 4px; margin: 4px 0; width: 100%; box-sizing: border-box; }}
         .row-top, .row-bottom-3 {{ display: grid; gap: 4px; width: 100%; box-sizing: border-box; }}
@@ -1252,7 +1253,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con botón PDF ultracompacto.")
+    print("✓ index.html actualizado con alineación stretch y botón PDF en línea independiente.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1288,7 +1289,7 @@ def ejecutar_monitoreo():
         if not ok: hubo_fallas = True
         resultados_dict[est_ifop["nombre"]] = {
             "nombre": est_ifop["nombre"], "url": est_ifop["url"], "lat": est_ifop["lat"], "lon": est_ifop["lon"],
-            "ok": ok, "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
+            "ok": ok, "estado": estado, "ultimo": ultimo, "temp": temp, "pres": pres,
             "viento": viento, "dir_viento": dir_viento, "racha": racha, "precipitacion": precipitacion
         }
 
@@ -1310,7 +1311,7 @@ def subir_a_github():
                 archivos_a_subir.append(pdf)
 
         subprocess.run(["git", "add"] + archivos_a_subir, check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Boton PDF ultracompacto junto al nombre y luz de estado [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Alineacion estricta stretch y boton PDF en linea independiente [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
