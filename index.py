@@ -1321,4 +1321,4 @@ def subir_a_github():
         print(f"Error en Git: {e}")
 
 if __name__ == "__main__":
-    ejecutar_monitoreo()
+    ejecutar_monitoreo() 
