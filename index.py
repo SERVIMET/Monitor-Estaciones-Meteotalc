@@ -876,25 +876,24 @@ def generar_html(resultados_totales, hay_alerta):
         .banner-alerta {{ background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }}
         #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
         
-        /* GRILLA FLEXBOX BLINDADA PARA PC Y CELULAR */
-        .grid {{ display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; max-width: 1200px; margin: 0 auto; box-sizing: border-box; }}
-        
-        /* ENLACE CON DISPLAY BLOCK Y ANCHO FIJO DE 32% PARA OBLIGAR LAS 3 COLUMNAS EN PC */
-        .card-link {{ text-decoration: none; color: inherit; display: block; width: 32%; min-width: 280px; box-sizing: border-box; margin-bottom: 4px; }}
+        /* GRILLA CSS ESTRICTA DE 3 COLUMNAS PARA PC (OBLIGA A 3 COLUMNAS SIN IMPORTAR NAVEGADOR) */
+        .grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; align-items: stretch; width: 100%; box-sizing: border-box; }}
         @media (max-width: 900px) {{
-            .card-link {{ width: 48%; }}
+            .grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
         }}
         @media (max-width: 600px) {{
-            .card-link {{ width: 100%; }}
+            .grid {{ grid-template-columns: 1fr; }}
         }}
 
-        .card {{ border-radius: 14px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; width: 100%; height: 100%; box-sizing: border-box; }}
+        .card-link {{ text-decoration: none; color: inherit; display: block; width: 100%; min-width: 0; box-sizing: border-box; }}
+
+        .card {{ border-radius: 14px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; width: 100%; height: 100%; min-width: 0; box-sizing: border-box; }}
         .card.ok {{ background: var(--card-ok-bg); border: 1px solid var(--card-ok-border); border-left: 6px solid #16a34a; }}
         .card.error {{ background: var(--card-error-bg); border: 1px solid var(--card-error-border); border-left: 6px solid #dc2626; }}
         .card:hover {{ transform: translateY(-3px); box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); }}
         .card.error:hover {{ box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3); }}
         
-        /* Cabecera superior: Nombre y Luz de estado */
+        /* Cabecera superior: Nombre y Luz de estado fija a la derecha */
         .card-header-top {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; min-height: 22px; width: 100%; min-width: 0; box-sizing: border-box; }}
         .station-name-text {{ font-weight: bold; font-size: 13px; color: var(--station-name-color); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; margin-right: 6px; }}
         .status-badge {{ font-size: 11px; display: flex; align-items: center; white-space: nowrap; flex-shrink: 0; }}
@@ -1254,7 +1253,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con display block en card-link para forzar 3 columnas en PC.")
+    print("✓ index.html actualizado con CSS Grid estricto de 3 columnas y luz fija.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1312,7 +1311,7 @@ def subir_a_github():
                 archivos_a_subir.append(pdf)
 
         subprocess.run(["git", "add"] + archivos_a_subir, check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Corregir display block en card-link para alinear 3 columnas en PC [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Arreglar grilla estricta grid de 3 columnas y fijar luz de estado [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
