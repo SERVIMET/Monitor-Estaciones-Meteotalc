@@ -876,14 +876,15 @@ def generar_html(resultados_totales, hay_alerta):
         .banner-alerta {{ background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }}
         #map {{ height: 350px; width: 100%; max-width: 1200px; margin: 0 auto 20px auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid var(--summary-border); }}
         
-        /* GRILLA BLINDADA A 3 COLUMNAS FIJAS (PUNTO DE QUIBRE BAJADO A 600px PARA EVITAR EL ESCALONAMIENTO) */
-        .grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; align-items: stretch; width: 100%; box-sizing: border-box; }}
+        /* GRILLA BLINDADA CON FLEXBOX Y ANCHOS EXACTOS DE 3 COLUMNAS */
+        .grid {{ display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 15px; max-width: 1200px; margin: 0 auto; box-sizing: border-box; }}
+        
+        .card-link {{ text-decoration: none; color: inherit; display: flex; flex-direction: column; width: calc(33.333% - 10px); min-width: 280px; flex-grow: 1; box-sizing: border-box; }}
         @media (max-width: 600px) {{
-            .grid {{ grid-template-columns: 1fr; }}
+            .card-link {{ width: 100%; min-width: 100%; }}
         }}
 
-        .card-link {{ text-decoration: none; color: inherit; display: flex; flex-direction: column; width: 100%; min-width: 0; box-sizing: border-box; }}
-        .card {{ border-radius: 14px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; width: 100%; height: 100%; min-width: 0; box-sizing: border-box; }}
+        .card {{ border-radius: 14px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; width: 100%; height: 100%; box-sizing: border-box; }}
         .card.ok {{ background: var(--card-ok-bg); border: 1px solid var(--card-ok-border); border-left: 6px solid #16a34a; }}
         .card.error {{ background: var(--card-error-bg); border: 1px solid var(--card-error-border); border-left: 6px solid #dc2626; }}
         .card:hover {{ transform: translateY(-3px); box-shadow: 0 8px 20px rgba(30, 64, 175, 0.2); }}
@@ -1249,7 +1250,7 @@ def generar_html(resultados_totales, hay_alerta):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✓ index.html actualizado con grilla fija de 3 columnas para PC.")
+    print("✓ index.html actualizado con diseño Flexbox de 3 columnas fijas.")
 
 def generar_json_esp32(resultados_totales):
     estados_12_estaciones = [r['ok'] for r in resultados_totales]
@@ -1307,7 +1308,7 @@ def subir_a_github():
                 archivos_a_subir.append(pdf)
 
         subprocess.run(["git", "add"] + archivos_a_subir, check=True)
-        resultado = subprocess.run(["git", "commit", "-m", "Fijar grilla a 3 columnas para evitar escalonamientos en PC [skip ci]"], capture_output=True, text=True)
+        resultado = subprocess.run(["git", "commit", "-m", "Migrar grilla a Flexbox con anchos exactos de 3 columnas [skip ci]"], capture_output=True, text=True)
         if resultado.returncode != 0 and "nothing to commit" in (resultado.stdout + resultado.stderr).lower():
             print("Sin cambios nuevos para subir.")
             return
