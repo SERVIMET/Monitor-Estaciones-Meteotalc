@@ -540,7 +540,8 @@ def consultar_directemar(est):
 
 def consultar_wunderground_web(est):
     try:
-        api_url = f"https://api.weather.com/v2/pws/observations/current?stationId={est['id']}&format=json&units=e&apiKey=e1f10a1e78da46f5b10a1e78da96f525"
+        # API Key personal configurada
+        api_url = f"https://api.weather.com/v2/pws/observations/current?stationId={est['id']}&format=json&units=e&apiKey=9214a7502910484094a750291048405d"
         req = urllib.request.Request(api_url, headers=HEADERS)
         with urllib.request.urlopen(req, timeout=15, context=ctx) as response:
             data = json.loads(response.read().decode("utf-8"))
